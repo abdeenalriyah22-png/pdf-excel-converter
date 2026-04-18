@@ -25,14 +25,9 @@ def set_styled_interface(png_file):
         background-attachment: fixed;
     }}
     
-    /* شريط الأدوات العلوي */
-    [data-testid="stHeader"] {{
-        background: rgba(0,0,0,0.3) !important;
-    }}
-
-    /* صندوق العمل الرئيسي - شفافية خفيفة جداً لإبراز الخلفية مع الحفاظ على النص */
+    /* صندوق العمل الرئيسي */
     .main .block-container {{
-        background-color: rgba(0, 0, 0, 0.4) !important; /* خلفية داكنة خفيفة خلف النص */
+        background-color: rgba(0, 0, 0, 0.4) !important;
         padding: 60px !important;
         border-radius: 30px !important;
         margin-top: 50px !important;
@@ -40,40 +35,41 @@ def set_styled_interface(png_file):
         max-width: 1100px !important;
     }}
 
-    /* تعديل النصوص للون الأبيض ومضاعفة الحجم */
+    /* النصوص باللون الأبيض وحجم مضاعف */
     h1 {{
-        font-size: 80px !important; /* الضعف تقريباً */
+        font-size: 80px !important;
         color: #FFFFFF !important;
         font-weight: 900 !important;
-        text-shadow: 4px 4px 10px #000000 !important; /* ظل أسود عميق */
+        text-shadow: 4px 4px 10px #000000 !important;
         margin-bottom: 30px !important;
     }}
     
     p, span, label, .stMarkdown {{
-        font-size: 40px !important; /* الضعف لضمان الوضوح */
+        font-size: 40px !important;
         color: #FFFFFF !important;
         font-weight: 700 !important;
         text-shadow: 2px 2px 5px #000000 !important;
         line-height: 1.8 !important;
     }}
 
-    /* شعار التذييل */
-    .footer-text {{
-        font-size: 50px !important;
-        color: #FFFFFF !important;
-        text-align: center !important;
-        text-shadow: 3px 3px 8px #000000 !important;
+    /* التعديل الجديد: جعل مستطيل الرفع برتقالي شفاف */
+    [data-testid="stFileUploader"] {{
+        background-color: rgba(255, 165, 0, 0.3) !important; /* لون برتقالي شفاف */
+        border: 3px dashed #FFA500 !important; /* إطار برتقالي منقط */
+        border-radius: 20px !important;
+        padding: 20px !important;
+    }}
+
+    /* تغيير لون أيقونة الرفع والنص داخل المستطيل للأبيض */
+    [data-testid="stFileUploader"] section button {{
+        background-color: #FFA500 !important;
+        color: white !important;
     }}
 
     /* ضبط اتجاه النص للعربية */
     .stApp, .stMarkdown, .stTitle, div {{
         direction: rtl !important;
         text-align: right !important;
-    }}
-
-    /* تحسين شكل زر الرفع */
-    .stFileUploader label {{
-        color: white !important;
     }}
     </style>
     '''
@@ -87,7 +83,7 @@ except:
 
 # 3. واجهة التطبيق
 st.markdown("<h1>📄 محول ملفات PDF</h1>", unsafe_allow_html=True)
-st.markdown("<p>أهلاً بك يا أستاذ عبدين. ارفع ملفك الآن لاستخراج البيانات بوضوح تام.</p>", unsafe_allow_html=True)
+st.markdown("<p>أهلاً بك يا أستاذ عبدين. ارفع ملفك الآن في المستطيل البرتقالي أدناه.</p>", unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("اختر ملف PDF", type=["pdf"])
 
@@ -114,4 +110,4 @@ if uploaded_file is not None:
     except Exception as e:
         st.error(f"حدث خطأ: {e}")
 
-st.markdown("<br><br><br><p class='footer-text'>الفصل في الذمة.. الوصل في الأمانة</p>", unsafe_allow_html=True)
+st.markdown("<br><br><br><p style='text-align: center; font-size: 50px; color: white; text-shadow: 3px 3px 8px #000;'>الفصل في الذمة.. الوصل في الأمانة</p>", unsafe_allow_html=True)
