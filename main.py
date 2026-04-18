@@ -3,43 +3,38 @@ import tabula
 import pandas as pd
 import io
 
-# 1. إعدادات الصفحة - وضعناها في البداية لضمان استجابة السيرفر
-st.set_page_config(page_title="محول PDF إلى Excel المحترف", layout="wide")
+# 1. إعدادات الصفحة
+st.set_page_config(page_title="محول PDF إلى Excel", layout="wide")
 
-# 2. كود إجبار الخلفية على الظهور وتجاوز إعدادات الثيم (Force Background)
+# 2. رابط الصورة المباشر (استخدمنا رابط خارجي مضمون)
 img_url = "https://images.unsplash.com/photo-1454165833767-0220eb99c3e4?q=80&w=2070&auto=format&fit=crop"
 
 page_bg_img = f"""
 <style>
-/* استهداف الحاوية الكبرى للموقع وإجبارها على عرض الصورة */
-div[data-testid="stAppViewContainer"] {{
-    background-image: url("{img_url}") !important;
-    background-size: cover !important;
-    background-position: center !important;
-    background-attachment: fixed !important;
+/* إجبار الخلفية على الظهور في أعمق طبقة */
+.stApp {{
+    background-image: url("{img_url}");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
 }}
 
-/* جعل جميع الطبقات المتوسطة شفافة تماماً لرؤية الخلفية */
-div[data-testid="stAppViewBlockContainer"], 
-div[data-testid="stVerticalBlock"],
-[data-testid="stHeader"],
-[data-testid="stToolbar"] {{
-    background-color: transparent !important;
-    background: transparent !important;
+/* جعل الطبقات التي فوقها شفافة */
+[data-testid="stAppViewContainer"] {{
+    background-color: rgba(0,0,0,0);
 }}
 
-/* إنشاء مربع العمل الأبيض الشفاف ليكون الكلام واضحاً */
+/* تنسيق حاوية العمل لتكون بيضاء شفافة وواضحة */
 .main .block-container {{
-    background-color: rgba(255, 255, 255, 0.85) !important;
+    background-color: rgba(255, 255, 255, 0.9) !important;
     padding: 3rem !important;
     border-radius: 20px !important;
-    margin-top: 60px !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
-    max-width: 900px !important;
+    margin-top: 50px !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
 }}
 
-/* تنسيق النصوص والمحاذاة */
-h1, h2, h3, p, span, .stMarkdown {{
+/* تنسيق النصوص باللون الأسود والمحاذاة لليمين */
+h1, h2, p, span {{
     direction: rtl !important;
     text-align: right !important;
     color: #000000 !important;
@@ -49,21 +44,18 @@ h1, h2, h3, p, span, .stMarkdown {{
 
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
-# 3. واجهة البرنامج
+# 3. واجهة التطبيق
 st.title("📄 محول PDF إلى Excel المحترف")
-st.write("أهلاً بك يا أستاذ عبدين. ارفع ملف الـ PDF هنا لاستخراج الجداول فوراً وبدقة.")
+st.write("أهلاً بك يا أستاذ عبدين. ارفع ملف الـ PDF هنا لاستخراج الجداول فوراً.")
 
-# 4. منطقة معالجة الملفات
 uploaded_file = st.file_uploader("اختر ملف PDF من جهازك", type=["pdf"])
 
 if uploaded_file is not None:
     try:
-        with st.spinner('جاري قراءة الجداول من الملف...'):
+        with st.spinner('جاري معالجة الجداول...'):
             dfs = tabula.read_pdf(uploaded_file, pages='all', multiple_tables=True)
-            
             if len(dfs) > 0:
-                st.success(f"✅ تم العثور على {len(dfs)} جدول بنجاح.")
-                
+                st.success(f"✅ تم العثور على {len(dfs)} جدول.")
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     for i, df in enumerate(dfs):
@@ -78,11 +70,9 @@ if uploaded_file is not None:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
             else:
-                st.warning("⚠️ لم يتم العثور على جداول نصية واضحة.")
-                
+                st.warning("⚠️ لم يتم العثور على جداول.")
     except Exception as e:
-        st.error(f"❌ حدث خطأ تقني: {e}")
+        st.error(f"حدث خطأ: {e}")
 
-# 5. التذييل
 st.markdown("---")
-st.markdown("<p style='text-align: center; font-weight: bold;'>الفصل في الذمة.. الوصل في الأمانة</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'><b>الفصل في الذمة.. الوصل في الأمانة</b></p>", unsafe_allow_html=True)
