@@ -3,15 +3,16 @@ import tabula
 import pandas as pd
 import io
 
-# 1. إعدادات الصفحة
-st.set_page_config(page_title="محول PDF إلى Excel", layout="wide")
+# 1. إعدادات الصفحة (يجب أن يكون أول أمر برمي)
+st.set_page_config(page_title="محول PDF إلى Excel المحترف", layout="wide")
 
-# 2. كود الخلفية (مباشر ومبسط)
-# ملاحظة: تأكد من رفع صورة باسم background.jpg في حسابك
-img_url = "https://raw.githubusercontent.com/abdeenalriyadh22-png/pdf-excel-converter/main/background.jpg"
+# 2. كود الخلفية - استخدمنا رابطاً عالمياً مباشراً لضمان العمل 100%
+# الصورة المختارة هي صورة مكتب محاسبة أنيق واحترافي
+img_url = "https://images.unsplash.com/photo-1454165833767-0220eb99c3e4?q=80&w=2070&auto=format&fit=crop"
 
 page_bg_img = f"""
 <style>
+/* تعيين الخلفية للموقع بالكامل */
 [data-testid="stAppViewContainer"] {{
     background-image: url("{img_url}");
     background-size: cover;
@@ -19,42 +20,53 @@ page_bg_img = f"""
     background-attachment: fixed;
 }}
 
+/* إخفاء خلفية رأس الصفحة لتظهر الصورة */
 [data-testid="stHeader"] {{
     background: rgba(0,0,0,0);
 }}
 
-/* حاوية العمل - جعلتها أكثر شفافية (0.7) لتظهر الخلفية بوضوح */
+/* تنسيق حاوية العمل (المربع الذي ترفع فيه الملفات) */
 .main .block-container {{
-    background-color: rgba(255, 255, 255, 0.7); 
+    background-color: rgba(255, 255, 255, 0.85); /* أبيض شفاف */
     padding: 3rem;
     border-radius: 20px;
     margin-top: 50px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }}
 
-/* تنسيق النصوص لليمين */
+/* توحيد تنسيق الخطوط والمحاذاة لليمين */
 h1, h2, h3, p, span, .stMarkdown {{
-    direction: rtl;
-    text-align: right;
-    color: #000000 !important;
+    direction: rtl !important;
+    text-align: right !important;
+    color: #1E1E1E !important;
+}}
+
+/* تحسين شكل زر الرفع */
+.stFileUploader {{
+    direction: ltr; /* للحفاظ على شكل أيقونة الرفع */
 }}
 </style>
 """
 
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
-# 3. محتوى التطبيق
+# 3. واجهة البرنامج
 st.title("📄 محول PDF إلى Excel المحترف")
-st.write("أهلاً بك يا أستاذ عبدين. ارفع ملف الـ PDF هنا لاستخراج الجداول فوراً.")
+st.write("أهلاً بك يا أستاذ عبدين. ارفع ملف الـ PDF هنا لاستخراج الجداول فوراً وبدقة.")
 
-uploaded_file = st.file_uploader("اختر ملف PDF", type=["pdf"])
+# 4. منطقة رفع ومعالجة الملفات
+uploaded_file = st.file_uploader("اختر ملف PDF من جهازك", type=["pdf"])
 
 if uploaded_file is not None:
     try:
-        with st.spinner('جاري قراءة الجداول...'):
+        with st.spinner('جاري قراءة الجداول من الملف...'):
+            # قراءة الجداول باستخدام مكتبة tabula
             dfs = tabula.read_pdf(uploaded_file, pages='all', multiple_tables=True)
+            
             if len(dfs) > 0:
-                st.success(f"✅ تم العثور على {len(dfs)} جدول.")
+                st.success(f"✅ تم العثور على {len(dfs)} جدول بنجاح.")
+                
+                # إعداد ملف الإكسل في الذاكرة
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     for i, df in enumerate(dfs):
@@ -62,6 +74,7 @@ if uploaded_file is not None:
                         st.dataframe(df)
                         df.to_excel(writer, sheet_name=f'Table_{i+1}', index=False)
                 
+                # زر تحميل ملف الإكسل الناتج
                 st.download_button(
                     label="📥 تحميل ملف Excel الجاهز",
                     data=output.getvalue(),
@@ -69,9 +82,12 @@ if uploaded_file is not None:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
             else:
-                st.warning("⚠️ لم يتم العثور على جداول نصية.")
+                st.warning("⚠️ لم يتم العثور على جداول واضحة. تأكد أن الملف يحتوي على جداول نصية قابلة للقراءة.")
+                
     except Exception as e:
-        st.error(f"حدث خطأ: {e}")
+        st.error(f"❌ حدث خطأ تقني: {e}")
+        st.info("نصيحة: تأكد من وجود ملف packages.txt وبه كلمة default-jre في حسابك على GitHub.")
 
+# 5. التذييل (مبدأ العمل الخاص بك)
 st.markdown("---")
-st.markdown("<p style='text-align: center; color: black;'><b>الفصل في الذمة.. الوصل في الأمانة</b></p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-weight: bold;'>الفصل في الذمة.. الوصل في الأمانة</p>", unsafe_allow_html=True)
