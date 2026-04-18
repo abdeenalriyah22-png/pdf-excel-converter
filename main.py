@@ -6,13 +6,9 @@ import io
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="محول PDF إلى Excel", layout="wide")
 
-# 2. إعدادات الخلفية (تأكد أن اسم الصورة في GitHub هو background.jpg)
-image_filename = "background.jpg" 
-github_user = "abdeenalriyadh22-png"
-repo = "pdf-excel-converter"
-
-# الرابط المباشر للصورة من سيرفرات GitHub
-img_url = f"https://raw.githubusercontent.com/{github_user}/{repo}/main/{image_filename}"
+# 2. كود الخلفية (مباشر ومبسط)
+# ملاحظة: تأكد من رفع صورة باسم background.jpg في حسابك
+img_url = "https://raw.githubusercontent.com/abdeenalriyadh22-png/pdf-excel-converter/main/background.jpg"
 
 page_bg_img = f"""
 <style>
@@ -23,20 +19,24 @@ page_bg_img = f"""
     background-attachment: fixed;
 }}
 
-/* تجعل واجهة العمل شفافة قليلاً لتظهر الخلفية من خلفها */
+[data-testid="stHeader"] {{
+    background: rgba(0,0,0,0);
+}}
+
+/* حاوية العمل - جعلتها أكثر شفافية (0.7) لتظهر الخلفية بوضوح */
 .main .block-container {{
-    background-color: rgba(255, 255, 255, 0.85); 
+    background-color: rgba(255, 255, 255, 0.7); 
     padding: 3rem;
     border-radius: 20px;
     margin-top: 50px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }}
 
-/* محاذاة النصوص لليمين */
-h1, h2, p, span {{
+/* تنسيق النصوص لليمين */
+h1, h2, h3, p, span, .stMarkdown {{
     direction: rtl;
     text-align: right;
-    color: #1E1E1E !important;
+    color: #000000 !important;
 }}
 </style>
 """
@@ -44,8 +44,8 @@ h1, h2, p, span {{
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
 # 3. محتوى التطبيق
-st.title("📄 محول PDF إلى Excel")
-st.write(f"أهلاً بك يا أستاذ عبدين. ارفع ملف الـ PDF هنا لاستخراج الجداول فوراً.")
+st.title("📄 محول PDF إلى Excel المحترف")
+st.write("أهلاً بك يا أستاذ عبدين. ارفع ملف الـ PDF هنا لاستخراج الجداول فوراً.")
 
 uploaded_file = st.file_uploader("اختر ملف PDF", type=["pdf"])
 
@@ -74,4 +74,4 @@ if uploaded_file is not None:
         st.error(f"حدث خطأ: {e}")
 
 st.markdown("---")
-st.markdown("<p style='text-align: center;'>الفصل في الذمة.. الوصل في الأمانة</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: black;'><b>الفصل في الذمة.. الوصل في الأمانة</b></p>", unsafe_allow_html=True)
