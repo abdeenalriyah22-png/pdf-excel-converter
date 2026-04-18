@@ -82,8 +82,8 @@ except:
     pass
 
 # 3. واجهة التطبيق
-st.markdown("<h1>📄 محول ملفات PDF</h1>", unsafe_allow_html=True)
-st.markdown("<p>أهلاً بك يا أستاذ عبدين. ارفع ملفك الآن في المستطيل البرتقالي أدناه.</p>", unsafe_allow_html=True)
+st.markdown("<h1>📄 محول ملفات الى اكسل PDF</h1>", unsafe_allow_html=True)
+st.markdown("<p>أهلاً بك يا أستاذ عابدين. ارفع ملفك الآن في المستطيل البرتقالي أدناه.</p>", unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("اختر ملف PDF", type=["pdf"])
 
