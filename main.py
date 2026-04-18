@@ -3,47 +3,46 @@ import tabula
 import pandas as pd
 import io
 
-# 1. إعدادات الصفحة (يجب أن يكون أول أمر برمي)
+# 1. إعدادات الصفحة - وضعناها في البداية لضمان استجابة السيرفر
 st.set_page_config(page_title="محول PDF إلى Excel المحترف", layout="wide")
 
-# 2. كود الخلفية - استخدمنا رابطاً عالمياً مباشراً لضمان العمل 100%
-# الصورة المختارة هي صورة مكتب محاسبة أنيق واحترافي
+# 2. كود إجبار الخلفية على الظهور وتجاوز إعدادات الثيم (Force Background)
 img_url = "https://images.unsplash.com/photo-1454165833767-0220eb99c3e4?q=80&w=2070&auto=format&fit=crop"
 
 page_bg_img = f"""
 <style>
-/* تعيين الخلفية للموقع بالكامل */
-[data-testid="stAppViewContainer"] {{
-    background-image: url("{img_url}");
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
+/* استهداف الحاوية الكبرى للموقع وإجبارها على عرض الصورة */
+div[data-testid="stAppViewContainer"] {{
+    background-image: url("{img_url}") !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
 }}
 
-/* إخفاء خلفية رأس الصفحة لتظهر الصورة */
-[data-testid="stHeader"] {{
-    background: rgba(0,0,0,0);
+/* جعل جميع الطبقات المتوسطة شفافة تماماً لرؤية الخلفية */
+div[data-testid="stAppViewBlockContainer"], 
+div[data-testid="stVerticalBlock"],
+[data-testid="stHeader"],
+[data-testid="stToolbar"] {{
+    background-color: transparent !important;
+    background: transparent !important;
 }}
 
-/* تنسيق حاوية العمل (المربع الذي ترفع فيه الملفات) */
+/* إنشاء مربع العمل الأبيض الشفاف ليكون الكلام واضحاً */
 .main .block-container {{
-    background-color: rgba(255, 255, 255, 0.85); /* أبيض شفاف */
-    padding: 3rem;
-    border-radius: 20px;
-    margin-top: 50px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    background-color: rgba(255, 255, 255, 0.85) !important;
+    padding: 3rem !important;
+    border-radius: 20px !important;
+    margin-top: 60px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+    max-width: 900px !important;
 }}
 
-/* توحيد تنسيق الخطوط والمحاذاة لليمين */
+/* تنسيق النصوص والمحاذاة */
 h1, h2, h3, p, span, .stMarkdown {{
     direction: rtl !important;
     text-align: right !important;
-    color: #1E1E1E !important;
-}}
-
-/* تحسين شكل زر الرفع */
-.stFileUploader {{
-    direction: ltr; /* للحفاظ على شكل أيقونة الرفع */
+    color: #000000 !important;
 }}
 </style>
 """
@@ -54,19 +53,17 @@ st.markdown(page_bg_img, unsafe_allow_html=True)
 st.title("📄 محول PDF إلى Excel المحترف")
 st.write("أهلاً بك يا أستاذ عبدين. ارفع ملف الـ PDF هنا لاستخراج الجداول فوراً وبدقة.")
 
-# 4. منطقة رفع ومعالجة الملفات
+# 4. منطقة معالجة الملفات
 uploaded_file = st.file_uploader("اختر ملف PDF من جهازك", type=["pdf"])
 
 if uploaded_file is not None:
     try:
         with st.spinner('جاري قراءة الجداول من الملف...'):
-            # قراءة الجداول باستخدام مكتبة tabula
             dfs = tabula.read_pdf(uploaded_file, pages='all', multiple_tables=True)
             
             if len(dfs) > 0:
                 st.success(f"✅ تم العثور على {len(dfs)} جدول بنجاح.")
                 
-                # إعداد ملف الإكسل في الذاكرة
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     for i, df in enumerate(dfs):
@@ -74,7 +71,6 @@ if uploaded_file is not None:
                         st.dataframe(df)
                         df.to_excel(writer, sheet_name=f'Table_{i+1}', index=False)
                 
-                # زر تحميل ملف الإكسل الناتج
                 st.download_button(
                     label="📥 تحميل ملف Excel الجاهز",
                     data=output.getvalue(),
@@ -82,12 +78,11 @@ if uploaded_file is not None:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
             else:
-                st.warning("⚠️ لم يتم العثور على جداول واضحة. تأكد أن الملف يحتوي على جداول نصية قابلة للقراءة.")
+                st.warning("⚠️ لم يتم العثور على جداول نصية واضحة.")
                 
     except Exception as e:
         st.error(f"❌ حدث خطأ تقني: {e}")
-        st.info("نصيحة: تأكد من وجود ملف packages.txt وبه كلمة default-jre في حسابك على GitHub.")
 
-# 5. التذييل (مبدأ العمل الخاص بك)
+# 5. التذييل
 st.markdown("---")
 st.markdown("<p style='text-align: center; font-weight: bold;'>الفصل في الذمة.. الوصل في الأمانة</p>", unsafe_allow_html=True)
