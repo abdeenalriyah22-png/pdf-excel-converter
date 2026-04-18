@@ -3,65 +3,58 @@ import tabula
 import pandas as pd
 import io
 
-# 1. إعدادات الصفحة الأساسية
-st.set_page_config(page_title="محول PDF إلى Excel المحترف", layout="wide")
+# 1. إعدادات الصفحة
+st.set_page_config(page_title="محول PDF إلى Excel", layout="wide")
 
-# 2. كود الخلفية المخصص بصورتك الخاصة
-# ملاحظة: استبدل 'background.jpg' باسم صورتك التي رفعتها على GitHub
-image_name = "background.jpg" 
-user_github = "abdeenalriyadh22-png"
-repo_name = "pdf-excel-converter"
+# 2. إعدادات الخلفية (تأكد أن اسم الصورة في GitHub هو background.jpg)
+image_filename = "background.jpg" 
+github_user = "abdeenalriyadh22-png"
+repo = "pdf-excel-converter"
+
+# الرابط المباشر للصورة من سيرفرات GitHub
+img_url = f"https://raw.githubusercontent.com/{github_user}/{repo}/main/{image_filename}"
 
 page_bg_img = f"""
 <style>
 [data-testid="stAppViewContainer"] {{
-    background-image: url("https://raw.githubusercontent.com/{user_github}/{repo_name}/main/{image_name}");
+    background-image: url("{img_url}");
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
 }}
 
-[data-testid="stHeader"] {{
-    background: rgba(0,0,0,0);
-}}
-
-/* حاوية المحتوى لجعل النصوص واضحة فوق الصورة */
+/* تجعل واجهة العمل شفافة قليلاً لتظهر الخلفية من خلفها */
 .main .block-container {{
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.85); 
     padding: 3rem;
     border-radius: 20px;
     margin-top: 50px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }}
 
-/* تنسيق النصوص */
-h1, h2, h3, p {{
-    color: #1E1E1E !important;
+/* محاذاة النصوص لليمين */
+h1, h2, p, span {{
     direction: rtl;
     text-align: right;
+    color: #1E1E1E !important;
 }}
 </style>
 """
 
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
-# 3. واجهة البرنامج
+# 3. محتوى التطبيق
 st.title("📄 محول PDF إلى Excel")
-st.write("أهلاً بك يا أستاذ عبدين. ارفع ملف الـ PDF هنا لاستخراج الجداول فوراً.")
+st.write(f"أهلاً بك يا أستاذ عبدين. ارفع ملف الـ PDF هنا لاستخراج الجداول فوراً.")
 
-# 4. منطق معالجة الملفات
 uploaded_file = st.file_uploader("اختر ملف PDF", type=["pdf"])
 
 if uploaded_file is not None:
     try:
         with st.spinner('جاري قراءة الجداول...'):
-            # استخدام tabula لقراءة الجداول
             dfs = tabula.read_pdf(uploaded_file, pages='all', multiple_tables=True)
-            
             if len(dfs) > 0:
-                st.success(f"✅ تم العثور على {len(dfs)} جدول بنجاح.")
-                
-                # إعداد ملف الإكسل
+                st.success(f"✅ تم العثور على {len(dfs)} جدول.")
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     for i, df in enumerate(dfs):
@@ -69,22 +62,16 @@ if uploaded_file is not None:
                         st.dataframe(df)
                         df.to_excel(writer, sheet_name=f'Table_{i+1}', index=False)
                 
-                processed_data = output.getvalue()
-                
-                # زر التحميل
                 st.download_button(
                     label="📥 تحميل ملف Excel الجاهز",
-                    data=processed_data,
+                    data=output.getvalue(),
                     file_name="Converted_Data.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
             else:
-                st.warning("⚠️ لم يتم العثور على جداول. تأكد من أن الملف يحتوي على جداول نصية.")
-                
+                st.warning("⚠️ لم يتم العثور على جداول نصية.")
     except Exception as e:
-        st.error(f"❌ حدث خطأ: {e}")
-        st.info("تأكد من وجود ملف packages.txt وبه كلمة default-jre في حسابك على GitHub.")
+        st.error(f"حدث خطأ: {e}")
 
-# 5. التذييل (مبدأ العمل)
 st.markdown("---")
 st.markdown("<p style='text-align: center;'>الفصل في الذمة.. الوصل في الأمانة</p>", unsafe_allow_html=True)
