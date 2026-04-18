@@ -2,60 +2,64 @@ import streamlit as st
 import tabula
 import pandas as pd
 import io
+import base64
 
 # 1. إعدادات الصفحة
-st.set_page_config(page_title="محول PDF إلى Excel المحترف", layout="wide")
+st.set_page_config(page_title="محول PDF إلى Excel", layout="wide")
 
-# 2. كود الخلفية - قمت بتعديل الرابط ليكون "مباشراً" تماماً وتجاوز حماية المتصفح
-img_url = "https://raw.githubusercontent.com/abdeenalriyadh22-png/pdf-excel-converter/main/background.jpg"
+# 2. وظيفة لتحويل صورة محليا أو من رابط إلى كود Base64 لضمان الظهور
+def get_base64(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
 
-st.markdown(
-    f"""
+def set_background(png_file):
+    bin_str = get_base64(png_file)
+    page_bg_img = f'''
     <style>
-    /* إجبار الخلفية على الظهور وتجاوز أي إعدادات سابقة */
     .stApp {{
-        background: url("{img_url}") no-repeat center center fixed !important;
-        background-size: cover !important;
+        background-image: url("data:image/png;base64,{bin_str}");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }}
+    
+    [data-testid="stHeader"] {{
+        background: rgba(0,0,0,0);
     }}
 
-    /* جعل الطبقات المتوسطة شفافة 100% */
-    [data-testid="stAppViewContainer"], 
-    [data-testid="stHeader"], 
-    [data-testid="stAppViewBlockContainer"] {{
-        background-color: transparent !important;
-    }}
-
-    /* صندوق العمل - أبيض شفاف ليكون الكلام واضحاً */
     .main .block-container {{
-        background-color: rgba(255, 255, 255, 0.9) !important;
-        padding: 3rem !important;
-        border-radius: 20px !important;
-        margin-top: 50px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.4) !important;
-        max-width: 900px !important;
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 3rem;
+        border-radius: 20px;
+        margin-top: 50px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }}
 
-    /* تنسيق الخطوط العربية واللون الأسود */
-    h1, h2, p, span, div, .stMarkdown {{
-        direction: rtl !important;
-        text-align: right !important;
+    h1, h2, p, span {{
+        direction: rtl;
+        text-align: right;
         color: #000000 !important;
-        font-weight: 500;
     }}
     </style>
-    """,
-    unsafe_allow_html=True
-)
+    '''
+    st.markdown(page_bg_img, unsafe_allow_html=True)
 
-# 3. واجهة البرنامج
-st.title("📄 محول PDF إلى Excel")
-st.write("أهلاً بك يا أستاذ عبدين. ارفع ملف الـ PDF هنا لاستخراج الجداول فوراً.")
+# استدعاء الخلفية (تأكد أن الملف background.jpg موجود في نفس المجلد بجانب main.py)
+try:
+    set_background('background.jpg')
+except:
+    st.warning("جاري تحميل التنسيقات الفنية...")
 
-uploaded_file = st.file_uploader("اختر ملف PDF", type=["pdf"])
+# 3. محتوى التطبيق
+st.title("📄 محول PDF إلى Excel المحترف")
+st.write(f"أهلاً بك يا أستاذ عبدين. ارفع ملف الـ PDF هنا لاستخراج الجداول فوراً.")
+
+uploaded_file = st.file_uploader("اختر ملف PDF من جهازك", type=["pdf"])
 
 if uploaded_file is not None:
     try:
-        with st.spinner('جاري التحويل...'):
+        with st.spinner('جاري معالجة البيانات...'):
             dfs = tabula.read_pdf(uploaded_file, pages='all', multiple_tables=True)
             if len(dfs) > 0:
                 st.success(f"✅ تم العثور على {len(dfs)} جدول.")
@@ -76,4 +80,4 @@ if uploaded_file is not None:
         st.error(f"حدث خطأ: {e}")
 
 st.markdown("---")
-st.markdown("<p style='text-align: center; font-weight: bold;'>الفصل في الذمة.. الوصل في الأمانة</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'><b>الفصل في الذمة.. الوصل في الأمانة</b></p>", unsafe_allow_html=True)
