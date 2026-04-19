@@ -24,31 +24,71 @@ def set_styled_interface(png_file):
         bin_str = get_base64(png_file)
         style_code = f'''
         <style>
+        /* خلفية التطبيق */
         .stApp {{
             background-image: url("data:image/png;base64,{bin_str}");
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
+            direction: rtl; /* توجيه الصفحة لليمين */
         }}
+
+        /* --- الشريط العلوي الأصفر --- */
         header[data-testid="stHeader"] {{
             background-color: #FFD700 !important;
             color: #000000 !important;
         }}
         header[data-testid="stHeader"] svg {{ fill: #000000 !important; }}
         header[data-testid="stHeader"] button {{ color: #000000 !important; }}
-        div[data-testid="stMainMenu"] ul {{
-            background-color: rgba(255, 215, 0, 0.5) !important;
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
+
+        /* --- تعديل القائمة المنسدلة (جهة اليمين + نصوص واضحة) --- */
+        div[data-testid="stTooltipHoverTarget"] {{ direction: rtl !important; }}
+        
+        /* استهداف حاوية القائمة المنسدلة */
+        div[data-baseweb="popover"] {{
+            direction: rtl !important;
+            text-align: right !important;
         }}
+
+        /* تنسيق الأزرار داخل القائمة */
+        div[data-testid="stMainMenu"] ul {{
+            background-color: rgba(255, 215, 0, 0.9) !important; /* زيادة كثافة اللون للوضوح */
+            border: 2px solid #000000 !important;
+            border-radius: 12px !important;
+            padding: 10px !important;
+        }}
+
+        div[data-testid="stMainMenu"] li {{
+            color: #000000 !important; /* نص أسود فاحم */
+            font-weight: 900 !important; /* خط عريض جداً */
+            font-size: 18px !important;
+            text-align: right !important;
+            padding: 10px !important;
+        }}
+
+        div[data-testid="stMainMenu"] li:hover {{
+            background-color: rgba(0, 0, 0, 0.15) !important;
+        }}
+
+        /* تصحيح مكان الأيقونة (الثلاث نقاط) لتكون جهة اليمين */
+        [data-testid="stToolbar"] {{
+            right: auto !important;
+            left: 2rem !important;
+            flex-direction: row-reverse !important;
+        }}
+        /* --------------------------------------------------- */
+        
         .main .block-container {{
-            background-color: rgba(0, 0, 0, 0.4) !important;
+            background-color: rgba(0, 0, 0, 0.5) !important;
             padding: 50px !important;
             border-radius: 30px !important;
         }}
-        h1 {{ font-size: 70px !important; color: #FFFFFF !important; font-weight: 900 !important; text-shadow: 4px 4px 10px #000000 !important; text-align: right !important; }}
-        p, label {{ font-size: 30px !important; color: #FFFFFF !important; font-weight: 700 !important; text-align: right !important; }}
-        .stTabs [data-baseweb="tab-list"] {{ background-color: transparent !important; gap: 10px !important; }}
+
+        h1 {{ font-size: 60px !important; color: #FFFFFF !important; font-weight: 900 !important; text-shadow: 4px 4px 10px #000000 !important; text-align: right !important; }}
+        p, label {{ font-size: 28px !important; color: #FFFFFF !important; font-weight: 700 !important; text-align: right !important; }}
+
+        /* التبويبات السفلية */
+        .stTabs [data-baseweb="tab-list"] {{ background-color: transparent !important; gap: 10px !important; direction: rtl !important; }}
         .stTabs [data-baseweb="tab"] {{
             background-color: rgba(255, 255, 255, 0.1) !important;
             color: #FFFFFF !important;
@@ -58,9 +98,9 @@ def set_styled_interface(png_file):
             padding: 10px 20px !important;
         }}
         .stTabs [aria-selected="true"] {{ background-color: #FFD700 !important; color: #000000 !important; }}
+
         .stTextArea textarea {{ background-color: rgba(255, 255, 255, 0.95) !important; color: #000000 !important; font-size: 20px !important; direction: rtl !important; }}
         [data-testid="stFileUploader"] {{ background-color: rgba(255, 215, 0, 0.1) !important; border: 2px dashed #FFD700 !important; }}
-        .stApp {{ direction: rtl !important; text-align: right !important; }}
         </style>
         '''
         st.markdown(style_code, unsafe_allow_html=True)
