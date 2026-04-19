@@ -1,5 +1,4 @@
 default-jre
 tesseract-ocr
 tesseract-ocr-ara
-libgl1-mesa-glx
-
+libtesseract-dev
