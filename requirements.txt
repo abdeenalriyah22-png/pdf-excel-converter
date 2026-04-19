@@ -1,6 +1,7 @@
 streamlit
-tabula-py
 pandas
+tabula-py
 xlsxwriter
-pytesseract
 Pillow
+pytesseract
+pymupdf
