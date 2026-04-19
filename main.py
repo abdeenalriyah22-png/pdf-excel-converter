@@ -13,7 +13,7 @@ st.set_page_config(page_title="المحاسب الذكي - عابدين", layout
 # التحقق من وجود محرك OCR
 tesseract_path = shutil.which("tesseract")
 
-# 2. وظائف التنسيق والبصريات (CSS)
+# 2. وظائف التنسيق والبصريات (التعديل المطلوب للشريط العلوي)
 def get_base64(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()
@@ -24,37 +24,57 @@ def set_styled_interface(png_file):
         bin_str = get_base64(png_file)
         style_code = f'''
         <style>
+        /* خلفية التطبيق */
         .stApp {{
             background-image: url("data:image/png;base64,{bin_str}");
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
         }}
-        [data-testid="stHeader"] {{ background: rgba(0,0,0,0.3) !important; }}
+
+        /* --- تعديل الشريط العلوي (Share, Edit, etc.) باللون الأصفر --- */
+        header[data-testid="stHeader"] {{
+            background-color: #FFD700 !important;
+            color: #000000 !important;
+        }}
+        header[data-testid="stHeader"] svg {{
+            fill: #000000 !important; /* تلوين الأيقونات بالأسود لتظهر فوق الأصفر */
+        }}
+        header[data-testid="stHeader"] button {{
+            color: #000000 !important;
+        }}
+        /* --------------------------------------------------------- */
+        
         .main .block-container {{
             background-color: rgba(0, 0, 0, 0.4) !important;
             padding: 50px !important;
             border-radius: 30px !important;
         }}
+
         h1 {{ font-size: 70px !important; color: #FFFFFF !important; font-weight: 900 !important; text-shadow: 4px 4px 10px #000000 !important; text-align: right !important; }}
         p, label {{ font-size: 30px !important; color: #FFFFFF !important; font-weight: 700 !important; text-align: right !important; }}
 
-        /* شريط التبويبات الأصفر */
+        /* إعادة التبويبات لشكلها السابق (شفافة مع خط أبيض) */
         .stTabs [data-baseweb="tab-list"] {{
-            background-color: #FFD700 !important;
-            padding: 10px !important;
-            border-radius: 15px 15px 0 0 !important;
+            background-color: transparent !important;
+            padding: 0 !important;
+            gap: 10px !important;
         }}
         .stTabs [data-baseweb="tab"] {{
-            color: #000000 !important;
-            font-size: 24px !important;
-            font-weight: 800 !important;
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: #FFFFFF !important;
+            font-size: 22px !important;
+            font-weight: 700 !important;
+            border-radius: 10px !important;
+            padding: 10px 20px !important;
         }}
         .stTabs [aria-selected="true"] {{
-            background-color: #000000 !important;
-            color: #FFD700 !important;
-            border-radius: 10px !important;
+            background-color: #FFD700 !important;
+            color: #000000 !important;
         }}
+
+        .stTextArea textarea {{ background-color: rgba(255, 255, 255, 0.95) !important; color: #000000 !important; font-size: 20px !important; direction: rtl !important; }}
+        [data-testid="stFileUploader"] {{ background-color: rgba(255, 215, 0, 0.1) !important; border: 2px dashed #FFD700 !important; }}
         .stApp {{ direction: rtl !important; text-align: right !important; }}
         </style>
         '''
@@ -69,18 +89,16 @@ st.markdown("<h1>📄 المحاسب الذكي</h1>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs(["📊 جداول Excel", "🔍 استخراج نصوص"])
 
-# --- التبويب الأول: محول الجداول (جدول تحت جدول في ورقة واحدة) ---
+# --- التبويب الأول: محول الجداول ---
 with tab1:
-    st.markdown("<p>تحويل PDF إلى جداول منفصلة في ورقة إكسيل واحدة</p>", unsafe_allow_html=True)
+    st.markdown("<p>تحويل PDF إلى جداول مرتبة في ورقة إكسيل واحدة</p>", unsafe_allow_html=True)
     pdf_files = st.file_uploader("ارفع ملفات PDF", type=["pdf"], key="pdf_multi", accept_multiple_files=True)
     
     if pdf_files:
         for uploaded_pdf in pdf_files:
             try:
-                with st.spinner(f'جاري معالجة جداول: {uploaded_pdf.name} ...'):
-                    # قراءة الجداول مع الحفاظ على انفصالها
+                with st.spinner(f'جاري معالجة: {uploaded_pdf.name} ...'):
                     dfs = tabula.read_pdf(uploaded_pdf, pages='all', multiple_tables=True)
-                    
                     if dfs:
                         output = io.BytesIO()
                         with pd.ExcelWriter(output, engine='xlsxwriter', engine_kwargs={'options': {'nan_inf_to_errors': True}}) as writer:
@@ -89,40 +107,25 @@ with tab1:
                             worksheet = workbook.add_worksheet(sheet_name)
                             writer.sheets[sheet_name] = worksheet
                             
-                            # التنسيقات
                             border_fmt = workbook.add_format({'border': 1, 'align': 'center', 'valign': 'vcenter'})
                             header_fmt = workbook.add_format({'bold': True, 'bg_color': '#FFD700', 'color': 'black', 'border': 1, 'align': 'center'})
                             
-                            current_row = 0 # مؤشر الصف الحالي للكتابة
-                            
+                            current_row = 0
                             for df in dfs:
-                                # تنظيف الجدول الحالي
                                 df = df.replace([float('inf'), float('-inf')], 0).fillna('')
                                 if df.empty: continue
-                                
-                                # كتابة رأس الجدول الحالي
                                 for col_num, value in enumerate(df.columns.values):
                                     worksheet.write(current_row, col_num, value, header_fmt)
-                                    worksheet.set_column(col_num, col_num, 22) # عرض العمود
-                                
-                                # كتابة بيانات الجدول الحالي
+                                    worksheet.set_column(col_num, col_num, 22)
                                 for row_idx, row_data in enumerate(df.values):
                                     for col_num, col_data in enumerate(row_data):
                                         worksheet.write(current_row + row_idx + 1, col_num, col_data, border_fmt)
-                                
-                                # تحديث مؤشر الصف (عدد الصفوف + الرأس + سطرين فراغ للتمييز)
                                 current_row += len(df) + 3
                             
-                        st.success(f"تم ترتيب {len(dfs)} جداول بنجاح في {uploaded_pdf.name}")
-                        st.download_button(
-                            label=f"📥 تحميل إكسيل: {uploaded_pdf.name}",
-                            data=output.getvalue(),
-                            file_name=f"Separated_{uploaded_pdf.name.split('.')[0]}.xlsx",
-                            key=f"btn_{uploaded_pdf.name}"
-                        )
+                        st.download_button(label=f"📥 تحميل إكسيل: {uploaded_pdf.name}", data=output.getvalue(), file_name=f"Excel_{uploaded_pdf.name.split('.')[0]}.xlsx", key=f"btn_{uploaded_pdf.name}")
                         st.divider()
             except Exception as e:
-                st.error(f"خطأ في {uploaded_pdf.name}: {e}")
+                st.error(f"خطأ: {e}")
 
 # --- التبويب الثاني: استخراج النصوص ---
 with tab2:
