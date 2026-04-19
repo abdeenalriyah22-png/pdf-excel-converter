@@ -32,44 +32,55 @@ def set_styled_interface(png_file):
         /* الشريط العلوي */
         header[data-testid="stHeader"] {{
             background-color: #FFD700 !important;
-            color: #000000 !important;
         }}
 
-        /* --- الحل النهائي لمشكلة القائمة بدون خلفية --- */
-        /* استهداف حاوية القائمة المنسدلة لضمان وجود خلفية صفراء صريحة */
+        /* --- تعديل مستطيل رفع الملفات (Uploader) --- */
+        [data-testid="stFileUploader"] {{
+            background-color: rgba(255, 165, 0, 0.2) !important; /* برتقالي شفاف */
+            border: 3px dashed #FFA500 !important; /* برواز برتقالي متقطع */
+            border-radius: 15px !important;
+            padding: 20px !important;
+        }}
+        
+        /* تلوين النص داخل مربع الرفع */
+        [data-testid="stFileUploader"] section {{
+            color: #FFFFFF !important;
+        }}
+        
+        /* زر الرفع الداخلي */
+        [data-testid="stFileUploader"] button {{
+            background-color: #FFA500 !important;
+            color: #000000 !important;
+            font-weight: bold !important;
+        }}
+
+        /* القائمة المنسدلة بخلفية صفراء صريحة */
         div[data-baseweb="popover"], 
         div[class*="st-emotion-cache-"] ul {{
-            background-color: #FFD700 !important; /* أصفر كامل بدون شفافية لضمان الوضوح */
+            background-color: #FFD700 !important;
             background: #FFD700 !important;
             border: 2px solid #000000 !important;
-            box-shadow: 0px 10px 20px rgba(0,0,0,0.8) !important;
         }}
 
-        /* تنسيق النصوص داخل القائمة لتكون واضحة جداً */
-        div[data-testid="stMainMenu"] li, 
-        div[class*="st-emotion-cache-"] li span {{
-            color: #000000 !important; /* نص أسود */
-            font-weight: 800 !important; /* خط عريض */
-            font-size: 18px !important;
+        div[data-testid="stMainMenu"] li {{
+            color: #000000 !important;
+            font-weight: 800 !important;
         }}
-
-        /* تعديل مكان شريط الأدوات لليمين */
-        [data-testid="stToolbar"] {{
-            right: 1rem !important;
-            left: auto !important;
-            display: flex !important;
-            flex-direction: row-reverse !important;
-        }}
-        /* ------------------------------------------- */
 
         .main .block-container {{
             background-color: rgba(0, 0, 0, 0.5) !important;
             padding: 50px !important;
             border-radius: 30px !important;
         }}
+        
         h1 {{ font-size: 60px !important; color: #FFFFFF !important; font-weight: 900 !important; text-align: right !important; }}
         p, label {{ font-size: 28px !important; color: #FFFFFF !important; font-weight: 700 !important; text-align: right !important; }}
-        .stTabs [aria-selected="true"] {{ background-color: #FFD700 !important; color: #000000 !important; }}
+        
+        /* التبويبات */
+        .stTabs [aria-selected="true"] {{
+            background-color: #FFD700 !important;
+            color: #000000 !important;
+        }}
         </style>
         '''
         st.markdown(style_code, unsafe_allow_html=True)
@@ -82,10 +93,11 @@ set_styled_interface('background.jpg')
 st.markdown("<h1>📄 المحاسب الذكي</h1>", unsafe_allow_html=True)
 tab1, tab2 = st.tabs(["📊 جداول Excel", "🔍 استخراج نصوص"])
 
-# الكود المتبقي لمعالجة الملفات (كما هو في النسخ السابقة)
 with tab1:
     st.markdown("<p>تحويل PDF إلى جداول مرتبة</p>", unsafe_allow_html=True)
-    pdf_files = st.file_uploader("ارفع ملفات PDF", type=["pdf"], key="pdf_multi", accept_multiple_files=True)
+    # هذا هو العنصر الذي قمنا بتعديله ليظهر بالبرتقالي
+    pdf_files = st.file_uploader("ارفع ملفات PDF هنا", type=["pdf"], key="pdf_multi", accept_multiple_files=True)
+    
     if pdf_files:
         for uploaded_pdf in pdf_files:
             try:
