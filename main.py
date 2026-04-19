@@ -21,7 +21,6 @@ def set_styled_interface(png_file):
         bin_str = get_base64(png_file)
         style_code = f'''
         <style>
-        /* خلفية التطبيق وتوجيه النص */
         .stApp {{
             background-image: url("data:image/png;base64,{bin_str}");
             background-size: cover;
@@ -30,30 +29,22 @@ def set_styled_interface(png_file):
             direction: rtl;
         }}
 
-        /* الشريط العلوي الأصفر */
         header[data-testid="stHeader"] {{
             background-color: #FFD700 !important;
         }}
 
-        /* --- توحيد خلفية مستطيل الرفع في كل التبويبات --- */
+        /* تنسيق مستطيل الرفع البرتقالي في كل التبويبات */
         [data-testid="stFileUploader"] {{
-            background-color: rgba(255, 165, 0, 0.25) !important; /* برتقالي شفاف واضح */
-            border: 2px dashed #FFA500 !important; /* برواز برتقالي */
+            background-color: rgba(255, 165, 0, 0.25) !important;
+            border: 2px dashed #FFA500 !important;
             border-radius: 15px !important;
             padding: 20px !important;
-            margin-bottom: 20px !important;
-        }}
-        
-        /* تلوين نصوص منطقة الرفع */
-        [data-testid="stFileUploader"] section {{
-            color: #FFFFFF !important;
         }}
 
-        /* --- القائمة المنسدلة (الثلاث نقاط) بخلفية صفراء كاملة --- */
+        /* القائمة المنسدلة (الثلاث نقاط) بخلفية صفراء واضحة */
         div[data-baseweb="popover"], 
         div[class*="st-emotion-cache-"] ul {{
             background-color: #FFD700 !important;
-            background: #FFD700 !important;
             border: 2px solid #000000 !important;
         }}
 
@@ -62,7 +53,6 @@ def set_styled_interface(png_file):
             font-weight: 800 !important;
         }}
 
-        /* حاوية المحتوى الرئيسية */
         .main .block-container {{
             background-color: rgba(0, 0, 0, 0.6) !important;
             padding: 40px !important;
@@ -72,14 +62,11 @@ def set_styled_interface(png_file):
         h1 {{ font-size: 60px !important; color: #FFFFFF !important; font-weight: 900 !important; text-align: right !important; }}
         p, label {{ font-size: 28px !important; color: #FFFFFF !important; font-weight: 700 !important; text-align: right !important; }}
         
-        /* تنسيق التبويبات */
-        .stTabs [data-baseweb="tab-list"] {{ direction: rtl !important; }}
         .stTabs [aria-selected="true"] {{
             background-color: #FFD700 !important;
             color: #000000 !important;
         }}
         
-        /* صندوق النص المستخرج */
         .stTextArea textarea {{
             background-color: rgba(255, 255, 255, 0.9) !important;
             color: #000000 !important;
@@ -131,10 +118,9 @@ with tab1:
             except Exception as e:
                 st.error(f"خطأ: {e}")
 
-# --- التبويب الثاني: استخراج النصوص (تم إصلاح الرفع هنا) ---
+# --- التبويب الثاني: استخراج النصوص (تمت إضافة زر التحميل) ---
 with tab2:
     st.markdown("<p>استخراج النصوص من الصور والمستندات</p>", unsafe_allow_html=True)
-    # خيار الرفع الآن يظهر بالخلفية البرتقالية المطلوبة
     img_file = st.file_uploader("ارفع صورة (JPG/PNG) لاستخراج النص منها", type=["jpg", "png", "jpeg"], key="img_up_tab2")
     
     if img_file:
@@ -145,7 +131,16 @@ with tab2:
                 with st.spinner('جاري قراءة البيانات...'):
                     text = pytesseract.image_to_string(image, lang='ara+eng')
                     if text.strip():
-                        st.text_area("النص المستخرج:", value=text, height=400)
+                        # عرض النص في مربع نصي
+                        st.text_area("النص المستخرج:", value=text, height=350)
+                        
+                        # --- إضافة ميزة تحميل النص المستخرج كملف TXT ---
+                        st.download_button(
+                            label="📥 تحميل النص كملف TXT",
+                            data=text,
+                            file_name=f"Extracted_Text_{img_file.name.split('.')[0]}.txt",
+                            mime="text/plain"
+                        )
                     else:
                         st.warning("لم يتم العثور على نص واضح في الصورة.")
             except Exception as e:
