@@ -21,6 +21,7 @@ def set_styled_interface(png_file):
         bin_str = get_base64(png_file)
         style_code = f'''
         <style>
+        /* خلفية التطبيق وتوجيه النص */
         .stApp {{
             background-image: url("data:image/png;base64,{bin_str}");
             background-size: cover;
@@ -29,32 +30,26 @@ def set_styled_interface(png_file):
             direction: rtl;
         }}
 
-        /* الشريط العلوي */
+        /* الشريط العلوي الأصفر */
         header[data-testid="stHeader"] {{
             background-color: #FFD700 !important;
         }}
 
-        /* --- تعديل مستطيل رفع الملفات (Uploader) --- */
+        /* --- توحيد خلفية مستطيل الرفع في كل التبويبات --- */
         [data-testid="stFileUploader"] {{
-            background-color: rgba(255, 165, 0, 0.2) !important; /* برتقالي شفاف */
-            border: 3px dashed #FFA500 !important; /* برواز برتقالي متقطع */
+            background-color: rgba(255, 165, 0, 0.25) !important; /* برتقالي شفاف واضح */
+            border: 2px dashed #FFA500 !important; /* برواز برتقالي */
             border-radius: 15px !important;
             padding: 20px !important;
+            margin-bottom: 20px !important;
         }}
         
-        /* تلوين النص داخل مربع الرفع */
+        /* تلوين نصوص منطقة الرفع */
         [data-testid="stFileUploader"] section {{
             color: #FFFFFF !important;
         }}
-        
-        /* زر الرفع الداخلي */
-        [data-testid="stFileUploader"] button {{
-            background-color: #FFA500 !important;
-            color: #000000 !important;
-            font-weight: bold !important;
-        }}
 
-        /* القائمة المنسدلة بخلفية صفراء صريحة */
+        /* --- القائمة المنسدلة (الثلاث نقاط) بخلفية صفراء كاملة --- */
         div[data-baseweb="popover"], 
         div[class*="st-emotion-cache-"] ul {{
             background-color: #FFD700 !important;
@@ -67,19 +62,28 @@ def set_styled_interface(png_file):
             font-weight: 800 !important;
         }}
 
+        /* حاوية المحتوى الرئيسية */
         .main .block-container {{
-            background-color: rgba(0, 0, 0, 0.5) !important;
-            padding: 50px !important;
+            background-color: rgba(0, 0, 0, 0.6) !important;
+            padding: 40px !important;
             border-radius: 30px !important;
         }}
         
         h1 {{ font-size: 60px !important; color: #FFFFFF !important; font-weight: 900 !important; text-align: right !important; }}
         p, label {{ font-size: 28px !important; color: #FFFFFF !important; font-weight: 700 !important; text-align: right !important; }}
         
-        /* التبويبات */
+        /* تنسيق التبويبات */
+        .stTabs [data-baseweb="tab-list"] {{ direction: rtl !important; }}
         .stTabs [aria-selected="true"] {{
             background-color: #FFD700 !important;
             color: #000000 !important;
+        }}
+        
+        /* صندوق النص المستخرج */
+        .stTextArea textarea {{
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            color: #000000 !important;
+            font-size: 20px !important;
         }}
         </style>
         '''
@@ -93,9 +97,9 @@ set_styled_interface('background.jpg')
 st.markdown("<h1>📄 المحاسب الذكي</h1>", unsafe_allow_html=True)
 tab1, tab2 = st.tabs(["📊 جداول Excel", "🔍 استخراج نصوص"])
 
+# --- التبويب الأول: Excel ---
 with tab1:
     st.markdown("<p>تحويل PDF إلى جداول مرتبة</p>", unsafe_allow_html=True)
-    # هذا هو العنصر الذي قمنا بتعديله ليظهر بالبرتقالي
     pdf_files = st.file_uploader("ارفع ملفات PDF هنا", type=["pdf"], key="pdf_multi", accept_multiple_files=True)
     
     if pdf_files:
@@ -126,5 +130,25 @@ with tab1:
                         st.download_button(label=f"📥 تحميل إكسيل: {uploaded_pdf.name}", data=output.getvalue(), file_name=f"Excel_{uploaded_pdf.name.split('.')[0]}.xlsx")
             except Exception as e:
                 st.error(f"خطأ: {e}")
+
+# --- التبويب الثاني: استخراج النصوص (تم إصلاح الرفع هنا) ---
+with tab2:
+    st.markdown("<p>استخراج النصوص من الصور والمستندات</p>", unsafe_allow_html=True)
+    # خيار الرفع الآن يظهر بالخلفية البرتقالية المطلوبة
+    img_file = st.file_uploader("ارفع صورة (JPG/PNG) لاستخراج النص منها", type=["jpg", "png", "jpeg"], key="img_up_tab2")
+    
+    if img_file:
+        image = Image.open(img_file)
+        st.image(image, caption="الصورة المرفوعة", width=500)
+        if st.button("🚀 ابدأ استخراج النص الآن"):
+            try:
+                with st.spinner('جاري قراءة البيانات...'):
+                    text = pytesseract.image_to_string(image, lang='ara+eng')
+                    if text.strip():
+                        st.text_area("النص المستخرج:", value=text, height=400)
+                    else:
+                        st.warning("لم يتم العثور على نص واضح في الصورة.")
+            except Exception as e:
+                st.error(f"خطأ في محرك OCR: {e}")
 
 st.markdown("<br><br><p style='text-align: center; font-size: 45px; color: white; text-shadow: 3px 3px 8px #000;'>الفصل في الذمة.. الوصل في الأمانة</p>", unsafe_allow_html=True)
