@@ -13,7 +13,7 @@ st.set_page_config(page_title="المحاسب الذكي - عابدين", layout
 # التحقق من وجود محرك OCR
 tesseract_path = shutil.which("tesseract")
 
-# 2. وظائف التنسيق والبصريات (التعديل المطلوب للشريط العلوي)
+# 2. وظائف التنسيق والبصريات (تعديل القائمة المنسدلة والشريط العلوي)
 def get_base64(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()
@@ -32,18 +32,28 @@ def set_styled_interface(png_file):
             background-attachment: fixed;
         }}
 
-        /* --- تعديل الشريط العلوي (Share, Edit, etc.) باللون الأصفر --- */
+        /* --- الشريط العلوي الأصفر --- */
         header[data-testid="stHeader"] {{
             background-color: #FFD700 !important;
             color: #000000 !important;
         }}
-        header[data-testid="stHeader"] svg {{
-            fill: #000000 !important; /* تلوين الأيقونات بالأسود لتظهر فوق الأصفر */
+        header[data-testid="stHeader"] svg {{ fill: #000000 !important; }}
+        header[data-testid="stHeader"] button {{ color: #000000 !important; }}
+
+        /* --- تعديل القائمة المنسدلة (خلفية أصفر شفاف 50%) --- */
+        div[data-testid="stMainMenu"] ul {{
+            background-color: rgba(255, 215, 0, 0.5) !important; /* أصفر بشفافية 50% */
+            backdrop-filter: blur(10px); /* إضافة تأثير ضبابي لزيادة الوضوح */
+            border-radius: 10px;
         }}
-        header[data-testid="stHeader"] button {{
-            color: #000000 !important;
+        div[data-testid="stMainMenu"] ul li {{
+            color: #000000 !important; /* نصوص القائمة بالأسود */
+            font-weight: 600 !important;
         }}
-        /* --------------------------------------------------------- */
+        div[data-testid="stMainMenu"] ul li:hover {{
+            background-color: rgba(0, 0, 0, 0.1) !important; /* تأثير عند مرور الماوس */
+        }}
+        /* --------------------------------------------------- */
         
         .main .block-container {{
             background-color: rgba(0, 0, 0, 0.4) !important;
@@ -54,12 +64,8 @@ def set_styled_interface(png_file):
         h1 {{ font-size: 70px !important; color: #FFFFFF !important; font-weight: 900 !important; text-shadow: 4px 4px 10px #000000 !important; text-align: right !important; }}
         p, label {{ font-size: 30px !important; color: #FFFFFF !important; font-weight: 700 !important; text-align: right !important; }}
 
-        /* إعادة التبويبات لشكلها السابق (شفافة مع خط أبيض) */
-        .stTabs [data-baseweb="tab-list"] {{
-            background-color: transparent !important;
-            padding: 0 !important;
-            gap: 10px !important;
-        }}
+        /* التبويبات السفلية */
+        .stTabs [data-baseweb="tab-list"] {{ background-color: transparent !important; gap: 10px !important; }}
         .stTabs [data-baseweb="tab"] {{
             background-color: rgba(255, 255, 255, 0.1) !important;
             color: #FFFFFF !important;
@@ -68,10 +74,7 @@ def set_styled_interface(png_file):
             border-radius: 10px !important;
             padding: 10px 20px !important;
         }}
-        .stTabs [aria-selected="true"] {{
-            background-color: #FFD700 !important;
-            color: #000000 !important;
-        }}
+        .stTabs [aria-selected="true"] {{ background-color: #FFD700 !important; color: #000000 !important; }}
 
         .stTextArea textarea {{ background-color: rgba(255, 255, 255, 0.95) !important; color: #000000 !important; font-size: 20px !important; direction: rtl !important; }}
         [data-testid="stFileUploader"] {{ background-color: rgba(255, 215, 0, 0.1) !important; border: 2px dashed #FFD700 !important; }}
