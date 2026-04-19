@@ -2,3 +2,5 @@ streamlit
 tabula-py
 pandas
 xlsxwriter
+pytesseract
+Pillow
