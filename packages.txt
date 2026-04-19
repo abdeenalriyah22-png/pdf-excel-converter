@@ -1,4 +1,5 @@
 default-jre
 tesseract-ocr
 tesseract-ocr-ara
+tesseract-ocr-eng
 libtesseract-dev
