@@ -6,6 +6,7 @@ import base64
 from PIL import Image
 import pytesseract
 import shutil
+import fitz  # مكتبة PyMuPDF للتعامل مع نصوص الـ PDF المصورة
 
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="المحاسب الذكي - عابدين", layout="wide")
@@ -28,50 +29,27 @@ def set_styled_interface(png_file):
             background-attachment: fixed;
             direction: rtl;
         }}
-
-        header[data-testid="stHeader"] {{
-            background-color: #FFD700 !important;
-        }}
-
-        /* تنسيق مستطيل الرفع البرتقالي في كل التبويبات */
+        header[data-testid="stHeader"] {{ background-color: #FFD700 !important; }}
         [data-testid="stFileUploader"] {{
             background-color: rgba(255, 165, 0, 0.25) !important;
             border: 2px dashed #FFA500 !important;
             border-radius: 15px !important;
             padding: 20px !important;
         }}
-
-        /* القائمة المنسدلة (الثلاث نقاط) بخلفية صفراء واضحة */
-        div[data-baseweb="popover"], 
-        div[class*="st-emotion-cache-"] ul {{
+        div[data-baseweb="popover"], div[class*="st-emotion-cache-"] ul {{
             background-color: #FFD700 !important;
             border: 2px solid #000000 !important;
         }}
-
-        div[data-testid="stMainMenu"] li {{
-            color: #000000 !important;
-            font-weight: 800 !important;
-        }}
-
+        div[data-testid="stMainMenu"] li {{ color: #000000 !important; font-weight: 800 !important; }}
         .main .block-container {{
             background-color: rgba(0, 0, 0, 0.6) !important;
             padding: 40px !important;
             border-radius: 30px !important;
         }}
-        
         h1 {{ font-size: 60px !important; color: #FFFFFF !important; font-weight: 900 !important; text-align: right !important; }}
         p, label {{ font-size: 28px !important; color: #FFFFFF !important; font-weight: 700 !important; text-align: right !important; }}
-        
-        .stTabs [aria-selected="true"] {{
-            background-color: #FFD700 !important;
-            color: #000000 !important;
-        }}
-        
-        .stTextArea textarea {{
-            background-color: rgba(255, 255, 255, 0.9) !important;
-            color: #000000 !important;
-            font-size: 20px !important;
-        }}
+        .stTabs [aria-selected="true"] {{ background-color: #FFD700 !important; color: #000000 !important; }}
+        .stTextArea textarea {{ background-color: rgba(255, 255, 255, 0.9) !important; color: #000000 !important; font-size: 20px !important; }}
         </style>
         '''
         st.markdown(style_code, unsafe_allow_html=True)
@@ -84,11 +62,10 @@ set_styled_interface('background.jpg')
 st.markdown("<h1>📄 المحاسب الذكي</h1>", unsafe_allow_html=True)
 tab1, tab2 = st.tabs(["📊 جداول Excel", "🔍 استخراج نصوص"])
 
-# --- التبويب الأول: Excel ---
+# --- التبويب الأول: تحويل الجداول (Excel) ---
 with tab1:
     st.markdown("<p>تحويل PDF إلى جداول مرتبة</p>", unsafe_allow_html=True)
-    pdf_files = st.file_uploader("ارفع ملفات PDF هنا", type=["pdf"], key="pdf_multi", accept_multiple_files=True)
-    
+    pdf_files = st.file_uploader("ارفع ملفات PDF هنا", type=["pdf"], key="pdf_excel", accept_multiple_files=True)
     if pdf_files:
         for uploaded_pdf in pdf_files:
             try:
@@ -100,7 +77,6 @@ with tab1:
                             sheet_name = 'Data_Sheet'
                             workbook = writer.book
                             worksheet = workbook.add_worksheet(sheet_name)
-                            writer.sheets[sheet_name] = worksheet
                             header_fmt = workbook.add_format({'bold': True, 'bg_color': '#FFD700', 'color': 'black', 'border': 1, 'align': 'center'})
                             current_row = 0
                             for df in dfs:
@@ -118,32 +94,46 @@ with tab1:
             except Exception as e:
                 st.error(f"خطأ: {e}")
 
-# --- التبويب الثاني: استخراج النصوص (تمت إضافة زر التحميل) ---
+# --- التبويب الثاني: استخراج النصوص (يدعم الصور و PDF) ---
 with tab2:
-    st.markdown("<p>استخراج النصوص من الصور والمستندات</p>", unsafe_allow_html=True)
-    img_file = st.file_uploader("ارفع صورة (JPG/PNG) لاستخراج النص منها", type=["jpg", "png", "jpeg"], key="img_up_tab2")
+    st.markdown("<p>استخراج النصوص من الصور وملفات PDF</p>", unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("ارفع صورة أو ملف PDF", type=["jpg", "png", "jpeg", "pdf"], key="ocr_up")
     
-    if img_file:
-        image = Image.open(img_file)
-        st.image(image, caption="الصورة المرفوعة", width=500)
-        if st.button("🚀 ابدأ استخراج النص الآن"):
+    if uploaded_file:
+        full_text = ""
+        if st.button("🚀 ابدأ استخراج النص"):
             try:
-                with st.spinner('جاري قراءة البيانات...'):
-                    text = pytesseract.image_to_string(image, lang='ara+eng')
-                    if text.strip():
-                        # عرض النص في مربع نصي
-                        st.text_area("النص المستخرج:", value=text, height=350)
-                        
-                        # --- إضافة ميزة تحميل النص المستخرج كملف TXT ---
+                with st.spinner('جاري التحليل...'):
+                    # إذا كان الملف PDF
+                    if uploaded_file.type == "application/pdf":
+                        pdf_data = uploaded_file.read()
+                        doc = fitz.open(stream=pdf_data, filetype="pdf")
+                        for page in doc:
+                            # استخراج النص المباشر أولاً
+                            page_text = page.get_text()
+                            if page_text.strip():
+                                full_text += page_text + "\n"
+                            else:
+                                # إذا كانت الصفحة عبارة عن صورة داخل PDF نستخدم OCR
+                                pix = page.get_pixmap()
+                                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                                full_text += pytesseract.image_to_string(img, lang='ara+eng') + "\n"
+                    # إذا كان الملف صورة
+                    else:
+                        image = Image.open(uploaded_file)
+                        full_text = pytesseract.image_to_string(image, lang='ara+eng')
+
+                    if full_text.strip():
+                        st.text_area("النص المستخرج:", value=full_text, height=350)
                         st.download_button(
                             label="📥 تحميل النص كملف TXT",
-                            data=text,
-                            file_name=f"Extracted_Text_{img_file.name.split('.')[0]}.txt",
+                            data=full_text,
+                            file_name=f"Text_{uploaded_file.name.split('.')[0]}.txt",
                             mime="text/plain"
                         )
                     else:
-                        st.warning("لم يتم العثور على نص واضح في الصورة.")
+                        st.warning("تعذر العثور على نص في هذا الملف.")
             except Exception as e:
-                st.error(f"خطأ في محرك OCR: {e}")
+                st.error(f"حدث خطأ أثناء المعالجة: {e}")
 
 st.markdown("<br><br><p style='text-align: center; font-size: 45px; color: white; text-shadow: 3px 3px 8px #000;'>الفصل في الذمة.. الوصل في الأمانة</p>", unsafe_allow_html=True)
