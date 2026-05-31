@@ -8,7 +8,7 @@ st.markdown("""
     <style>
     /* 1. الخلفية الأساسية: لون رمادي فاتح جداً مريح للعين */
     .stApp {
-        background-color: #f8f9fa !important;
+        background-color: #f8f2fa !important;
         background-image: none !important;
     }
 
