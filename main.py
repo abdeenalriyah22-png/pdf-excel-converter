@@ -1,29 +1,68 @@
 import streamlit as st
 import streamlit as st
 
-# أضف هذا الجزء لتغيير الخلفية وإخفاء الهيدر
+import streamlit as st
+
+# كود التنسيق الاحترافي (ضع هذا الكود في أعلى ملف main.py)
 st.markdown("""
     <style>
-    /* إلغاء صورة الخلفية الحالية ووضع تدرج لوني هادئ */
+    /* 1. الخلفية الأساسية: لون رمادي فاتح جداً مريح للعين */
     .stApp {
+        background-color: #f8f9fa !important;
         background-image: none !important;
-        background: linear-gradient(45deg, #E0EAFC, #CFDEF3) !important;
-        background-attachment: fixed !important;
     }
-    /* إخفاء شريط العنوان العلوي الخاص بستريمليت */
-    header, [data-testid="stHeader"] { 
+
+    /* 2. إخفاء شريط العنوان والعناصر غير الضرورية */
+    header, [data-testid="stHeader"] {
         visibility: hidden;
         display: none;
     }
-    /* تحسين شكل الحاوية الرئيسية */
+    footer {visibility: hidden;}
+
+    /* 3. حاوية المحتوى: جعلها كأنها ورقة بيضاء نظيفة بظل ناعم */
     [data-testid="stAppViewBlockContainer"] {
-        background-color: rgba(255, 255, 255, 0.9);
-        border-radius: 20px;
-        padding: 30px !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        background-color: #ffffff !important;
+        border-radius: 20px !important;
+        padding: 40px !important;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05) !important;
+        margin-top: 30px !important;
+        max-width: 750px !important;
+    }
+
+    /* 4. تنسيق أزرار الرفع والمعالجة (لون أزرق داكن احترافي) */
+    .stButton>button {
+        background-color: #2c3e50 !important;
+        color: white !important;
+        border-radius: 12px !important;
+        border: none !important;
+        padding: 12px 24px !important;
+        font-weight: bold !important;
+        width: 100% !important;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton>button:hover {
+        background-color: #34495e !important;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+    }
+
+    /* 5. تنسيق النصوص */
+    h1, h2, h3, p {
+        color: #2c3e50 !important;
+        text-align: center;
+    }
+
+    /* تحسين شكل منطقة رفع الملفات */
+    [data-testid="stFileUploader"] {
+        border: 2px dashed #bdc3c7 !important;
+        border-radius: 15px !important;
+        padding: 10px !important;
     }
     </style>
     """, unsafe_allow_html=True)
+
+# ... باقي كودك الخاص بمعالجة الـ PDF هنا ...
 import tabula
 import pandas as pd
 import io
