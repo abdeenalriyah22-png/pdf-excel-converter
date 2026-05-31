@@ -1,68 +1,59 @@
 import streamlit as st
 import streamlit as st
 
-import streamlit as st
-
-# كود التنسيق الاحترافي (ضع هذا الكود في أعلى ملف main.py)
+# كود التنسيق الداكن لجعل النصوص البيضاء واضحة جداً
 st.markdown("""
     <style>
-    /* 1. الخلفية الأساسية: لون رمادي فاتح جداً مريح للعين */
+    /* 1. خلفية داكنة فخمة للموقع بالكامل */
     .stApp {
-        background-color: #f3f2fa !important;
+        background-color: #0e1117 !important;
         background-image: none !important;
     }
 
-    /* 2. إخفاء شريط العنوان والعناصر غير الضرورية */
+    /* 2. إخفاء العناصر العلوية */
     header, [data-testid="stHeader"] {
         visibility: hidden;
         display: none;
     }
-    footer {visibility: hidden;}
 
-    /* 3. حاوية المحتوى: جعلها كأنها ورقة بيضاء نظيفة بظل ناعم */
+    /* 3. حاوية المحتوى: بلون رمادي داكن لتمييزها عن الخلفية */
     [data-testid="stAppViewBlockContainer"] {
-        background-color: #ffffff !important;
+        background-color: #161b22 !important;
         border-radius: 20px !important;
-        padding: 40px !important;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.05) !important;
-        margin-top: 30px !important;
-        max-width: 750px !important;
+        padding: 30px !important;
+        border: 1px solid #30363d !important;
+        margin-top: 20px !important;
     }
 
-    /* 4. تنسيق أزرار الرفع والمعالجة (لون أزرق داكن احترافي) */
+    /* 4. إجبار كافة النصوص على الظهور باللون الأبيض الواضح */
+    h1, h2, h3, p, span, label {
+        color: #ffffff !important;
+    }
+
+    /* 5. تحسين شكل صندوق رفع الملفات */
+    [data-testid="stFileUploader"] {
+        background-color: #0d1117 !important;
+        border: 2px dashed #30363d !important;
+        border-radius: 15px !important;
+        padding: 20px !important;
+    }
+
+    /* 6. تنسيق الزر ليكون بلون مميز (أخضر إكسل أو أزرق) */
     .stButton>button {
-        background-color: #2c3e50 !important;
+        background-color: #238636 !important; /* لون أخضر احترافي */
         color: white !important;
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         border: none !important;
-        padding: 12px 24px !important;
-        font-weight: bold !important;
+        font-size: 18px !important;
+        height: 50px !important;
         width: 100% !important;
-        transition: all 0.3s ease;
     }
     
-    .stButton>button:hover {
-        background-color: #34495e !important;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
-    }
-
-    /* 5. تنسيق النصوص */
-    h1, h2, h3, p {
-        color: #2c3e50 !important;
-        text-align: center;
-    }
-
-    /* تحسين شكل منطقة رفع الملفات */
-    [data-testid="stFileUploader"] {
-        border: 2px dashed #bdc3c7 !important;
-        border-radius: 15px !important;
-        padding: 10px !important;
-    }
+    /* 7. إخفاء أي تذييل أو قوائم */
+    footer {visibility: hidden;}
+    #MainMenu {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
-
-# ... باقي كودك الخاص بمعالجة الـ PDF هنا ...
 import tabula
 import pandas as pd
 import io
