@@ -1,4 +1,29 @@
 import streamlit as st
+import streamlit as st
+
+# أضف هذا الجزء لتغيير الخلفية وإخفاء الهيدر
+st.markdown("""
+    <style>
+    /* إلغاء صورة الخلفية الحالية ووضع تدرج لوني هادئ */
+    .stApp {
+        background-image: none !important;
+        background: linear-gradient(45deg, #E0EAFC, #CFDEF3) !important;
+        background-attachment: fixed !important;
+    }
+    /* إخفاء شريط العنوان العلوي الخاص بستريمليت */
+    header, [data-testid="stHeader"] { 
+        visibility: hidden;
+        display: none;
+    }
+    /* تحسين شكل الحاوية الرئيسية */
+    [data-testid="stAppViewBlockContainer"] {
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 20px;
+        padding: 30px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    </style>
+    """, unsafe_allow_html=True)
 import tabula
 import pandas as pd
 import io
