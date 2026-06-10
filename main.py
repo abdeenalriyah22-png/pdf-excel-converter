@@ -16,8 +16,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. دمج كود جوجل أدسنس التلقائي (Auto Ads) في الخلفية ---
+# --- 2. دمج كود جوجل أدسنس والتحقق عبر العلامة الوصفية (Meta Tag) في الخلفية ---
 components.html("""
+<meta name="google-adsense-account" content="ca-pub-1091631464795781">
+
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1091631464795781"
      crossorigin="anonymous"></script>
 """, height=0, width=0)
@@ -28,8 +30,8 @@ def apply_neon_style():
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-    /* استدعاء خط كايرو الاحترافي داخل التاق الصحيح */
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+    /* استدعاء خط كايرو الاحترافي داخل التاق الصحيح وبدون تداخل */
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap');
     
     /* تطبيق الخط والاتجاهات على الموقع بالكامل */
     html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label {
@@ -52,7 +54,7 @@ def apply_neon_style():
 
     /* حاوية المحتوى الرئيسية */
     [data-testid="stAppViewBlockContainer"] {
-        padding: 2rem 5rem 8rem 5rem; /* ترك مساحة في الأسفل للإعلان والتذييل */
+        padding: 2rem 5rem 8rem 5rem;
     }
 
     /* تصميم التبويبات العلوية الحديثة (Tabs) */
@@ -344,12 +346,12 @@ components.html("""
     <ins class="adsbygoogle"
          style="display:block; min-width:300px; max-width:970px; width:100%; height:90px; margin:auto;"
          data-ad-client="ca-pub-1091631464795781"
-         data-ad-slot="auto"
+         data-ad-slot="8159670732"
          data-ad-format="auto"
          data-full-width-responsive="true"></ins>
     <script>
          (adsbygoogle = window.adsbygoogle || []).push({});
-</script>
+    </script>
 </div>
 """, height=110)
 
