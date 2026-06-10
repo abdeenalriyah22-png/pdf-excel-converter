@@ -15,72 +15,82 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. ستايل احترافي (CSS) لحل مشاكل الألوان ووضوح العناصر ---
-def apply_custom_style():
+# --- 2. ستايل النيون المتطور والأيقونات المتحركة (CSS) ---
+def apply_neon_style():
     st.markdown("""
-    <style>
-    /* الخطوط واتجاه الصفحة */
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap');
     
+    <style>
+    /* التنسيق العام والخطوط */
     html, body, [class*="st-emotion-cache"] {
         font-family: 'Cairo', sans-serif;
         direction: rtl;
         text-align: right;
     }
 
-    /* الخلفية العامة للموقع */
+    /* خلفية الفضاء الداكن الفخمة */
     .stApp {
-        background-color: #0d1117;
+        background: radial-gradient(circle at center, #111723 0%, #07090e 100%) !important;
         color: #e6edf3;
     }
 
-    /* إخفاء الهيدر الافتراضي */
+    /* إخفاء العناصر الافتراضية للمنصة */
     header, [data-testid="stHeader"] {
         visibility: hidden;
         display: none;
     }
 
-    /* حاوية المحتوى الرئيسية */
+    /* حاوية المحتوى الرئيسية وتأثير التوهج الخلفي */
     [data-testid="stAppViewBlockContainer"] {
         padding: 2rem 5rem;
     }
 
-    /* تصميم البطاقات (Tabs) */
+    /* تصميم التبويبات العلوية الحديثة (Tabs) */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
-        background-color: transparent;
+        gap: 15px;
+        background-color: rgba(22, 27, 34, 0.5);
+        padding: 8px;
+        border-radius: 12px;
+        border: 1px solid #21262d;
     }
 
     .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        background-color: #161b22;
-        border-radius: 10px 10px 0 0;
+        height: 48px;
+        background-color: transparent;
+        border-radius: 8px;
         color: #8b949e;
-        border: 1px solid #30363d;
-        padding: 0 20px;
+        border: none;
+        padding: 0 25px;
+        font-weight: bold;
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
 
     .stTabs [aria-selected="true"] {
-        background-color: #1f6feb !important;
+        background: linear-gradient(135deg, #1f6feb 0%, #0d44a5 100%) !important;
         color: white !important;
-        border-color: #58a6ff !important;
+        box-shadow: 0 0 15px rgba(31, 111, 235, 0.6);
+        transform: scale(1.02);
     }
 
-    /* 🔥 تجميل صناديق الرفع وإجبار النصوص على الوضوح 🔥 */
+    /* 💎 صناديق رفع الملفات النيونية المتحركة 💎 */
     [data-testid="stFileUploader"] {
-        background-color: #161b22 !important;
-        border: 2px dashed #30363d !important;
-        border-radius: 15px;
-        padding: 20px;
-        transition: 0.3s;
+        background-color: rgba(22, 27, 34, 0.7) !important;
+        border: 2px dashed #21262d !important;
+        border-radius: 20px !important;
+        padding: 30px !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        transition: all 0.4s ease;
     }
     
     [data-testid="stFileUploader"]:hover {
-        border-color: #58a6ff;
-        background-color: #1c2128;
+        border-color: #58a6ff !important;
+        background-color: rgba(28, 33, 40, 0.9) !important;
+        box-shadow: 0 0 25px rgba(88, 166, 255, 0.25);
+        transform: translateY(-4px);
     }
 
-    /* إيضاح النصوص الداخلية لصندوق رفع الملفات والمستطيلات */
+    /* إيضاح نصوص صناديق الرفع */
     [data-testid="stFileUploader"] section *, 
     [data-testid="stFileUploader"] div, 
     [data-testid="stFileUploader"] span, 
@@ -88,173 +98,198 @@ def apply_custom_style():
         color: #ffffff !important;
     }
 
-    /* 🔥 تلوين علامة الـ X (حذف الملف الخاطئ) باللون الأحمر الواضح 🔥 */
-    [data-testid="stFileUploader"] button[aria-label="Remove file"],
-    [data-testid="stFileUploader"] button[class*="st-"] svg {
+    /* علامة الـ X لحذف الملف الخاطئ بتأثير نيون أحمر */
+    [data-testid="stFileUploader"] button[aria-label="Remove file"] {
+        background-color: rgba(255, 75, 75, 0.15) !important;
+        border: 1px solid rgba(255, 75, 75, 0.4) !important;
+        transition: all 0.3s ease;
+    }
+    [data-testid="stFileUploader"] button[aria-label="Remove file"]:hover {
+        background-color: #ff4b4b !important;
+        box-shadow: 0 0 12px #ff4b4b;
+        transform: rotate(90deg);
+    }
+    [data-testid="stFileUploader"] button[aria-label="Remove file"] svg {
         fill: #ff4b4b !important;
-        color: #ff4b4b !important;
+    }
+    [data-testid="stFileUploader"] button[aria-label="Remove file"]:hover svg {
+        fill: #ffffff !important;
+    }
+
+    /* ⚡ تصميم الأيقونات المتحركة المخصصة ⚡ */
+    .icon-container {
+        font-size: 55px;
+        margin-bottom: 15px;
+        transition: all 0.4s ease;
+        display: inline-block;
     }
     
-    [data-testid="stFileUploader"] button {
-        background-color: rgba(255, 75, 75, 0.1) !important;
-        border-radius: 50% !important;
+    /* حركة النبض والارتفاع عند تمرير الماوس */
+    .excel-icon { color: #2ea043; text-shadow: 0 0 20px rgba(46, 160, 67, 0.4); }
+    .ocr-icon { color: #58a6ff; text-shadow: 0 0 20px rgba(88, 166, 255, 0.4); }
+    
+    .custom-card:hover .excel-icon {
+        transform: scale(1.15) translateY(-5px);
+        filter: drop-shadow(0 0 15px #2ea043);
+    }
+    .custom-card:hover .ocr-icon {
+        transform: scale(1.15) rotate(10deg);
+        filter: drop-shadow(0 0 15px #58a6ff);
     }
 
-    /* العناوين */
-    h1, h2, h3 {
-        color: #58a6ff !important;
-        font-weight: 900;
-        text-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
+    /* بطاقة العرض الداخلي الاحترافية */
+    .custom-card {
+        background: linear-gradient(145deg, #161b22 0%, #0f1319 100%);
+        border: 1px solid #30363d;
+        border-radius: 16px;
+        padding: 25px;
+        text-align: center;
+        margin-bottom: 20px;
+        transition: 0.3s;
+    }
+    .custom-card:hover {
+        border-color: #444c56;
     }
 
-    /* الأزرار الرئيسية */
+    /* العناوين المتوهجة */
+    h1 {
+        color: #ffffff !important;
+        font-weight: 900 !important;
+        background: linear-gradient(to right, #ffffff, #58a6ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* الأزرار الكبيرة وتأثير الحركة عند التمرير */
     .stButton>button {
         background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important;
         color: white !important;
         border: none !important;
-        border-radius: 8px !important;
-        padding: 0.5rem 2rem !important;
+        border-radius: 12px !important;
+        padding: 0.7rem 2rem !important;
         font-weight: bold !important;
+        font-size: 16px !important;
         width: 100%;
-        transition: 0.3s;
+        box-shadow: 0 4px 12px rgba(46, 160, 67, 0.2);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     
     .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(46, 160, 67, 0.4);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(46, 160, 67, 0.5);
     }
 
-    /* زر التحميل */
+    /* زر التحميل الأزرق المتوهج */
     [data-testid="stDownloadButton"] button {
         background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%) !important;
         color: white !important;
-        border-radius: 8px !important;
-        width: 100%;
+        border: none !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 12px rgba(31, 111, 235, 0.2);
+        transition: all 0.3s ease;
+    }
+    [data-testid="stDownloadButton"] button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(31, 111, 235, 0.5);
     }
 
-    /* تعديل صندوق النصوص (Text Area) ليكون واضح جداً */
+    /* تجميل مربع النص المستخرج */
     .stTextArea textarea {
-        background-color: #161b22 !important;
-        color: #ffffff !important;
+        background-color: #0d1117 !important;
+        color: #e6edf3 !important;
         border: 1px solid #30363d !important;
+        border-radius: 12px !important;
     }
 
-    /* التذييل الفخم */
+    /* التذييل الثابت والسفلي الفخم */
     .footer {
         position: fixed;
         bottom: 0;
         left: 0;
         width: 100%;
-        background-color: #161b22;
+        background-color: rgba(22, 27, 34, 0.9);
+        backdrop-filter: blur(8px);
         color: #8b949e;
         text-align: center;
-        padding: 10px;
+        padding: 12px;
         border-top: 1px solid #30363d;
         font-size: 14px;
         z-index: 999;
     }
 
-    /* إخفاء القائمة المزعجة */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-apply_custom_style()
+apply_neon_style()
 
 # --- 3. واجهة البرنامج الرئيسية ---
 
-# الهيدر
-col1, col2 = st.columns([3, 1])
-with col1:
-    st.markdown("<h1>📊 المحاسب الذكي <span style='font-size:20px; color:#8b949e;'>النسخة الاحترافية</span></h1>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:18px; color:#c9d1d9;'>حوّل مستنداتك الورقية إلى بيانات رقمية بدقة متناهية</p>", unsafe_allow_html=True)
+# الرأسية والتصميم العلوي
+st.markdown("""
+<div style='text-align: right; margin-bottom: 10px;'>
+    <h1>📊 المحاسب الذكي <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span></h1>
+    <p style='font-size:16px; color:#8b949e; margin-top:-10px;'>النظام السحابي المطور لمعالجة الجداول والبيانات ذكياً</p>
+</div>
+""", unsafe_allow_html=True)
 
-st.markdown("---")
+st.markdown("<br>", unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["📑 تحويل PDF إلى Excel", "🔍 استخراج النصوص (OCR)"])
+tab1, tab2 = st.tabs(["📊 تحويل PDF إلى جداول Excel", "🔍 استخراج النصوص الذكي (OCR)"])
 
-# --- التبويب الأول: PDF to Excel ---
+# --- التبويب الأول: تحويل الجداول لـ Excel ---
 with tab1:
-    st.markdown("### 📥 رفع ملفات الـ PDF")
-    pdf_files = st.file_uploader("يمكنك رفع عدة ملفات معاً", type=["pdf"], key="pdf_main", accept_multiple_files=True)
+    st.markdown("""
+    <div class="custom-card">
+        <div class="icon-container excel-icon"><i class="fa-solid fa-file-excel fa-beat-hover"></i></div>
+        <h3 style='margin:0; color:#ffffff;'>مستخرج جداول البيانات</h3>
+        <p style='font-size:14px; color:#8b949e; margin:5px 0;'>ارفع ملفاتك لتحويل أي جدول صامت داخل الـ PDF إلى ملف إكسيل منسق تلقائياً</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    pdf_files = st.file_uploader("قم بسحب وإفلات ملفات الـ PDF الخاصة بالجداول هنا", type=["pdf"], key="pdf_main", accept_multiple_files=True)
     
     if pdf_files:
         for uploaded_pdf in pdf_files:
+            st.write("")
             with st.container():
-                st.info(f"📁 معالجة ملف: {uploaded_pdf.name}")
-                if st.button(f"بدأ التحويل لـ {uploaded_pdf.name}"):
+                st.info(f"📁 ملف قيد التحضير: {uploaded_pdf.name}")
+                if st.button(f"بدأ تحويل وجدولة: {uploaded_pdf.name}"):
                     try:
-                        with st.spinner('جاري تحليل الجداول...'):
+                        with st.spinner('جاري تفكيك الجداول وهيكلتها...'):
                             dfs = tabula.read_pdf(uploaded_pdf, pages='all', multiple_tables=True, lattice=True)
                             
                             if dfs:
                                 output = io.BytesIO()
                                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                                     workbook = writer.book
-                                    header_fmt = workbook.add_format({
-                                        'bold': True, 'bg_color': '#1f6feb', 
-                                        'font_color': 'white', 'border': 1, 'align': 'center'
-                                    })
-                                    
                                     current_row = 0
-                                    for i, df in enumerate(dfs):
+                                    for df in dfs:
                                         df = df.fillna('').replace([float('inf'), float('-inf')], 0)
                                         df.to_excel(writer, index=False, startrow=current_row, sheet_name='البيانات المستخرجة')
                                         current_row += len(df) + 2
                                     
-                                st.success("🚀 تمت المعالجة بنجاح!")
+                                st.success("🚀 اكتمل التحويل بنجاح وبأعلى دقة!")
                                 st.download_button(
-                                    label="📥 تحميل ملف Excel الجاهز",
+                                    label=f"📥 اضغط هنا لتحميل ملف Excel المستخرج",
                                     data=output.getvalue(),
                                     file_name=f"Excel_{uploaded_pdf.name.replace('.pdf', '')}.xlsx",
                                     mime="application/vnd.ms-excel"
                                 )
                             else:
-                                st.warning("⚠️ لم يتم العثور على جداول واضحة في هذا الملف.")
+                                st.warning("⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.")
                     except Exception as e:
-                        st.error(f"حدث خطأ: {str(e)}")
+                        st.error(f"حدث خطأ أثناء المعالجة: {str(e)}")
 
-# --- التبويب الثاني: OCR ---
+# --- التبويب الثاني: استخراج النصوص OCR ---
 with tab2:
-    st.markdown("### 🔍 استخراج نصوص الصور والـ PDF")
-    ocr_file = st.file_uploader("ارفع صورة (JPG, PNG) أو ملف PDF", type=["jpg", "png", "jpeg", "pdf"], key="ocr_main")
-    
-    if ocr_file:
-        if st.button("🚀 ابدأ استخراج النصوص الآن"):
-            full_text = ""
-            try:
-                with st.spinner('جاري قراءة النصوص بالذكاء الاصطناعي...'):
-                    if ocr_file.type == "application/pdf":
-                        doc = fitz.open(stream=ocr_file.read(), filetype="pdf")
-                        for page in doc:
-                            text = page.get_text()
-                            if text.strip():
-                                full_text += text + "\n"
-                            else:
-                                pix = page.get_pixmap()
-                                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-                                full_text += pytesseract.image_to_string(img, lang='ara+eng') + "\n"
-                    else:
-                        img = Image.open(ocr_file)
-                        full_text = pytesseract.image_to_string(img, lang='ara+eng')
-
-                if full_text.strip():
-                    st.markdown("#### ✅ النتائج المستخرجة:")
-                    st.text_area("", value=full_text, height=300)
-                    st.download_button(
-                        label="📥 حفظ النص كملف TXT",
-                        data=full_text,
-                        file_name="extracted_text.txt"
-                    )
-                else:
-                    st.warning("لم نتمكن من العثور على نصوص واضحة.")
-            except Exception as e:
-                st.error(f"خطأ في المعالجة: {e}")
-
-# التذييل (Footer)
-st.markdown("""
-    <div class="footer">
-        المحاسب الذكي Pro | الفصل في الذمة.. الوصل في الأمانة | 2026 ©
+    st.markdown("""
+    <div class="custom-card">
+        <div class="icon-container ocr-icon"><i class="fa-solid fa-eye fa-pulse-hover"></i></div>
+        <h3 style='margin:0; color:#ffffff;'>قارئ النصوص والماسح الضوئي</h3>
+        <p style='font-size:14px; color:#8b949e; margin:5px 0;'>استخراج النصوص العربية والإنجليزية بدقة كاملة من المستندات المصورة والـ PDF الممسوح ضوئياً</p>
     </div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+    
+    ocr_file = st.
