@@ -19,12 +19,14 @@ st.set_page_config(
 def apply_neon_style():
     st.markdown("""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap');
     
     <style>
-    /* التنسيق العام والخطوط */
-    html, body, [class*="st-emotion-cache"] {
-        font-family: 'Cairo', sans-serif;
+    /* استدعاء خط كايرو الاحترافي داخل التاق الصحيح */
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+    
+    /* تطبيق الخط والاتجاهات على الموقع بالكامل */
+    html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label {
+        font-family: 'Cairo', sans-serif !important;
         direction: rtl;
         text-align: right;
     }
