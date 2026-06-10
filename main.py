@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. ستايل احترافي (CSS) بدون صور خلفية ---
+# --- 2. ستايل احترافي (CSS) لحل مشاكل الألوان ووضوح العناصر ---
 def apply_custom_style():
     st.markdown("""
     <style>
@@ -45,7 +45,7 @@ def apply_custom_style():
         padding: 2rem 5rem;
     }
 
-    /* تصميم البطاقات (Cards) */
+    /* تصميم البطاقات (Tabs) */
     .stTabs [data-baseweb="tab-list"] {
         gap: 10px;
         background-color: transparent;
@@ -66,10 +66,10 @@ def apply_custom_style():
         border-color: #58a6ff !important;
     }
 
-    /* تجميل صناديق الرفع */
+    /* 🔥 تجميل صناديق الرفع وإجبار النصوص على الوضوح 🔥 */
     [data-testid="stFileUploader"] {
-        background-color: #161b22;
-        border: 2px dashed #30363d;
+        background-color: #161b22 !important;
+        border: 2px dashed #30363d !important;
         border-radius: 15px;
         padding: 20px;
         transition: 0.3s;
@@ -80,14 +80,34 @@ def apply_custom_style():
         background-color: #1c2128;
     }
 
+    /* إيضاح النصوص الداخلية لصندوق رفع الملفات والمستطيلات */
+    [data-testid="stFileUploader"] section *, 
+    [data-testid="stFileUploader"] div, 
+    [data-testid="stFileUploader"] span, 
+    [data-testid="stFileUploader"] p {
+        color: #ffffff !important;
+    }
+
+    /* 🔥 تلوين علامة الـ X (حذف الملف الخاطئ) باللون الأحمر الواضح 🔥 */
+    [data-testid="stFileUploader"] button[aria-label="Remove file"],
+    [data-testid="stFileUploader"] button[class*="st-"] svg {
+        fill: #ff4b4b !important;
+        color: #ff4b4b !important;
+    }
+    
+    [data-testid="stFileUploader"] button {
+        background-color: rgba(255, 75, 75, 0.1) !important;
+        border-radius: 50% !important;
+    }
+
     /* العناوين */
-    h1 {
-        color: #58a6ff;
+    h1, h2, h3 {
+        color: #58a6ff !important;
         font-weight: 900;
         text-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
     }
 
-    /* الأزرار */
+    /* الأزرار الرئيسية */
     .stButton>button {
         background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important;
         color: white !important;
@@ -112,6 +132,13 @@ def apply_custom_style():
         width: 100%;
     }
 
+    /* تعديل صندوق النصوص (Text Area) ليكون واضح جداً */
+    .stTextArea textarea {
+        background-color: #161b22 !important;
+        color: #ffffff !important;
+        border: 1px solid #30363d !important;
+    }
+
     /* التذييل الفخم */
     .footer {
         position: fixed;
@@ -124,6 +151,7 @@ def apply_custom_style():
         padding: 10px;
         border-top: 1px solid #30363d;
         font-size: 14px;
+        z-index: 999;
     }
 
     /* إخفاء القائمة المزعجة */
@@ -158,7 +186,6 @@ with tab1:
                 if st.button(f"بدأ التحويل لـ {uploaded_pdf.name}"):
                     try:
                         with st.spinner('جاري تحليل الجداول...'):
-                            # قراءة الجداول باستخدام tabula
                             dfs = tabula.read_pdf(uploaded_pdf, pages='all', multiple_tables=True, lattice=True)
                             
                             if dfs:
@@ -172,7 +199,6 @@ with tab1:
                                     
                                     current_row = 0
                                     for i, df in enumerate(dfs):
-                                        # تنظيف البيانات وسد الأقواس بشكل صحيح هنا
                                         df = df.fillna('').replace([float('inf'), float('-inf')], 0)
                                         df.to_excel(writer, index=False, startrow=current_row, sheet_name='البيانات المستخرجة')
                                         current_row += len(df) + 2
@@ -200,19 +226,16 @@ with tab2:
             try:
                 with st.spinner('جاري قراءة النصوص بالذكاء الاصطناعي...'):
                     if ocr_file.type == "application/pdf":
-                        # معالجة PDF نصي أو صوري
                         doc = fitz.open(stream=ocr_file.read(), filetype="pdf")
                         for page in doc:
                             text = page.get_text()
                             if text.strip():
                                 full_text += text + "\n"
                             else:
-                                # إذا كانت الصفحة صورة
                                 pix = page.get_pixmap()
                                 img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
                                 full_text += pytesseract.image_to_string(img, lang='ara+eng') + "\n"
                     else:
-                        # معالجة صورة مباشرة
                         img = Image.open(ocr_file)
                         full_text = pytesseract.image_to_string(img, lang='ara+eng')
 
