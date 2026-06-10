@@ -20,7 +20,7 @@ def apply_custom_style():
     st.markdown("""
     <style>
     /* الخطوط واتجاه الصفحة */
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap');
     
     html, body, [class*="st-emotion-cache"] {
         font-family: 'Cairo', sans-serif;
@@ -172,5 +172,66 @@ with tab1:
                                     
                                     current_row = 0
                                     for i, df in enumerate(dfs):
-                                        # تنظيف البيانات
-                                        df = df.fillna('').replace([float('inf'), float
+                                        # تنظيف البيانات وسد الأقواس بشكل صحيح هنا
+                                        df = df.fillna('').replace([float('inf'), float('-inf')], 0)
+                                        df.to_excel(writer, index=False, startrow=current_row, sheet_name='البيانات المستخرجة')
+                                        current_row += len(df) + 2
+                                    
+                                st.success("🚀 تمت المعالجة بنجاح!")
+                                st.download_button(
+                                    label="📥 تحميل ملف Excel الجاهز",
+                                    data=output.getvalue(),
+                                    file_name=f"Excel_{uploaded_pdf.name.replace('.pdf', '')}.xlsx",
+                                    mime="application/vnd.ms-excel"
+                                )
+                            else:
+                                st.warning("⚠️ لم يتم العثور على جداول واضحة في هذا الملف.")
+                    except Exception as e:
+                        st.error(f"حدث خطأ: {str(e)}")
+
+# --- التبويب الثاني: OCR ---
+with tab2:
+    st.markdown("### 🔍 استخراج نصوص الصور والـ PDF")
+    ocr_file = st.file_uploader("ارفع صورة (JPG, PNG) أو ملف PDF", type=["jpg", "png", "jpeg", "pdf"], key="ocr_main")
+    
+    if ocr_file:
+        if st.button("🚀 ابدأ استخراج النصوص الآن"):
+            full_text = ""
+            try:
+                with st.spinner('جاري قراءة النصوص بالذكاء الاصطناعي...'):
+                    if ocr_file.type == "application/pdf":
+                        # معالجة PDF نصي أو صوري
+                        doc = fitz.open(stream=ocr_file.read(), filetype="pdf")
+                        for page in doc:
+                            text = page.get_text()
+                            if text.strip():
+                                full_text += text + "\n"
+                            else:
+                                # إذا كانت الصفحة صورة
+                                pix = page.get_pixmap()
+                                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                                full_text += pytesseract.image_to_string(img, lang='ara+eng') + "\n"
+                    else:
+                        # معالجة صورة مباشرة
+                        img = Image.open(ocr_file)
+                        full_text = pytesseract.image_to_string(img, lang='ara+eng')
+
+                if full_text.strip():
+                    st.markdown("#### ✅ النتائج المستخرجة:")
+                    st.text_area("", value=full_text, height=300)
+                    st.download_button(
+                        label="📥 حفظ النص كملف TXT",
+                        data=full_text,
+                        file_name="extracted_text.txt"
+                    )
+                else:
+                    st.warning("لم نتمكن من العثور على نصوص واضحة.")
+            except Exception as e:
+                st.error(f"خطأ في المعالجة: {e}")
+
+# التذييل (Footer)
+st.markdown("""
+    <div class="footer">
+        المحاسب الذكي Pro | الفصل في الذمة.. الوصل في الأمانة | 2026 ©
+    </div>
+""", unsafe_allow_html=True)
