@@ -1,172 +1,176 @@
 import streamlit as st
-import streamlit as st
-
-# كود التنسيق الداكن لجعل النصوص البيضاء واضحة جداً
-st.markdown("""
-    <style>
-    /* 1. خلفية داكنة فخمة للموقع بالكامل */
-    .stApp {
-        background-color: #0e1117 !important;
-        background-image: none !important;
-    }
-
-    /* 2. إخفاء العناصر العلوية */
-    header, [data-testid="stHeader"] {
-        visibility: hidden;
-        display: none;
-    }
-
-    /* 3. حاوية المحتوى: بلون رمادي داكن لتمييزها عن الخلفية */
-    [data-testid="stAppViewBlockContainer"] {
-        background-color: #161b22 !important;
-        border-radius: 20px !important;
-        padding: 30px !important;
-        border: 1px solid #30363d !important;
-        margin-top: 20px !important;
-    }
-
-    /* 4. إجبار كافة النصوص على الظهور باللون الأبيض الواضح */
-    h1, h2, h3, p, span, label {
-        color: #ffffff !important;
-    }
-
-    /* 5. تحسين شكل صندوق رفع الملفات */
-    [data-testid="stFileUploader"] {
-        background-color: #0d1117 !important;
-        border: 2px dashed #30363d !important;
-        border-radius: 15px !important;
-        padding: 20px !important;
-    }
-
-    /* 6. تنسيق الزر ليكون بلون مميز (أخضر إكسل أو أزرق) */
-    .stButton>button {
-        background-color: #238636 !important; /* لون أخضر احترافي */
-        color: white !important;
-        border-radius: 10px !important;
-        border: none !important;
-        font-size: 18px !important;
-        height: 50px !important;
-        width: 100% !important;
-    }
-    
-    /* 7. إخفاء أي تذييل أو قوائم */
-    footer {visibility: hidden;}
-    #MainMenu {visibility: hidden;}
-    </style>
-    """, unsafe_allow_html=True)
 import tabula
 import pandas as pd
 import io
 import base64
 from PIL import Image
 import pytesseract
-import shutil
-import fitz  # استيراد PyMuPDF
+import fitz  # PyMuPDF
 
-# 1. إعدادات الصفحة
-st.set_page_config(page_title="المحاسب الذكي - عابدين", layout="wide")
+# --- 1. إعدادات الصفحة الأساسية ---
+st.set_page_config(
+    page_title="المحاسب الذكي Pro",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-# 2. وظائف التنسيق
-def get_base64(bin_file):
-    with open(bin_file, 'rb') as f:
-        return base64.b64encode(f.read()).decode()
+# --- 2. ستايل احترافي (CSS) بدون صور خلفية ---
+def apply_custom_style():
+    st.markdown("""
+    <style>
+    /* الخطوط واتجاه الصفحة */
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+    
+    html, body, [class*="st-emotion-cache"] {
+        font-family: 'Cairo', sans-serif;
+        direction: rtl;
+        text-align: right;
+    }
 
-def set_styled_interface(png_file):
-    try:
-        bin_str = get_base64(png_file)
-        st.markdown(f'''
-        <style>
-        .stApp {{
-            background-image: url("data:image/png;base64,{bin_str}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            direction: rtl;
-        }}
-        header[data-testid="stHeader"] {{ background-color: #FFD700 !important; }}
-        [data-testid="stFileUploader"] {{
-            background-color: rgba(255, 165, 0, 0.25) !important;
-            border: 2px dashed #FFA500 !important;
-            border-radius: 15px !important;
-            padding: 20px !important;
-        }}
-        div[data-baseweb="popover"], div[class*="st-emotion-cache-"] ul {{
-            background-color: #FFD700 !important;
-            border: 2px solid #000000 !important;
-        }}
-        div[data-testid="stMainMenu"] li {{ color: #000000 !important; font-weight: 800 !important; }}
-        .main .block-container {{
-            background-color: rgba(0, 0, 0, 0.6) !important;
-            padding: 40px !important;
-            border-radius: 30px !important;
-        }}
-        h1 {{ font-size: 60px !important; color: #FFFFFF !important; font-weight: 900 !important; text-align: right !important; }}
-        p, label {{ font-size: 28px !important; color: #FFFFFF !important; font-weight: 700 !important; text-align: right !important; }}
-        .stTabs [aria-selected="true"] {{ background-color: #FFD700 !important; color: #000000 !important; }}
-        .stTextArea textarea {{ background-color: rgba(255, 255, 255, 0.9) !important; color: #000000 !important; font-size: 20px !important; }}
-        </style>
-        ''', unsafe_allow_html=True)
-    except: pass
+    /* الخلفية العامة للموقع */
+    .stApp {
+        background-color: #0d1117;
+        color: #e6edf3;
+    }
 
-set_styled_interface('background.jpg')
+    /* إخفاء الهيدر الافتراضي */
+    header, [data-testid="stHeader"] {
+        visibility: hidden;
+        display: none;
+    }
 
-# 3. واجهة التطبيق
-st.markdown("<h1>📄 المحاسب الذكي</h1>", unsafe_allow_html=True)
-tab1, tab2 = st.tabs(["📊 جداول Excel", "🔍 استخراج نصوص"])
+    /* حاوية المحتوى الرئيسية */
+    [data-testid="stAppViewBlockContainer"] {
+        padding: 2rem 5rem;
+    }
 
+    /* تصميم البطاقات (Cards) */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 10px;
+        background-color: transparent;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        background-color: #161b22;
+        border-radius: 10px 10px 0 0;
+        color: #8b949e;
+        border: 1px solid #30363d;
+        padding: 0 20px;
+    }
+
+    .stTabs [aria-selected="true"] {
+        background-color: #1f6feb !important;
+        color: white !important;
+        border-color: #58a6ff !important;
+    }
+
+    /* تجميل صناديق الرفع */
+    [data-testid="stFileUploader"] {
+        background-color: #161b22;
+        border: 2px dashed #30363d;
+        border-radius: 15px;
+        padding: 20px;
+        transition: 0.3s;
+    }
+    
+    [data-testid="stFileUploader"]:hover {
+        border-color: #58a6ff;
+        background-color: #1c2128;
+    }
+
+    /* العناوين */
+    h1 {
+        color: #58a6ff;
+        font-weight: 900;
+        text-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
+    }
+
+    /* الأزرار */
+    .stButton>button {
+        background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 2rem !important;
+        font-weight: bold !important;
+        width: 100%;
+        transition: 0.3s;
+    }
+    
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(46, 160, 67, 0.4);
+    }
+
+    /* زر التحميل */
+    [data-testid="stDownloadButton"] button {
+        background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%) !important;
+        color: white !important;
+        border-radius: 8px !important;
+        width: 100%;
+    }
+
+    /* التذييل الفخم */
+    .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #161b22;
+        color: #8b949e;
+        text-align: center;
+        padding: 10px;
+        border-top: 1px solid #30363d;
+        font-size: 14px;
+    }
+
+    /* إخفاء القائمة المزعجة */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    </style>
+    """, unsafe_allow_html=True)
+
+apply_custom_style()
+
+# --- 3. واجهة البرنامج الرئيسية ---
+
+# الهيدر
+col1, col2 = st.columns([3, 1])
+with col1:
+    st.markdown("<h1>📊 المحاسب الذكي <span style='font-size:20px; color:#8b949e;'>النسخة الاحترافية</span></h1>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:18px; color:#c9d1d9;'>حوّل مستنداتك الورقية إلى بيانات رقمية بدقة متناهية</p>", unsafe_allow_html=True)
+
+st.markdown("---")
+
+tab1, tab2 = st.tabs(["📑 تحويل PDF إلى Excel", "🔍 استخراج النصوص (OCR)"])
+
+# --- التبويب الأول: PDF to Excel ---
 with tab1:
-    st.markdown("<p>تحويل PDF إلى جداول مرتبة</p>", unsafe_allow_html=True)
-    pdf_files = st.file_uploader("ارفع ملفات PDF للجداول", type=["pdf"], key="pdf_excel", accept_multiple_files=True)
+    st.markdown("### 📥 رفع ملفات الـ PDF")
+    pdf_files = st.file_uploader("يمكنك رفع عدة ملفات معاً", type=["pdf"], key="pdf_main", accept_multiple_files=True)
+    
     if pdf_files:
         for uploaded_pdf in pdf_files:
-            try:
-                with st.spinner(f'جاري المعالجة...'):
-                    dfs = tabula.read_pdf(uploaded_pdf, pages='all', multiple_tables=True, lattice=True)
-                    if dfs:
-                        output = io.BytesIO()
-                        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                            sheet_name = 'Data_Sheet'
-                            workbook = writer.book
-                            worksheet = workbook.add_worksheet(sheet_name)
-                            header_fmt = workbook.add_format({'bold': True, 'bg_color': '#FFD700', 'color': 'black', 'border': 1, 'align': 'center'})
-                            current_row = 0
-                            for df in dfs:
-                                df = df.replace([float('inf'), float('-inf')], 0).fillna('').loc[:, ~df.columns.str.contains('^Unnamed')]
-                                df = df.replace('', pd.NA).dropna(axis=1, how='all').fillna('')
-                                if df.empty: continue
-                                for col_num, value in enumerate(df.columns.values):
-                                    worksheet.write(current_row, col_num, value, header_fmt)
-                                for row_idx, row_data in enumerate(df.values):
-                                    for col_num, col_data in enumerate(row_data):
-                                        worksheet.write(current_row + row_idx + 1, col_num, col_data)
-                                current_row += len(df) + 3
-                        st.download_button(label=f"📥 تحميل إكسيل: {uploaded_pdf.name}", data=output.getvalue(), file_name=f"Excel_{uploaded_pdf.name.split('.')[0]}.xlsx")
-            except Exception as e: st.error(f"خطأ: {e}")
-
-with tab2:
-    st.markdown("<p>استخراج النصوص من الصور وملفات PDF</p>", unsafe_allow_html=True)
-    ocr_file = st.file_uploader("ارفع صورة أو ملف PDF للنصوص", type=["jpg", "png", "jpeg", "pdf"], key="ocr_up")
-    if ocr_file:
-        full_text = ""
-        if st.button("🚀 ابدأ الاستخراج"):
-            try:
-                with st.spinner('جاري التحليل...'):
-                    if ocr_file.type == "application/pdf":
-                        doc = fitz.open(stream=ocr_file.read(), filetype="pdf")
-                        for page in doc:
-                            text = page.get_text()
-                            if text.strip(): full_text += text + "\n"
-                            else:
-                                pix = page.get_pixmap()
-                                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-                                full_text += pytesseract.image_to_string(img, lang='ara+eng') + "\n"
-                    else:
-                        full_text = pytesseract.image_to_string(Image.open(ocr_file), lang='ara+eng')
-
-                    if full_text.strip():
-                        st.text_area("النص:", value=full_text, height=350)
-                        st.download_button(label="📥 تحميل النص TXT", data=full_text, file_name="extracted.txt")
-                    else: st.warning("لا يوجد نص واضح.")
-            except Exception as e: st.error(f"خطأ: {e}")
-
-st.markdown("<br><p style='text-align: center; font-size: 45px; color: white;'>الفصل في الذمة.. الوصل في الأمانة</p>", unsafe_allow_html=True)
+            with st.container():
+                st.info(f"📁 معالجة ملف: {uploaded_pdf.name}")
+                if st.button(f"بدأ التحويل لـ {uploaded_pdf.name}"):
+                    try:
+                        with st.spinner('جاري تحليل الجداول...'):
+                            # قراءة الجداول باستخدام tabula
+                            dfs = tabula.read_pdf(uploaded_pdf, pages='all', multiple_tables=True, lattice=True)
+                            
+                            if dfs:
+                                output = io.BytesIO()
+                                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                                    workbook = writer.book
+                                    header_fmt = workbook.add_format({
+                                        'bold': True, 'bg_color': '#1f6feb', 
+                                        'font_color': 'white', 'border': 1, 'align': 'center'
+                                    })
+                                    
+                                    current_row = 0
+                                    for i, df in enumerate(dfs):
+                                        # تنظيف البيانات
+                                        df = df.fillna('').replace([float('inf'), float
