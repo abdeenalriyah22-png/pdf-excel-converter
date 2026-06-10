@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import tabula
 import pandas as pd
 import io
@@ -15,7 +16,13 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. ستايل النيون المتطور والأيقونات المتحركة (CSS) ---
+# --- 2. دمج كود جوجل أدسنس التلقائي (Auto Ads) في الخلفية ---
+components.html("""
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1091631464795781"
+     crossorigin="anonymous"></script>
+""", height=0, width=0)
+
+# --- 3. ستايل النيون المتطور والأيقونات المتحركة (CSS) ---
 def apply_neon_style():
     st.markdown("""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -45,7 +52,7 @@ def apply_neon_style():
 
     /* حاوية المحتوى الرئيسية */
     [data-testid="stAppViewBlockContainer"] {
-        padding: 2rem 5rem;
+        padding: 2rem 5rem 8rem 5rem; /* ترك مساحة في الأسفل للإعلان والتذييل */
     }
 
     /* تصميم التبويبات العلوية الحديثة (Tabs) */
@@ -225,7 +232,7 @@ def apply_neon_style():
 
 apply_neon_style()
 
-# --- 3. واجهة البرنامج الرئيسية ---
+# --- 4. واجهة البرنامج الرئيسية ---
 
 # الرأسية والتصميم العلوي
 st.markdown("""
@@ -325,6 +332,26 @@ with tab2:
                     st.warning("نعتذر، لم نكتشف حروفاً أو نصوصاً مقروءة في هذا المستند.")
             except Exception as e:
                 st.error(f"حدث تداخل أو خطأ في الـ OCR: {e}")
+
+# --- 5. مساحة إعلانية مخصصة ومتجاوبة في أسفل المحتوى ---
+st.markdown("<br><br>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#8b949e; font-size:11px; letter-spacing: 2px;'>إعــلان جـوجـل الألي عـالي الـعـائد</p>", unsafe_allow_html=True)
+
+components.html("""
+<div style="text-align: center; width: 100%;">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1091631464795781"
+         crossorigin="anonymous"></script>
+    <ins class="adsbygoogle"
+         style="display:block; min-width:300px; max-width:970px; width:100%; height:90px; margin:auto;"
+         data-ad-client="ca-pub-1091631464795781"
+         data-ad-slot="auto"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</div>
+""", height=110)
 
 # التذييل الاحترافي الثابت في قاع الموقع
 st.markdown("""
