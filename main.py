@@ -24,11 +24,12 @@ components.html("""
      crossorigin="anonymous"></script>
 """, height=0, width=0)
 
-# --- 3. اختيار اللغة في أعلى الموقع ---
+# --- 3. اختيار اللغة في أعلى الموقع (تم رفعها وتكبيرها وتعديل تصميمها) ---
 selected_lang = st.selectbox(
     "🌐 Choose Language / اختر اللغة / زبان کا انتخاب کریں",
     ["العربية", "English", "اردو"],
-    index=0
+    index=0,
+    key="language_selector"
 )
 
 # --- 4. قاموس الترجمة للغات الثلاث ---
@@ -127,7 +128,7 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. ستايل النيون المتطور وتوجيه المحاذاة حسب اللغة (CSS) ---
+# --- 5. ستايل النيون المتطور وتوجيه المحاذاة وتخصيص صندوق اللغة (CSS) ---
 def apply_neon_style(direction, align):
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -153,6 +154,30 @@ def apply_neon_style(direction, align):
 
     [data-testid="stAppViewBlockContainer"] {{
         padding: 1rem 5rem 8rem 5rem;
+    }}
+
+    /* --- تخصيص وتكبير وتلوين خيار تحديد اللغة بالنيون الأزرق --- */
+    [data-testid="stSelectbox"] label p {{
+        font-size: 18px !important;
+        font-weight: bold !important;
+        color: #58a6ff !important;
+        text-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
+    }}
+    
+    [data-testid="stSelectbox"] div[data-baseweb="select"] {{
+        background-color: rgba(22, 27, 34, 0.8) !important;
+        border: 1px solid #30363d !important;
+        border-radius: 12px !important;
+    }}
+    
+    [data-testid="stSelectbox"] div[data-baseweb="select"]:hover {{
+        border-color: #58a6ff !important;
+        box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
+    }}
+
+    div[role="listbox"] {{
+        background-color: #161b22 !important;
+        border: 1px solid #30363d !important;
     }}
 
     .stTabs [data-baseweb="tab-list"] {{
@@ -415,7 +440,6 @@ with tab2:
 # --- 7. مساحة إعلانية مخصصة ومتجاوبة في أسفل المحتوى ---
 st.markdown("<br><br>", unsafe_allow_html=True)
 
-# أصلحنا تداخل علامات الاقتباس الثلاثية هنا عبر عزلها وحقن القيم مباشرة
 ads_code = """
 <div style="text-align: center; width: 100%;">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1091631464795781"
