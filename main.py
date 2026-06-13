@@ -89,7 +89,7 @@ translations = {
         "download_txt": "📥 Download text as TXT file",
         "ocr_result_header": "#### ✅ Extracted Text:",
         "opt1": "📋 Option 1:",
-        "opt2": "📥 Option 1:",
+        "opt2": "📥 Option 2:",
         "btn_copy": "📋 Copy Full Text",
         "copied": "✅ Copied Successfully!",
         "motto": "Separation of liability... connection in trust"
@@ -104,7 +104,7 @@ translations = {
         "card1_title": "ڈیٹا ٹیبل ایکسٹریکٹر",
         "card1_desc": "پی ڈی ایف کے اندر موجود کسی بھی پوشیدہ ٹیبل کو خودکار طور پر فارمیٹ شدہ ایکسل فائل میں تبدیل کرنے کے لیے اپنی فائلیں اپ لوڈ کریں",
         "card2_title": "ٹیکسٹ ریڈر اور اسكينر",
-        "card2_desc": "اسكين شدہ दस्तावेजات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
+        "card2_desc": "اسکین شدہ दस्तावेजات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
         "uploader_pdf": "اپنی پی ڈی ایف ٹیبل فائلیں یہاں ڈریگ اور ڈراپ کریں",
         "uploader_ocr": "انوائس/دستاویز کی تصویر (JPG, PNG) أو اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
         "btn_convert": "تبدیلی اور شیڈولنگ شروع کریں: ",
@@ -116,7 +116,7 @@ translations = {
         "warning_no_tables": "⚠️ اس فائل میں کوئی واضح عددی ٹیبل نہیں ملا۔",
         "warning_no_text": "معذرت، اس دستاویز میں کوئی پڑھنے کے قابل حروف یا متن نہیں ملا۔",
         "download_excel": "📥 نکالی گئی ایکسل فائل ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
-        "download_txt": "📥 متن کو TXT فائل کے طور پر ڈاؤن لوڈ کریں",
+        "download_txt": "📥 متن کو TXT فائل کے طور بر ڈاؤن لوڈ کریں",
         "ocr_result_header": "#### ✅ نکالا گیا متن:",
         "opt1": "📋 پہلا آپشن:",
         "opt2": "📥 دوسرا آپشن:",
@@ -202,10 +202,10 @@ def apply_neon_style(direction, align):
 
     /* === حل مشكلة تكرار كلمة Upload بداخل أزرار الرفع بدون لمس التصميم الأساسي === */
     [data-testid="stFileUploader"] button span span {{
-        display: none !important;
+        display: none !important;  /* إخفاء النص الخلفي المكرر من نظام ستريمليت */
     }}
     [data-testid="stFileUploader"] button span::after {{
-        content: "Upload" !important;
+        content: "Upload" !important; /* فرض ظهور كلمة واحدة فقط وبشكل نظيف وثابت */
         color: white !important;
     }}
 
@@ -392,18 +392,7 @@ with tab1:
                 if st.button(f"{lang['btn_convert']}{uploaded_pdf.name}"):
                     try:
                         with st.spinner(lang["status_loading"]):
-                            # الطريقة الشاملة والمحسنة لقراءة كافة أسطر الجداول وتفادي الاختصار
-                            dfs = tabula.read_pdf(
-                                uploaded_pdf, 
-                                pages='all', 
-                                multiple_tables=True, 
-                                stream=True, 
-                                guess=False
-                            )
-                            
-                            # إذا فشلت أو جاءت ناقصة، يتم الانتقال تلقائياً لنظام الشبكة Lattice الكاملة
-                            if not dfs or len(dfs) == 0 or (len(dfs) == 1 and dfs[0].empty):
-                                dfs = tabula.read_pdf(uploaded_pdf, pages='all', multiple_tables=True, lattice=True)
+                            dfs = tabula.read_pdf(uploaded_pdf, pages='all', multiple_tables=True, lattice=True)
                             
                             if dfs:
                                 output = io.BytesIO()
