@@ -1,64 +1,51 @@
 import streamlit as st
-import streamlit.components.v1 as components
+import tabula
+import pandas as pd
+import io
+from PIL import Image
+import pytesseract
+import fitz  # PyMuPDF
 
 # --- إعدادات الصفحة ---
-st.set_page_config(page_title="المحاسب الذكي Pro", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="المحاسب الذكي", layout="wide")
 
-# --- قاموس الترجمة ---
-translations = {
-    "العربية": {"dir": "rtl", "align": "right", "title": "📊 المحاسب الذكي Pro", "menu": "🛠️ الأدوات", "theme": "🌓 المظهر", "lang": "🌐 اللغة", "excel": "📊 تحويل PDF", "ocr": "🔍 OCR", "motto": "الفصل في الذمة.. الوصل في الأمانة"},
-    "English": {"dir": "ltr", "align": "left", "title": "📊 Smart Accountant Pro", "menu": "🛠️ Tools", "theme": "🌓 Theme", "lang": "🌐 Language", "excel": "📊 PDF to Excel", "ocr": "🔍 OCR", "motto": "Separation of liability... connection in trust"},
-    "اردو": {"dir": "rtl", "align": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "menu": "🛠️ ٹولز", "theme": "🌓 تھیم", "lang": "🌐 زبان", "excel": "📊 پی ڈی ایف ٹو ایکسل", "ocr": "🔍 OCR", "motto": "الفصل في الذمة.. الوصل في الأمانة"}
-}
+# --- الأدوات الأساسية ---
+st.title("📊 المحاسب الذكي")
+st.sidebar.title("🛠️ الأدوات")
 
-# --- القائمة الجانبية (اللغة في الأسفل) ---
-with st.sidebar:
-    st.markdown("## ⚙️ Control Panel")
-    theme_choice = st.radio("🌓 المظهر / Theme", ["Dark Neon 🌑", "Light ☀️"])
-    st.markdown("---")
-    current_tool = st.radio("🛠️ الأدوات / Tools", ["📊 تحويل PDF", "🔍 OCR", "📂 دمج ملفات"])
-    
-    st.markdown("<br><br><br><br>", unsafe_allow_html=True) # مسافة لضمان نزول اللغة
-    selected_lang = st.selectbox("🌐 اللغة / Language", ["العربية", "English", "اردو"])
-    lang = translations[selected_lang]
+menu = st.sidebar.radio("اختر العملية:", ["📊 تحويل PDF إلى إكسيل", "🔍 استخراج النصوص (OCR)"])
 
-# --- التنسيق النيون الشامل ---
-st.markdown(f"""
-<style>
-    /* القائمة الجانبية */
-    [data-testid="stSidebar"] {{ background-color: #050a14 !important; border-left: 2px solid #00f2fe !important; }}
-    
-    /* الألوان النيون */
-    .stApp {{ background-color: #050a14 !important; color: #00f2fe !important; }}
-    
-    /* المستطيلات (Upload & Inputs) */
-    [data-testid="stFileUploader"] {{ 
-        border: 2px dashed #00f2fe !important; 
-        background: #0b1526 !important; 
-        border-radius: 15px !important; 
-    }}
-    
-    /* القوائم المنسدلة */
-    div[data-baseweb="select"] {{ 
-        background: #0b1526 !important; 
-        border: 1px solid #00f2fe !important; 
-    }}
-    
-    /* النصوص والخطوط */
-    h1, h2, h3, label {{ color: #00f2fe !important; font-family: 'Cairo', sans-serif !important; }}
-    
-    /* إعدادات الاتجاه */
-    html, body {{ direction: {lang['dir']} !important; text-align: {lang['align']} !important; }}
-</style>
-""", unsafe_allow_html=True)
+# --- منطق التحويل (النسخة المستقرة) ---
+if menu == "📊 تحويل PDF إلى إكسيل":
+    st.subheader("تحويل جداول PDF إلى Excel")
+    pdf_file = st.file_uploader("ارفع ملف الـ PDF", type=["pdf"])
+    if pdf_file and st.button("بدء التحويل"):
+        with st.spinner("جاري المعالجة..."):
+            dfs = tabula.read_pdf(pdf_file, pages='all', multiple_tables=True)
+            if dfs:
+                output = io.BytesIO()
+                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                    for i, df in enumerate(dfs):
+                        df.to_excel(writer, sheet_name=f'Table_{i+1}', index=False)
+                st.success("تم التحويل بنجاح!")
+                st.download_button("📥 تحميل ملف Excel", data=output.getvalue(), file_name="converted.xlsx")
+            else:
+                st.warning("لم يتم العثور على جداول.")
 
-# --- عرض المحتوى ---
-st.markdown(f"<h1>{lang['title']}</h1>", unsafe_allow_html=True)
-
-# مثال لأداة الـ Upload
-st.markdown("<div style='border:1px solid #00f2fe; padding:20px; border-radius:15px;'>", unsafe_allow_html=True)
-st.file_uploader("قم برفع الملف هنا (نيون ستايل)", type=["pdf"])
-st.markdown("</div>", unsafe_allow_html=True)
-
-# التذييل
-st.markdown(f"<div style='text-align:center; padding:50px; color:#00f2fe;'>{lang['motto']} | 2026 ©</div>", unsafe_allow_html=True)
+# --- منطق استخراج النص (النسخة المستقرة) ---
+elif menu == "🔍 استخراج النصوص (OCR)":
+    st.subheader("استخراج النصوص من الصور/المستندات")
+    img_file = st.file_uploader("ارفع صورة أو ملف PDF", type=["jpg", "png", "pdf"])
+    if img_file and st.button("استخراج النص"):
+        with st.spinner("جاري القراءة..."):
+            try:
+                # معالجة بسيطة لاستخراج النص
+                if img_file.type == "application/pdf":
+                    doc = fitz.open(stream=img_file.read(), filetype="pdf")
+                    text = "".join([page.get_text() for page in doc])
+                else:
+                    text = pytesseract.image_to_string(Image.open(img_file), lang='ara+eng')
+                
+                st.text_area("النص المستخرج:", value=text, height=300)
+            except Exception as e:
+                st.error(f"حدث خطأ: {e}")
