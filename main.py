@@ -248,7 +248,7 @@ div[data-baseweb="select"] * {
 """
 st.markdown(css_style, unsafe_allow_html=True)
 
-# تفعيل اتجاهات النصوص حسب لغة واجهة الاختيار بشكل ديناميكي آمن
+# تفعيل اتجاهات النصوص حسب لغة واجهة الاختيار بشكل ديناميكي آمن ومنفصل
 direction_style = f"""
 <style>
 html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea, input {{
@@ -487,7 +487,7 @@ ads_code = """
 """
 components.html(ads_code, height=110)
 
-# التذييل الاحترافي المتوهج الثابت في قاع الموقع
+# التذييل الاحترافي المتوهج الثابت في قاع الموقع بشعارك المهني الجديد والمستقر
 footer_html = f"""
     <div class="footer">
         المحاسب الذكي Pro | <span style="color:#00f2fe; text-shadow: 0 0 5px #00f2fe;">{lang["motto"]}</span> | 2026 ©
