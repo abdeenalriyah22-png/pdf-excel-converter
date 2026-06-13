@@ -6,14 +6,14 @@ import io
 import base64
 from PIL import Image
 import pytesseract
-import fitz  # PyMuPDF المعتمدة لكل العمليات الجديدة
+import fitz  # PyMuPDF المعتمدة
 
 # --- 1. إعدادات الصفحة الأساسية ---
 st.set_page_config(
     page_title="المحاسب الذكي Pro / Smart Accountant",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded"  # جعل القائمة الجانبية تفتح تلقائياً لتسهيل التنقل
+    initial_sidebar_state="expanded"
 )
 
 # --- 2. دمج كود جوجل أدسنس والتحقق في الخلفية ---
@@ -23,9 +23,21 @@ components.html("""
      crossorigin="anonymous"></script>
 """, height=0, width=0)
 
-# --- 3. اختيار اللغة في أعلى القائمة الجانبية ---
+# --- 3. إعدادات القائمة الجانبية (اختيار اللغة والوضع المظهر) ---
 with st.sidebar:
-    st.markdown("<h2 style='text-align:center; color:#58a6ff; margin-bottom:20px;'>⚙️ لوحة التحكم</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#1f6feb; font-weight:bold; margin-bottom:10px;'>⚙️ لوحة التحكم</h2>", unsafe_allow_html=True)
+    
+    # خيار التبديل بين الوضع الفاتح والداكن
+    theme_choice = st.radio(
+        "🌓 مظهر الموقع / Theme Mode:",
+        ["داكن / Dark Mode", "فاتح / Light Mode"],
+        index=0,
+        key="theme_selector"
+    )
+    
+    st.markdown("---")
+    
+    # اختيار اللغة
     selected_lang = st.selectbox(
         "🌐 Language / اللغة / زبان",
         ["العربية", "English", "اردو"],
@@ -38,7 +50,7 @@ translations = {
     "العربية": {
         "direction": "rtl",
         "align": "right",
-        "title": "📊 المحاسب الذكي <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
+        "title": "📊 المحاسب الذكي <span style='font-size:22px; color:#1f6feb; font-weight:normal;'>Pro</span>",
         "subtitle": "المنصة السحابية المتكاملة لإدارة ومعالجة ملفات وجداول PDF ذكياً",
         "menu_title": "🛠️ اختر الأداة المطلوبة:",
         "tool_excel": "📊 تحويل PDF إلى جداول Excel",
@@ -65,7 +77,7 @@ translations = {
     "English": {
         "direction": "ltr",
         "align": "left",
-        "title": "📊 Smart Accountant <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
+        "title": "📊 Smart Accountant <span style='font-size:22px; color:#1f6feb; font-weight:normal;'>Pro</span>",
         "subtitle": "Integrated cloud platform for smart PDF management, processing and table extraction",
         "menu_title": "🛠️ Select Required Tool:",
         "tool_excel": "📊 Convert PDF to Excel Tables",
@@ -92,7 +104,7 @@ translations = {
     "اردو": {
         "direction": "rtl",
         "align": "right",
-        "title": "📊 سمارٹ اکاؤنٹنٹ <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
+        "title": "📊 سمارٹ اکاؤنٹنٹ <span style='font-size:22px; color:#1f6feb; font-weight:normal;'>Pro</span>",
         "subtitle": "سمارٹ ڈیٹا، پی ڈی ایف مینجمنٹ اور ٹیبل پروسیسنگ کے لیے جدید کلاؤڈ سسٹم",
         "menu_title": "🛠️ مطلوبہ ٹول منتخب کریں:",
         "tool_excel": "📊 پی ڈی ایف کو ایکسل میں تبدیل کریں",
@@ -128,8 +140,30 @@ with st.sidebar:
         [lang["tool_excel"], lang["tool_ocr"], lang["tool_merge"], lang["tool_delete"], lang["tool_reorder"], lang["tool_sign"]]
     )
 
-# --- 6. ستايل النيون المتطور وتخصيص جذري للمظهر والألوان (CSS المستقر) ---
-def apply_neon_style(direction, align):
+# --- 6. تطبيق ديناميكي لخصائص المظهر الفاتح والداكن وحل عيوب التباين ---
+def apply_custom_theme(theme_mode, direction, align):
+    # إعداد متغيرات الألوان بناءً على اختيار المستخدم
+    if theme_mode == "فاتح / Light Mode":
+        bg_style = "background: #f8f9fa !important; color: #212529 !important;"
+        card_bg = "linear-gradient(145deg, #ffffff 0%, #f1f3f5 100%)"
+        card_border = "#dee2e6"
+        text_color = "#212529 !important;"
+        sub_text_color = "#495057"
+        sidebar_bg = "#f1f3f5 !important;"
+        input_bg = "#ffffff !important;"
+        input_text = "#212529 !important;"
+        input_border = "#ced4da !important;"
+    else:
+        bg_style = "background: radial-gradient(circle at center, #111723 0%, #07090e 100%) !important; color: #e6edf3 !important;"
+        card_bg = "linear-gradient(145deg, #161b22 0%, #0f1319 100%)"
+        card_border = "#30363d"
+        text_color = "#ffffff !important;"
+        sub_text_color = "#8b949e"
+        sidebar_bg = "#0d1117 !important;"
+        input_bg = "#0d1117 !important;"
+        input_text = "#e6edf3 !important;"
+        input_border = "#30363d !important;"
+
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -143,19 +177,19 @@ def apply_neon_style(direction, align):
     }}
 
     .stApp {{
-        background: radial-gradient(circle at center, #111723 0%, #07090e 100%) !important;
-        color: #e6edf3;
+        {bg_style}
     }}
 
-    /* تخصيص قاع القائمة الجانبية لتتناسب مع التصميم المظلم */
+    /* تخصيص القائمة الجانبية بالكامل وضمان تباينها وعلاج النصوص فيها */
     [data-testid="stSidebar"] {{
-        background-color: #0d1117 !important;
+        background-color: {sidebar_bg}
         border-right: 1px solid #30363d !important;
     }}
 
     [data-testid="stSidebar"] * {{
         direction: {direction} !important;
         text-align: {align} !important;
+        color: {text_color}
     }}
 
     header, [data-testid="stHeader"] {{
@@ -167,7 +201,41 @@ def apply_neon_style(direction, align):
         padding: 1rem 5rem 8rem 5rem;
     }}
 
-    /* تحسين خيارات الرفع لمنع تكرار الكلمات */
+    /* === حل مشكلة القائمة المنسدلة للغة والنصوص بداخلها واختيارات السيلكت بوكس === */
+    [data-testid="stSelectbox"] label p, [data-testid="stRadio"] label p {{
+        font-size: 16px !important;
+        font-weight: bold !important;
+        color: #1f6feb !important;
+    }}
+    
+    div[data-baseweb="select"] {{
+        background-color: {input_bg}
+        border: 1px solid {input_border}
+        border-radius: 12px !important;
+    }}
+    
+    div[data-baseweb="select"] div {{
+        color: {text_color}
+        font-weight: bold !important;
+    }}
+
+    div[data-baseweb="popover"] {{
+        background-color: #161b22 !important;
+    }}
+    
+    /* معالجة عناصر قائمة خيارات اللغة لمنع شفافيتها واختفائها */
+    li[role="option"], li[role="option"] span, div[role="listbox"] div, div[role="listbox"] span, ul[role="listbox"] li {{
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        background-color: #161b22 !important;
+    }}
+    
+    div[data-baseweb="popover"] li:hover, li[role="option"]:hover {{
+        background-color: #1f6feb !important;
+        color: #ffffff !important;
+    }}
+
+    /* تحسين خيارات واجهة أزرار الرفع */
     [data-testid="stFileUploader"] button span span {{
         display: none !important;
     }}
@@ -177,8 +245,8 @@ def apply_neon_style(direction, align):
     }}
 
     .custom-card {{
-        background: linear-gradient(145deg, #161b22 0%, #0f1319 100%);
-        border: 1px solid #30363d;
+        background: {card_bg};
+        border: 1px solid {card_border};
         border-radius: 16px;
         padding: 25px;
         text-align: center;
@@ -195,16 +263,13 @@ def apply_neon_style(direction, align):
     .ocr-icon {{ color: #58a6ff; text-shadow: 0 0 20px rgba(88, 166, 255, 0.4); }}
     .pdf-tool-icon {{ color: #ff7b72; text-shadow: 0 0 20px rgba(255, 123, 114, 0.4); }}
 
-    h1 {{
-        color: #ffffff !important;
-        font-weight: 900 !important;
-        background: linear-gradient(to right, #ffffff, #58a6ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    h1, h3 {{
+        color: {text_color}
     }}
 
+    /* الأزرار الرئيسية المتوافقة */
     .stButton>button {{
-        background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important;
+        background: linear-gradient(135deg, #1f6feb 0%, #104ba3 100%) !important;
         color: white !important;
         border: none !important;
         border-radius: 12px !important;
@@ -212,27 +277,27 @@ def apply_neon_style(direction, align):
         font-weight: bold !important;
         font-size: 16px !important;
         width: 100%;
-        box-shadow: 0 4px 12px rgba(46, 160, 67, 0.2);
+        box-shadow: 0 4px 12px rgba(31, 111, 235, 0.2);
         transition: all 0.3s ease;
     }}
     
     .stButton>button:hover {{
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(46, 160, 67, 0.5);
+        box-shadow: 0 8px 25px rgba(31, 111, 235, 0.5);
     }}
 
     [data-testid="stDownloadButton"] button {{
-        background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%) !important;
+        background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important;
         color: white !important;
         border: none !important;
         border-radius: 12px !important;
         width: 100%;
     }}
 
-    .stTextArea textarea {{
-        background-color: #0d1117 !important;
-        color: #e6edf3 !important;
-        border: 1px solid #30363d !important;
+    .stTextArea textarea, .stTextInput input, .stNumberInput input {{
+        background-color: {input_bg}
+        color: {input_text}
+        border: 1px solid {input_border}
         border-radius: 12px !important;
     }}
 
@@ -241,21 +306,21 @@ def apply_neon_style(direction, align):
         bottom: 0;
         left: 0;
         width: 100%;
-        background-color: rgba(22, 27, 34, 0.9);
+        background-color: {sidebar_bg};
         backdrop-filter: blur(8px);
-        color: #8b949e;
+        color: {sub_text_color};
         text-align: center;
         padding: 12px;
-        border-top: 1px solid #30363d;
+        border-top: 1px solid {card_border};
         font-size: 14px;
         z-index: 999;
     }}
     </style>
     """, unsafe_allow_html=True)
 
-apply_neon_style(lang["direction"], lang["align"])
+apply_custom_theme(theme_choice, lang["direction"], lang["align"])
 
-# --- 7. واجهة البرنامج الرئيسية ---
+# --- 7. واجهة البرنامج الرئيسية المترجمة ---
 st.markdown(f"""
 <div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
     <h1>{lang["title"]}</h1>
@@ -272,8 +337,8 @@ if current_tool == lang["tool_excel"]:
     st.markdown(f"""
     <div class="custom-card">
         <div class="icon-container excel-icon"><i class="fa-solid fa-file-excel"></i></div>
-        <h3 style='margin:0; color:#ffffff;'>تحويل الجداول الرقمية إلى Excel</h3>
-        <p style='font-size:14px; color:#8b949e; margin:5px 0;'>ارفع الكشوفات والتقارير المالية لتحويلها تلقائياً إلى جداول بيانات ميكروسوفت إكسيل منسقة</p>
+        <h3 style='margin:0;'>تحويل الجداول الرقمية إلى Excel</h3>
+        <p style='font-size:14px; margin:5px 0;'>ارفع الكشوفات والتقارير المالية لتحويلها تلقائياً إلى جداول بيانات ميكروسوفت إكسيل منسقة</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -306,8 +371,8 @@ elif current_tool == lang["tool_ocr"]:
     st.markdown(f"""
     <div class="custom-card">
         <div class="icon-container ocr-icon"><i class="fa-solid fa-eye"></i></div>
-        <h3 style='margin:0; color:#ffffff;'>قارئ النصوص والماسح الضوئي الذكي</h3>
-        <p style='font-size:14px; color:#8b949e; margin:5px 0;'>استخرج الحروف والكلمات بدقة من الفواتير والملفات المصورة والممسوحة ضوئياً</p>
+        <h3 style='margin:0;'>قارئ النصوص والماسح الضوئي الذكي</h3>
+        <p style='font-size:14px; margin:5px 0;'>استخرج الحروف والكلمات بدقة من الفواتير والملفات المصورة والممسوحة ضوئياً</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -346,8 +411,8 @@ elif current_tool == lang["tool_ocr"]:
 elif current_tool == lang["tool_merge"]:
     st.markdown("""
     <div class="custom-card"><div class="icon-container pdf-tool-icon"><i class="fa-solid fa-file-medical"></i></div>
-    <h3 style='margin:0; color:#ffffff;'>📂 دمج ملفات PDF متعددة</h3>
-    <p style='font-size:14px; color:#8b949e; margin:5px 0;'>قم برفع كشوفات ومستندات متعددة ليتم تجميعها فوراً في ملف PDF واحد متسلسل</p></div>
+    <h3 style='margin:0;'>📂 دمج ملفات PDF متعددة</h3>
+    <p style='font-size:14px; margin:5px 0;'>قم برفع كشوفات ومستندات متعددة ليتم تجميعها فوراً في ملف PDF واحد متسلسل</p></div>
     """, unsafe_allow_html=True)
     
     merge_files = st.file_uploader("اختر ملفات PDF لدمجها معاً:", type=["pdf"], accept_multiple_files=True, key="merge_up")
@@ -371,8 +436,8 @@ elif current_tool == lang["tool_merge"]:
 elif current_tool == lang["tool_delete"]:
     st.markdown("""
     <div class="custom-card"><div class="icon-container pdf-tool-icon"><i class="fa-solid fa-file-circle-minus"></i></div>
-    <h3 style='margin:0; color:#ffffff;'>✂️ حذف صفحات معينة من المستند</h3>
-    <p style='font-size:14px; color:#8b949e; margin:5px 0;'>تخلص من الصفحات الفارغة أو الزائدة داخل التقارير عبر تحديد أرقامها بسهولة</p></div>
+    <h3 style='margin:0;'>✂️ حذف صفحات معينة من المستند</h3>
+    <p style='font-size:14px; margin:5px 0;'>تخلص من الصفحات الفارغة أو الزائدة داخل التقارير عبر تحديد أرقامها بسهولة</p></div>
     """, unsafe_allow_html=True)
     
     del_file = st.file_uploader("ارفع ملف الـ PDF المراد تعديله:", type=["pdf"], key="del_up")
@@ -382,7 +447,6 @@ elif current_tool == lang["tool_delete"]:
             try:
                 with st.spinner("جاري تنقيح الملف وفصل الصفحات..."):
                     doc = fitz.open(stream=del_file.read(), filetype="pdf")
-                    # تحويل المدخلات إلى أرقام ترتيبية (بدءاً من الصفر)
                     indices = sorted([int(p.strip()) - 1 for p in pages_to_del.split(",") if p.strip().isdigit()], reverse=True)
                     for idx in indices:
                         if 0 <= idx < len(doc):
@@ -399,8 +463,8 @@ elif current_tool == lang["tool_delete"]:
 elif current_tool == lang["tool_reorder"]:
     st.markdown("""
     <div class="custom-card"><div class="icon-container pdf-tool-icon"><i class="fa-solid fa-file-signature"></i></div>
-    <h3 style='margin:0; color:#ffffff;'>🔀 إعادة ترتيب وتنظيم الصفحات</h3>
-    <p style='font-size:14px; color:#8b949e; margin:5px 0;'>قم بإعادة صياغة هيكل الصفحات بالترتيب المناسب لاعتماداتك المالية</p></div>
+    <h3 style='margin:0;'>🔀 إعادة ترتيب وتنظيم الصفحات</h3>
+    <p style='font-size:14px; margin:5px 0;'>قم بإعادة صياغة هيكل الصفحات بالترتيب المناسب لاعتماداتك المالية</p></div>
     """, unsafe_allow_html=True)
     
     reorder_file = st.file_uploader("ارفع الملف لإعادة ترتيبه:", type=["pdf"], key="reorder_up")
@@ -428,8 +492,8 @@ elif current_tool == lang["tool_reorder"]:
 elif current_tool == lang["tool_sign"]:
     st.markdown("""
     <div class="custom-card"><div class="icon-container pdf-tool-icon"><i class="fa-solid fa-pen-nib"></i></div>
-    <h3 style='margin:0; color:#ffffff;'>✍️ التوقيع الإلكتروني الذكي على المستندات</h3>
-    <p style='font-size:14px; color:#8b949e; margin:5px 0;'>قم بإسقاط وتثبيت ختمك أو توقيعك الشخصي فوق أي مستند رسمي بمرونة مذهلة</p></div>
+    <h3 style='margin:0;'>✍️ التوقيع الإلكتروني الذكي على المستندات</h3>
+    <p style='font-size:14px; margin:5px 0;'>قم بإسقاط وتثبيت ختمك أو توقيعك الشخصي فوق أي مستند رسمي بمرونة مذهلة</p></div>
     """, unsafe_allow_html=True)
     
     col_f1, col_f2 = st.columns(2)
@@ -457,7 +521,6 @@ elif current_tool == lang["tool_sign"]:
             try:
                 with st.spinner("جاري تثبيت الختم وحماية المستند..."):
                     page = doc[target_page - 1]
-                    # تحويل مخرجات الرفع إلى بايتات لقراءتها بواسطة PyMuPDF
                     sign_bytes = sign_img.getvalue()
                     rect = fitz.Rect(x_pos, y_pos, x_pos + sig_width, y_pos + int(sig_width * 0.6))
                     page.insert_image(rect, stream=sign_bytes)
@@ -490,6 +553,6 @@ components.html(ads_code, height=110)
 # التذييل الاحترافي الثابت في قاع الموقع
 st.markdown(f"""
     <div class="footer">
-        المحاسب الذكي Pro | <span style="color:#58a6ff;">{lang["motto"]}</span> | 2026 ©
+        المحاسب الذكي Pro | <span style="color:#1f6feb;">{lang["motto"]}</span> | 2026 ©
     </div>
 """, unsafe_allow_html=True)
