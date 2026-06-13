@@ -5,3 +5,4 @@ xlsxwriter
 Pillow
 pytesseract
 pymupdf
+st-copy-to-clipboard
