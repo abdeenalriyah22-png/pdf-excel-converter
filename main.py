@@ -25,7 +25,6 @@ components.html("""
 """, height=0, width=0)
 
 # --- 3. اختيار اللغة في أعلى الموقع ---
-# وضعنا الاختيار في أعلى الصفحة مباشرة ليكون أول ما يراه المستخدم
 selected_lang = st.selectbox(
     "🌐 Choose Language / اختر اللغة / زبان کا انتخاب کریں",
     ["العربية", "English", "اردو"],
@@ -103,8 +102,8 @@ translations = {
         "tab2_title": "🔍 سمارٹ ٹیکسٹ نکالنا (OCR)",
         "card1_title": "ڈیٹا ٹیبل ایکسٹریکٹر",
         "card1_desc": "پی ڈی ایف کے اندر موجود کسی بھی پوشیدہ ٹیبل کو خودکار طور پر فارمیٹ شدہ ایکسل فائل میں تبدیل کرنے کے لیے اپنی فائلیں اپ لوڈ کریں",
-        "card2_title": "ٹیکسٹ ریڈر اور اسکینر",
-        "card2_desc": "اسکین شدہ دستاویزات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
+        "card2_title": "ٹیکسٹ ریڈر اور اسكينر",
+        "card2_desc": "اسکین شدہ दस्तावेजات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
         "uploader_pdf": "اپنی پی ڈی ایف ٹیبل فائلیں یہاں ڈریگ اور ڈراپ کریں",
         "uploader_ocr": "انوائس/دستاویز کی تصویر (JPG, PNG) یا اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
         "btn_convert": "تبدیلی اور شیڈولنگ شروع کریں: ",
@@ -126,7 +125,6 @@ translations = {
     }
 }
 
-# جلب نصوص اللغة المختارة طوالى
 lang = translations[selected_lang]
 
 # --- 5. ستايل النيون المتطور وتوجيه المحاذاة حسب اللغة (CSS) ---
@@ -137,7 +135,6 @@ def apply_neon_style(direction, align):
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap');
     
-    /* ديناميكية الاتجاه والمحاذاة حسب اللغة المختارة */
     html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea {{
         font-family: 'Cairo', sans-serif !important;
         direction: {direction} !important;
@@ -391,14 +388,12 @@ with tab2:
                                 full_text += pytesseract.image_to_string(img, lang='ara+eng') + "\n"
                     else:
                         img = Image.open(ocr_file)
-                        # إضافة الـ lang لدعم العربية والإنجليزية والأوردو طوالى في الـ OCR
                         full_text = pytesseract.image_to_string(img, lang='ara+eng+urd')
 
                 if full_text.strip():
                     st.markdown(lang["ocr_result_header"])
                     st.text_area("", value=full_text, height=320)
                     
-                    # أعمدة الأزرار (نسخ / تحميل) المترجمة ديناميكياً
                     col1, col2 = st.columns(2)
                     
                     with col1:
@@ -419,7 +414,9 @@ with tab2:
 
 # --- 7. مساحة إعلانية مخصصة ومتجاوبة في أسفل المحتوى ---
 st.markdown("<br><br>", unsafe_allow_html=True)
-components.html("""
+
+# أصلحنا تداخل علامات الاقتباس الثلاثية هنا عبر عزلها وحقن القيم مباشرة
+ads_code = """
 <div style="text-align: center; width: 100%;">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1091631464795781"
          crossorigin="anonymous"></script>
@@ -427,4 +424,18 @@ components.html("""
          style="display:block; min-width:300px; max-width:970px; width:100%; height:90px; margin:auto;"
          data-ad-client="ca-pub-1091631464795781"
          data-ad-slot="8159670732"
-         data-
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+</div>
+"""
+components.html(ads_code, height=110)
+
+# التذييل الاحترافي الثابت في قاع الموقع
+st.markdown(f"""
+    <div class="footer">
+        المحاسب الذكي Pro | <span style="color:#58a6ff;">{lang["motto"]}</span> | 2026 ©
+    </div>
+""", unsafe_allow_html=True)
