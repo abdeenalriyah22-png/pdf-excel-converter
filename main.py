@@ -113,18 +113,19 @@ with st.sidebar:
         key="language_selector"
     )
 
-lang = translations[selected_lang]
+# استخدام .get للحماية القصوى من KeyError وضمان عدم انهيار التطبيق
+lang = translations.get(selected_lang, translations["العربية"])
 
 with st.sidebar:
     st.markdown("<hr style='border-color:#1e293b;'>", unsafe_allow_html=True)
     tool_options = [lang["tool_excel"], lang["tool_ocr"], lang["tool_merge"], lang["tool_delete"], lang["tool_reorder"], lang["tool_sign"]]
     current_tool = st.radio(lang["menu_title"], tool_options)
 
-# --- 5. نظام الـ CSS المتطور والآمن لمنع ظهور الأكواد كنصوص ---
-css_style = """
+# --- 5. نظام الـ CSS الاحترافي (تم إصلاحه ليعمل كمكون HTML مستقل لمنع ظهوره كنص عالي) ---
+css_injection = """
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
 
 html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea, input {
     font-family: 'Cairo', sans-serif !important;
@@ -154,6 +155,7 @@ html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textar
     margin-bottom: 25px !important;
     transition: all 0.4s ease-in-out !important;
 }
+
 .custom-card:hover {
     transform: translateY(-5px) !important;
     border-color: #00f2fe !important;
@@ -164,12 +166,6 @@ html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textar
     font-size: 60px !important;
     margin-bottom: 15px !important;
     display: inline-block !important;
-    animation: pulse 2s infinite !important;
-}
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 0.9; }
-    50% { transform: scale(1.05); opacity: 1; }
-    100% { transform: scale(1); opacity: 0.9; }
 }
 
 .excel-icon { color: #00f2fe !important; text-shadow: 0 0 25px #00f2fe !important; }
@@ -196,8 +192,7 @@ h1 {
     transition: all 0.3s ease-in-out !important;
 }
 .stButton>button:hover {
-    transform: scale(1.01) !important;
-    box-shadow: 0 0 30px #00f2fe, 0 0 50px #4facfe !important;
+    box-shadow: 0 0 30px #00f2fe !important;
     color: #ffffff !important;
 }
 
@@ -205,7 +200,6 @@ h1 {
     background: linear-gradient(90deg, #2ea043 0%, #238636 100%) !important;
     color: white !important;
     font-weight: 700 !important;
-    box-shadow: 0 0 15px rgba(46, 160, 67, 0.4) !important;
 }
 
 [data-testid="stFileUploader"] {
@@ -214,20 +208,9 @@ h1 {
     border-radius: 16px !important;
 }
 
-div[data-baseweb="select"] {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
-    border-radius: 12px !important;
-}
-div[data-baseweb="select"] * {
-    color: #ffffff !important;
-}
-
-.stTextArea textarea, .stTextInput input, .stNumberInput input {
-    background-color: #0f172a !important;
-    color: #ffffff !important;
-    border: 1px solid #334155 !important;
-    border-radius: 12px !important;
+/* إصلاح تشوه نصوص الرفع الافتراضية للـ Uploader */
+[data-testid="stFileUploader"] section div div {
+    color: #94a3b8 !important;
 }
 
 .footer {
@@ -246,18 +229,20 @@ div[data-baseweb="select"] * {
 }
 </style>
 """
-st.markdown(css_style, unsafe_allow_html=True)
+st.markdown(css_injection, unsafe_allow_html=True)
 
-# تفعيل اتجاهات النصوص حسب لغة واجهة الاختيار بشكل ديناميكي آمن ومنفصل
-direction_style = f"""
+# تفعيل اتجاهات النصوص والـ RTL بشكل منفصل تماماً لتفادي تداخل الحروف ونصوص البايثون
+direction = lang["direction"]
+alignment = lang["align"]
+direction_injection = f"""
 <style>
 html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea, input {{
-    direction: {lang["direction"]} !important;
-    text-align: {lang["align"]} !important;
+    direction: {direction} !important;
+    text-align: {alignment} !important;
 }}
 </style>
 """
-st.markdown(direction_style, unsafe_allow_html=True)
+st.markdown(direction_injection, unsafe_allow_html=True)
 
 # --- 6. عنوان الواجهة الرئيسي ---
 st.markdown(f"""
@@ -487,7 +472,7 @@ ads_code = """
 """
 components.html(ads_code, height=110)
 
-# التذييل الاحترافي المتوهج الثابت في قاع الموقع بشعارك المهني الجديد والمستقر
+# التذييل الاحترافي المتوهج الثابت في قاع الموقع بالشعار المهني المستقر
 footer_html = f"""
     <div class="footer">
         المحاسب الذكي Pro | <span style="color:#00f2fe; text-shadow: 0 0 5px #00f2fe;">{lang["motto"]}</span> | 2026 ©
