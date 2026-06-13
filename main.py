@@ -30,6 +30,7 @@ translations = {
         "title": "📊 المحاسب الذكي <span style='color:#00f2fe; text-shadow: 0 0 10px #00f2fe;'>Pro</span>",
         "subtitle": "المنصة السحابية المتكاملة لإدارة ومعالجة ملفات وجداول PDF ذكياً",
         "menu_title": "🛠️ تفعيل الأدوات الذكية:",
+        "theme_title": "🌓 مظهر الموقع / Theme Mode :",
         "tool_excel": "📊 تحويل PDF إلى جداول Excel",
         "tool_ocr": "🔍 استخراج النصوص الذكي (OCR)",
         "tool_merge": "📂 دمج ملفات PDF متعددة",
@@ -55,6 +56,7 @@ translations = {
         "title": "📊 Smart Accountant <span style='color:#00f2fe; text-shadow: 0 0 10px #00f2fe;'>Pro</span>",
         "subtitle": "Integrated cloud platform for smart PDF management, processing and table extraction",
         "menu_title": "🛠️ Activate Smart Tools:",
+        "theme_title": "🌓 Theme Mode / مظهر الموقع :",
         "tool_excel": "📊 Convert PDF to Excel Tables",
         "tool_ocr": "🔍 Smart Text Extraction (OCR)",
         "tool_merge": "📂 Merge Multiple PDF Files",
@@ -80,6 +82,7 @@ translations = {
         "title": "📊 سمارٹ اکاؤنٹنٹ <span style='color:#00f2fe; text-shadow: 0 0 10px #00f2fe;'>Pro</span>",
         "subtitle": "سمارٹ ڈیٹا، پی ڈی ایف مینجمنٹ اور ٹیبل پروسیسنگ کے لیے جدید کلاؤڈ سسٹم",
         "menu_title": "🛠️ مطلوبہ ٹول منتخب کریں:",
+        "theme_title": "🌓 سائٹ کا انداز / Theme Mode :",
         "tool_excel": "📊 پی ڈی ایف کو ایکسل میں تبدیل کریں",
         "tool_ocr": "🔍 سمارٹ ٹیکسٹ نکالنا (OCR)",
         "tool_merge": "📂 متعدد پی ڈی ایف فائلیں ضم کریں",
@@ -101,150 +104,210 @@ translations = {
     }
 }
 
-# --- 4. بناء لوحة التحكم الجانبية الثابتة ---
+# --- 4. بناء لوحة التحكم الجانبية الثابتة والمعدلة الهيكلية ---
 with st.sidebar:
-    st.markdown("<h2 style='text-align:center; color:#00f2fe; text-shadow: 0 0 15px rgba(0,242,254,0.6); font-weight:900;'>⚙️ CONTROL PANEL</h2>", unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
-    
+    # أ. رفع اختيار اللغة في أعلى القائمة الجانبية تماماً قبل كل شيء
     selected_lang = st.selectbox(
-        "🌐 Language / اللغة",
+        "🌐 Language / اللغة / زبان",
         ["العربية", "English", "اردو"],
         index=0,
         key="language_selector"
     )
 
-# استخدام دالة .get لضمان الحماية المطلقة في حال اختلاف التشفير للنص
+# جلب قاموس اللغة بناء على الاختيار فوراً لمنع KeyError
 lang = translations.get(selected_lang, translations["العربية"])
 
 with st.sidebar:
-    st.markdown("<hr style='border-color:#1e293b;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='border-color: rgba(0, 242, 254, 0.2); margin: 10px 0;'>", unsafe_allow_html=True)
+    
+    # ب. إضافة ميزة اختيار المظهر (داكن / فاتح) بعد اللغة مباشرة
+    theme_choice = st.radio(
+        lang["theme_title"],
+        ["Dark Mode / داكن 🌑", "Light Mode / فاتح ☀️"],
+        index=0,
+        key="theme_selector"
+    )
+    
+    st.markdown("<hr style='border-color: rgba(0, 242, 254, 0.2); margin: 10px 0;'>", unsafe_allow_html=True)
+    
+    # ج. أدوات الاختيار الأساسية
     tool_options = [lang["tool_excel"], lang["tool_ocr"], lang["tool_merge"], lang["tool_delete"], lang["tool_reorder"], lang["tool_sign"]]
     current_tool = st.radio(lang["menu_title"], tool_options)
 
-# --- 5. الحل الجذري: حقن الـ CSS داخل مكون الـ HTML الآمن والمنفصل تماماً عن نصوص واجهة التطبيق مستنداً على شعارك المهني ---
-css_code = """
+# تتبع حالة الثيم المختار لبناء التنسيق الاحترافي المناسب ديناميكياً
+is_dark = "Dark" in theme_choice
+
+# تحديد الألوان بناء على اختيار المستخدم للمظهر
+bg_app = "radial-gradient(circle at 50% 50%, #0b0f19 0%, #04060a 100%)" if is_dark else "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)"
+text_main = "#f8fafc" if is_dark else "#0f172a"
+bg_sidebar = "rgba(10, 15, 26, 0.98)" if is_dark else "#ffffff"
+bg_card = "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)" if is_dark else "linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%)"
+border_card = "rgba(0, 242, 254, 0.2)" if is_dark else "rgba(79, 172, 254, 0.3)"
+bg_input = "#0f172a" if is_dark else "#ffffff"
+border_input = "#334155" if is_dark else "#cbd5e1"
+
+# --- 5. نظام الـ CSS المتطور للنيون والتوهج مفصول كلياً لحل مشكلة التداخل والتصغير ---
+css_code = f"""
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;600;700;900&display=swap');
 
-html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea, input {
+/* تطبيق الخطوط على التطبيق ككل */
+html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea, input {{
     font-family: 'Cairo', sans-serif !important;
-}
+}}
 
-.stApp {
-    background: radial-gradient(circle at 50% 50%, #0b0f19 0%, #04060a 100%) !important;
-    color: #f8fafc !important;
-}
+/* جسم التطبيق الأساسي المتجاوب */
+.stApp {{
+    background: {bg_app} !important;
+    color: {text_main} !important;
+}}
 
-[data-testid="stHeader"] {
+/* إخفاء الهيدر الافتراضي المزعج لشكل أكثر احترافية */
+[data-testid="stHeader"] {{
     visibility: hidden;
     display: none;
 }
 
-[data-testid="stSidebar"] {
-    background-color: rgba(10, 15, 26, 0.95) !important;
-    border-right: 2px solid #1e293b !important;
-}
+/* تنسيق لوحة التحكم الجانبية */
+[data-testid="stSidebar"] {{
+    background-color: {bg_sidebar} !important;
+    border-right: {"2px solid #1e293b" if is_dark else "2px solid #e2e8f0"} !important;
+}}
 
-.custom-card {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
-    border: 1px solid rgba(0, 242, 254, 0.2) !important;
+/* حل مشكلة التصغير العبقري: منع انهيار القائمة الجانبية وجعلها مرنة ومستقرة دائماً */
+[data-testid="stSidebarNav"] {{
+    background-color: transparent !important;
+}}
+[data-testid="stSidebar"] .stRadio, [data-testid="stSidebar"] .stSelectbox {{
+    padding: 5px 10px !important;
+}}
+
+/* تنسيق البطاقات الاحترافية المضيئة والمتحركة */
+.custom-card {{
+    background: {bg_card} !important;
+    border: 1px solid {border_card} !important;
     border-radius: 20px !important;
     padding: 30px !important;
     text-align: center !important;
     margin-bottom: 25px !important;
+    box-shadow: {"0 10px 25px rgba(0,0,0,0.3)" if is_dark else "0 10px 25px rgba(0,0,0,0.05)"} !important;
     transition: all 0.4s ease-in-out !important;
-}
-.custom-card:hover {
-    transform: translateY(-5px) !important;
+}}
+.custom-card:hover {{
+    transform: translateY(-4px) !important;
     border-color: #00f2fe !important;
     box-shadow: 0 15px 35px rgba(0, 242, 254, 0.25) !important;
-}
+}}
 
-.icon-container {
-    font-size: 60px !important;
-    margin-bottom: 15px !important;
+.icon-container {{
+    font-size: 55px !important;
+    margin-bottom: 12px !important;
     display: inline-block !important;
-}
+    animation: pulse 2.5s infinite !important;
+}}
+@keyframes pulse {{
+    0% {{ transform: scale(1); opacity: 0.9; }}
+    50% {{ transform: scale(1.04); opacity: 1; }}
+    100% {{ transform: scale(1); opacity: 0.9; }}
+}}
 
-.excel-icon { color: #00f2fe !important; text-shadow: 0 0 25px #00f2fe !important; }
-.ocr-icon { color: #4facfe !important; text-shadow: 0 0 25px #4facfe !important; }
-.pdf-tool-icon { color: #ff5e62 !important; text-shadow: 0 0 25px #ff5e62 !important; }
+.excel-icon {{ color: #00f2fe !important; text-shadow: 0 0 25px #00f2fe !important; }}
+.ocr-icon {{ color: #4facfe !important; text-shadow: 0 0 25px #4facfe !important; }}
+.pdf-tool-icon {{ color: #ff5e62 !important; text-shadow: 0 0 25px #ff5e62 !important; }}
 
-h1 {
+h1 {{
     font-weight: 900 !important;
-    background: linear-gradient(to right, #ffffff, #00f2fe, #4facfe);
+    background: linear-gradient(to right, {"#ffffff" if is_dark else "#0f172a"}, #00f2fe, #4facfe);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-}
+}}
 
-.stButton>button {
+/* الأزرار الاحترافية بنظام نيون فخم */
+.stButton>button {{
     background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%) !important;
     color: #000000 !important;
     border: none !important;
-    border-radius: 14px !important;
-    padding: 0.8rem 2rem !important;
+    border-radius: 12px !important;
+    padding: 0.7rem 2rem !important;
     font-weight: 900 !important;
-    font-size: 17px !important;
+    font-size: 16px !important;
     width: 100% !important;
-    box-shadow: 0 0 15px rgba(0, 242, 254, 0.4) !important;
+    box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3) !important;
     transition: all 0.3s ease-in-out !important;
-}
-.stButton>button:hover {
-    box-shadow: 0 0 30px #00f2fe !important;
+}}
+.stButton>button:hover {{
+    box-shadow: 0 0 25px #00f2fe !important;
     color: #ffffff !important;
-}
+}}
 
-[data-testid="stDownloadButton"] button {
+[data-testid="stDownloadButton"] button {{
     background: linear-gradient(90deg, #2ea043 0%, #238636 100%) !important;
     color: white !important;
     font-weight: 700 !important;
-}
+}}
 
-[data-testid="stFileUploader"] {
-    background: #0f172a !important;
-    border: 2px dashed rgba(0, 242, 254, 0.3) !important;
-    border-radius: 16px !important;
-}
-[data-testid="stFileUploader"] section div div {
-    color: #94a3b8 !important;
-}
+/* تجميل حقول السحب والإفلات للملفات لتناسب السيم المظلم/الفاتح */
+[data-testid="stFileUploader"] {{
+    background: {bg_input} !important;
+    border: 2px dashed rgba(0, 242, 254, 0.4) !important;
+    border-radius: 14px !important;
+}}
 
-.footer {
+/* صناديق الخيارات والقوائم المنسدلة */
+div[data-baseweb="select"] {{
+    background: {bg_input} !important;
+    border: 1px solid {border_input} !important;
+    border-radius: 10px !important;
+}}
+div[data-baseweb="select"] * {{
+    color: {text_main} !important;
+}}
+
+/* مدخلات النصوص والمساحات الكتابية */
+.stTextArea textarea, .stTextInput input, .stNumberInput input {{
+    background-color: {bg_input} !important;
+    color: {text_main} !important;
+    border: 1px solid {border_input} !important;
+    border-radius: 10px !important;
+}}
+
+/* التذييل الثابت والذكي للموقع بشعارك المحدث */
+.footer {{
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    background-color: rgba(15, 23, 42, 0.95);
+    background-color: {"rgba(15, 23, 42, 0.96)" if is_dark else "rgba(241, 245, 249, 0.96)"};
     backdrop-filter: blur(10px);
-    color: #94a3b8;
+    color: {"#94a3b8" if is_dark else "#475569"};
     text-align: center;
-    padding: 12px;
-    border-top: 1px solid #1e293b;
-    font-size: 14px;
+    padding: 10px;
+    border-top: 1px solid {"#1e293b" if is_dark else "#e2e8f0"};
+    font-size: 13px;
     z-index: 999;
-}
+}}
 </style>
 """
 
-# تمرير التنسيق عبر الكومبوننت لضمان عدم خروجه كـ نصوص عادية مشوهة على الشاشة
+# حقن التنسيق لضمان ثبات الواجهة برمجياً وبشكل تجاوبي كامل
 components.html(css_code, height=0, width=0)
 
-# تفعيل الإتجاهات البرمجية الصارمة بشكل منفصل تماماً
+# تفعيل الإتجاهات للنصوص الأساسية بالموقع حسب اختيار اللغة المفعّل
 st.markdown(f"""
 <style>
-html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea, input {{
+.stApp, p, div, h1, h2, h3, span, label, textarea, input {{
     direction: {lang["direction"]} !important;
     text-align: {lang["align"]} !important;
 }}
 </style>
 """, unsafe_allow_html=True)
 
-# --- 6. عنوان الواجهة الرئيسي ---
+# --- 6. عنوان التطبيق الرئيسي المتوهج ---
 st.markdown(f"""
-<div style='text-align: {lang["align"]}; margin-bottom: 15px;'>
+<div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
     <h1>{lang["title"]}</h1>
-    <p style='font-size:16px; color:#94a3b8; margin-top:-10px;'>{lang["subtitle"]}</p>
+    <p style='font-size:15px; color:{"#94a3b8" if is_dark else "#475569"}; margin-top:-10px;'>{lang["subtitle"]}</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -257,8 +320,8 @@ if current_tool == lang["tool_excel"]:
     st.markdown(f"""
     <div class="custom-card">
         <div class="icon-container excel-icon"><i class="fa-solid fa-file-excel"></i></div>
-        <h3 style='margin:0; color:#fff;'>تحويل الجداول الرقمية إلى Excel</h3>
-        <p style='font-size:14px; color:#94a3b8; margin:5px 0;'>ارفع الكشوفات والتقارير المالية لتحويلها تلقائياً إلى ملفات إكسيل منسقة بدقة</p>
+        <h3 style='margin:0; color:{"#fff" if is_dark else "#0f172a"};'>تحويل الجداول الرقمية إلى Excel</h3>
+        <p style='font-size:14px; color:{"#94a3b8" if is_dark else "#475569"}; margin:5px 0;'>ارفع الكشوفات والتقارير المالية لتحويلها تلقائياً إلى ملفات إكسيل منسقة بدقة</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -291,8 +354,8 @@ elif current_tool == lang["tool_ocr"]:
     st.markdown(f"""
     <div class="custom-card">
         <div class="icon-container ocr-icon"><i class="fa-solid fa-eye"></i></div>
-        <h3 style='margin:0; color:#fff;'>قارئ النصوص والماسح الضوئي الذكي</h3>
-        <p style='font-size:14px; color:#94a3b8; margin:5px 0;'>استخراج فوري للبيانات من الكشوفات المصورة التي تفتقر لخطوط الشبكة الواضحة</p>
+        <h3 style='margin:0; color:{"#fff" if is_dark else "#0f172a"};'>قارئ النصوص والماسح الضوئي الذكي</h3>
+        <p style='font-size:14px; color:{"#94a3b8" if is_dark else "#475569"}; margin:5px 0;'>استخراج فوري للبيانات من الكشوفات المصورة التي تفتقر لخطوط الشبكة الواضحة</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -329,10 +392,10 @@ elif current_tool == lang["tool_ocr"]:
 # 3. أداة دمج ملفات PDF
 # =========================================================================
 elif current_tool == lang["tool_merge"]:
-    st.markdown("""
+    st.markdown(f"""
     <div class="custom-card"><div class="icon-container pdf-tool-icon"><i class="fa-solid fa-file-medical"></i></div>
-    <h3 style='margin:0; color:#fff;'>📂 دمج ملفات PDF متعددة</h3>
-    <p style='font-size:14px; color:#94a3b8; margin:5px 0;'>تجميع الكشوفات الدورية والسجلات المشتتة في ملف مستند واحد متصل ومتسلسل</p></div>
+    <h3 style='margin:0; color:{"#fff" if is_dark else "#0f172a"};'>📂 دمج ملفات PDF متعددة</h3>
+    <p style='font-size:14px; color:{"#94a3b8" if is_dark else "#475569"}; margin:5px 0;'>تجميع الكشوفات الدورية والسجلات المشتتة في ملف مستند واحد متصل ومتسلسل</p></div>
     """, unsafe_allow_html=True)
     
     merge_files = st.file_uploader("اختر ملفات PDF لدمجها معاً:", type=["pdf"], accept_multiple_files=True, key="merge_up")
@@ -354,10 +417,10 @@ elif current_tool == lang["tool_merge"]:
 # 4. أداة حذف صفحات من ملف PDF
 # =========================================================================
 elif current_tool == lang["tool_delete"]:
-    st.markdown("""
+    st.markdown(f"""
     <div class="custom-card"><div class="icon-container pdf-tool-icon"><i class="fa-solid fa-file-circle-minus"></i></div>
-    <h3 style='margin:0; color:#fff;'>✂️ حذف صفحات معينة من المستند</h3>
-    <p style='font-size:14px; color:#94a3b8; margin:5px 0;'>تنقية السجلات والملفات من الصفحات البيضاء أو الملحقات الزائدة</p></div>
+    <h3 style='margin:0; color:{"#fff" if is_dark else "#0f172a"};'>✂️ حذف صفحات معينة من المستند</h3>
+    <p style='font-size:14px; color:{"#94a3b8" if is_dark else "#475569"}; margin:5px 0;'>تنقية السجلات والملفات من الصفحات البيضاء أو الملحقات الزائدة</p></div>
     """, unsafe_allow_html=True)
     
     del_file = st.file_uploader("ارفع ملف الـ PDF المراد تعديله:", type=["pdf"], key="del_up")
@@ -381,10 +444,10 @@ elif current_tool == lang["tool_delete"]:
 # 5. أداة إعادة ترتيب صفحات PDF
 # =========================================================================
 elif current_tool == lang["tool_reorder"]:
-    st.markdown("""
+    st.markdown(f"""
     <div class="custom-card"><div class="icon-container pdf-tool-icon"><i class="fa-solid fa-file-signature"></i></div>
-    <h3 style='margin:0; color:#fff;'>🔀 إعادة ترتيب وتنظيم الصفحات</h3>
-    <p style='font-size:14px; color:#94a3b8; margin:5px 0;'>أعد صياغة هيكلية الصفحات بالترتيب المتوافق مع متطلباتك</p></div>
+    <h3 style='margin:0; color:{"#fff" if is_dark else "#0f172a"};'>🔀 إعادة ترتيب وتنظيم الصفحات</h3>
+    <p style='font-size:14px; color:{"#94a3b8" if is_dark else "#475569"}; margin:5px 0;'>أعد صياغة هيكلية الصفحات بالترتيب المتوافق مع متطلباتك</p></div>
     """, unsafe_allow_html=True)
     
     reorder_file = st.file_uploader("ارفع الملف لإعادة ترتيبه:", type=["pdf"], key="reorder_up")
@@ -410,10 +473,10 @@ elif current_tool == lang["tool_reorder"]:
 # 6. أداة التوقيع الإلكتروني على المستند
 # =========================================================================
 elif current_tool == lang["tool_sign"]:
-    st.markdown("""
+    st.markdown(f"""
     <div class="custom-card"><div class="icon-container pdf-tool-icon"><i class="fa-solid fa-pen-nib"></i></div>
-    <h3 style='margin:0; color:#fff;'>✍️ التوقيع الإلكتروني الذكي على المستندات</h3>
-    <p style='font-size:14px; color:#94a3b8; margin:5px 0;'>إسقاط وتثبيت الأختام والتواقيع بصورة رسمية وغير قابلة للتعديل داخل التقارير</p></div>
+    <h3 style='margin:0; color:{"#fff" if is_dark else "#0f172a"};'>✍️ التوقيع الإلكتروني الذكي على المستندات</h3>
+    <p style='font-size:14px; color:{"#94a3b8" if is_dark else "#475569"}; margin:5px 0;'>إسقاط وتثبيت الأختام والتواقيع بصورة رسمية وغير قابلة للتعديل داخل التقارير</p></div>
     """, unsafe_allow_html=True)
     
     col_f1, col_f2 = st.columns(2)
@@ -468,7 +531,7 @@ ads_code = """
 """
 components.html(ads_code, height=110)
 
-# التذييل الاحترافي المتوهج الثابت في قاع الموقع بالشعار المهني المستقر والمحدث
+# التذييل الاحترافي المتوهج الثابت في قاع الموقع بالشعار المحدث
 st.markdown(f"""
     <div class="footer">
         المحاسب الذكي Pro | <span style="color:#00f2fe; text-shadow: 0 0 5px #00f2fe;">{lang["motto"]}</span> | 2026 ©
