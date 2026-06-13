@@ -54,7 +54,7 @@ translations = {
         "status_ocr_loading": "جاري المسح الضوئي للمستند وتفسير الحروف...",
         "success_convert": "🚀 اكتمل التحويل بنجاح وبأعلى دقة!",
         "warning_no_tables": "⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.",
-        "warning_no_text": "نعتذر، لم نكتشف حروفاً أو نصوصاً مقروءة في هذا المستند.",
+        "warning_no_text": "نعتذر, لم نكتشف حروفاً أو نصوصاً مقروءة في هذا المستند.",
         "download_excel": "📥 اضغط هنا لتحميل ملف Excel المستخرج",
         "download_txt": "📥 تحميل النص كملف TXT",
         "ocr_result_header": "#### ✅ النصوص التي تم العثور عليها ومسحها:",
@@ -128,7 +128,7 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. ستايل النيون المتطور وتخصيص ألوان صندوق اختيار اللغة ---
+# --- 5. ستايل النيون المتطور وتخصيص جذري لألوان خيارات صندوق اللغة (CSS) ---
 def apply_neon_style(direction, align):
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -156,7 +156,8 @@ def apply_neon_style(direction, align):
         padding: 1rem 5rem 8rem 5rem;
     }}
 
-    /* --- تلوين خيارات وعناصر تحديد اللغة باللون الأبيض الناصع والنيون --- */
+    /* === تخصيص جذري للقائمة المنسدلة والخيارات المنبثقة لـ Streamlit === */
+    /* 1. نص التسمية التوضيحية العلوي */
     [data-testid="stSelectbox"] label p {{
         font-size: 18px !important;
         font-weight: bold !important;
@@ -164,16 +165,16 @@ def apply_neon_style(direction, align):
         text-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
     }}
     
-    /* تغيير النص المختار حالياً داخل الصندوق إلى الأبيض */
+    /* 2. الصندوق الرئيسي والكلمة المختارة حالياً */
+    [data-testid="stSelectbox"] div[data-baseweb="select"] {{
+        background-color: rgba(22, 27, 34, 0.9) !important;
+        border: 1px solid #30363d !important;
+        border-radius: 12px !important;
+    }}
+    
     [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
         color: #ffffff !important;
         font-weight: bold !important;
-    }}
-    
-    [data-testid="stSelectbox"] div[data-baseweb="select"] {{
-        background-color: rgba(22, 27, 34, 0.8) !important;
-        border: 1px solid #30363d !important;
-        border-radius: 12px !important;
     }}
     
     [data-testid="stSelectbox"] div[data-baseweb="select"]:hover {{
@@ -181,22 +182,30 @@ def apply_neon_style(direction, align):
         box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
     }}
 
-    /* تعديل القائمة المنسدلة عند فتحها لتظهر جميع خيارات اللغات باللون الأبيض وعلفية داكنة */
-    div[role="listbox"] {{
+    /* 3. استهداف القائمة المنسدلة المنبثقة وإجبار جميع النصوص داخلها على اللون الأبيض */
+    div[data-baseweb="popover"] {{
         background-color: #161b22 !important;
-        border: 1px solid #30363d !important;
     }}
     
-    div[role="listbox"] ul li {{
+    div[data-baseweb="popover"] li {{
         color: #ffffff !important;
         font-weight: 600 !important;
         background-color: transparent !important;
     }}
+
+    /* تأكيد تغيير لون الخيارات المنسدلة بأي طريقة تظهر بها في المتصفح */
+    li[role="option"], li[role="option"] span, div[role="listbox"] div, div[role="listbox"] span {{
+        color: #ffffff !important;
+        font-weight: 600 !important;
+    }}
     
-    div[role="listbox"] ul li:hover {{
+    /* تأثير تمرير الماوس فوق الخيارات المنسدلة */
+    div[data-baseweb="popover"] li:hover, li[role="option"]:hover {{
         background-color: #1f6feb !important;
         color: #ffffff !important;
     }}
+
+    /* ================================================================= */
 
     .stTabs [data-baseweb="tab-list"] {{
         gap: 15px;
