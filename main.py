@@ -24,7 +24,7 @@ components.html("""
      crossorigin="anonymous"></script>
 """, height=0, width=0)
 
-# --- 3. اختيار اللغة في أعلى الموقع (تم رفعها وتكبيرها وتعديل تصميمها) ---
+# --- 3. اختيار اللغة في أعلى الموقع ---
 selected_lang = st.selectbox(
     "🌐 Choose Language / اختر اللغة / زبان کا انتخاب کریں",
     ["العربية", "English", "اردو"],
@@ -106,7 +106,7 @@ translations = {
         "card2_title": "ٹیکسٹ ریڈر اور اسكينر",
         "card2_desc": "اسکین شدہ दस्तावेजات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
         "uploader_pdf": "اپنی پی ڈی ایف ٹیبل فائلیں یہاں ڈریگ اور ڈراپ کریں",
-        "uploader_ocr": "انوائس/دستاویز کی تصویر (JPG, PNG) یا اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
+        "uploader_ocr": "انوائس/دستاویز کی تصویر (JPG, PNG) أو اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
         "btn_convert": "تبدیلی اور شیڈولنگ شروع کریں: ",
         "btn_ocr": "🚀 ٹیکسٹ پڑھنے کے لیے AI لانچ کریں",
         "status_preparing": "📁 فائل کی تیاری: ",
@@ -122,13 +122,13 @@ translations = {
         "opt2": "📥 دوسرا آپشن:",
         "btn_copy": "📋 پورا متن کاپی کریں",
         "copied": "✅ کامیابی سے کاپی ہو گیا!",
-        "motto": "ذمہ داری کی علیحدگی... امانت میں ملاپ"
+        "motto": "امانت میں ملاپ... ذمہ داری کی علیحدگی"
     }
 }
 
 lang = translations[selected_lang]
 
-# --- 5. ستايل النيون المتطور وتوجيه المحاذاة وتخصيص صندوق اللغة (CSS) ---
+# --- 5. ستايل النيون المتطور وتخصيص ألوان صندوق اختيار اللغة ---
 def apply_neon_style(direction, align):
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -156,12 +156,18 @@ def apply_neon_style(direction, align):
         padding: 1rem 5rem 8rem 5rem;
     }}
 
-    /* --- تخصيص وتكبير وتلوين خيار تحديد اللغة بالنيون الأزرق --- */
+    /* --- تلوين خيارات وعناصر تحديد اللغة باللون الأبيض الناصع والنيون --- */
     [data-testid="stSelectbox"] label p {{
         font-size: 18px !important;
         font-weight: bold !important;
         color: #58a6ff !important;
         text-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
+    }}
+    
+    /* تغيير النص المختار حالياً داخل الصندوق إلى الأبيض */
+    [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
+        color: #ffffff !important;
+        font-weight: bold !important;
     }}
     
     [data-testid="stSelectbox"] div[data-baseweb="select"] {{
@@ -175,9 +181,21 @@ def apply_neon_style(direction, align):
         box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
     }}
 
+    /* تعديل القائمة المنسدلة عند فتحها لتظهر جميع خيارات اللغات باللون الأبيض وعلفية داكنة */
     div[role="listbox"] {{
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
+    }}
+    
+    div[role="listbox"] ul li {{
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        background-color: transparent !important;
+    }}
+    
+    div[role="listbox"] ul li:hover {{
+        background-color: #1f6feb !important;
+        color: #ffffff !important;
     }}
 
     .stTabs [data-baseweb="tab-list"] {{
