@@ -502,11 +502,31 @@ elif current_tool == lang["tool_sign"]:
             
         if st.button("✍️ دمج وختم التوقيع داخل الـ PDF"):
             try:
-                with st.spinner("جاري تثبيت الختم وحماية المستند..."):
-                    page = doc[target_page - 1]
-                    sign_bytes = sign_img.getvalue()
-                    rect = fitz.Rect(x_pos, y_pos, x_pos + sig_width, y_pos + int(sig_width * 0.6))
-                    page.insert_image(rect, stream=sign_bytes)
+           # --- 4. بناء لوحة التحكم الجانبية الثابتة والمُعاد ترتيبها ---
+with st.sidebar:
+    # 1. اختيار اللغة في الأعلى
+    selected_lang = st.selectbox(
+        "🌐 Language / اللغة / زبان",
+        ["العربية", "English", "اردو"],
+        index=0,
+        key="language_selector"
+    )
+    
+    # 2. اختيار المظهر (تم إضافته هنا)
+    st.markdown("<hr style='border-color:#1e293b;'>", unsafe_allow_html=True)
+    theme_choice = st.radio(
+        "🌓 Theme Mode / مظهر الموقع",
+        ["Dark Mode 🌑", "Light Mode ☀️"],
+        index=0
+    )
+    
+    # 3. الأدوات
+    st.markdown("<hr style='border-color:#1e293b;'>", unsafe_allow_html=True)
+    lang = translations[selected_lang]
+    tool_options = [lang["tool_excel"], lang["tool_ocr"], lang["tool_merge"], lang["tool_delete"], lang["tool_reorder"], lang["tool_sign"]]
+    current_tool = st.radio(lang["menu_title"], tool_options)
+
+# ملاحظة: تأكد عند استخدام f-string في CSS داخل الكود أن تستخدم {{ لتجنب أخطاء SyntaxError
                     
                     output_bytes = doc.write()
                     st.success("✍️ تم دمج وختم التوقيع الإلكتروني بنجاح!")
