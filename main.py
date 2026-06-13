@@ -32,7 +32,7 @@ selected_lang = st.selectbox(
     key="language_selector"
 )
 
-# --- 4. قاموس الترجمة (تمت إضافة الفرنسية) ---
+# --- 4. قاموس الترجمة للغات الأربع ---
 translations = {
     "العربية": {
         "direction": "rtl", "align": "right", "title": "📊 المحاسب الذكي <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
@@ -99,8 +99,53 @@ translations = {
 
 lang = translations[selected_lang]
 
-# ... (باقي كود الـ CSS وتصميم الصفحة يظل كما هو دون تغيير) ...
+# --- 5. ستايل النيون ---
+def apply_neon_style(direction, align):
+    st.markdown(f"""
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+    html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea {{
+        font-family: 'Cairo', sans-serif !important;
+        direction: {direction} !important;
+        text-align: {align} !important;
+    }}
+    .stApp {{ background: radial-gradient(circle at center, #111723 0%, #07090e 100%) !important; color: #e6edf3; }}
+    header, [data-testid="stHeader"] {{ visibility: hidden; display: none; }}
+    [data-testid="stAppViewBlockContainer"] {{ padding: 1rem 5rem 8rem 5rem; }}
+    .custom-card {{ background: linear-gradient(145deg, #161b22 0%, #0f1319 100%); border: 1px solid #30363d; border-radius: 16px; padding: 25px; text-align: center; margin-bottom: 20px; }}
+    h1 {{ color: #ffffff !important; font-weight: 900 !important; background: linear-gradient(to right, #ffffff, #58a6ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
+    .stButton>button {{ background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important; color: white !important; border-radius: 12px !important; padding: 0.7rem 2rem !important; width: 100%; }}
+    .footer {{ position: fixed; bottom: 0; left: 0; width: 100%; background-color: rgba(22, 27, 34, 0.9); backdrop-filter: blur(8px); color: #8b949e; text-align: center; padding: 12px; border-top: 1px solid #30363d; z-index: 999; }}
+    </style>
+    """, unsafe_allow_html=True)
 
-# --- تعديل الـ OCR لدعم الفرنسية (ara+eng+fra) ---
-# ... (داخل التبويب الثاني عند قراءة الصور) ...
-# full_text = pytesseract.image_to_string(img, lang='ara+eng+fra')
+apply_neon_style(lang["direction"], lang["align"])
+
+# --- 6. واجهة البرنامج ---
+st.markdown(f"<div style='text-align: {lang['align']};'><h1>{lang['title']}</h1><p style='color:#8b949e;'>{lang['subtitle']}</p></div>", unsafe_allow_html=True)
+tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
+
+with tab1:
+    st.markdown(f"<div class='custom-card'><h3>{lang['card1_title']}</h3><p>{lang['card1_desc']}</p></div>", unsafe_allow_html=True)
+    pdf_files = st.file_uploader(lang["uploader_pdf"], type=["pdf"], key="pdf_main", accept_multiple_files=True)
+    if pdf_files:
+        for uploaded_pdf in pdf_files:
+            if st.button(f"{lang['btn_convert']}{uploaded_pdf.name}"):
+                dfs = tabula.read_pdf(uploaded_pdf, pages='all', lattice=True)
+                if dfs:
+                    output = io.BytesIO()
+                    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                        dfs[0].to_excel(writer, index=False)
+                    st.success(lang["success_convert"])
+                    st.download_button(lang["download_excel"], output.getvalue(), f"Excel_{uploaded_pdf.name}.xlsx")
+
+with tab2:
+    st.markdown(f"<div class='custom-card'><h3>{lang['card2_title']}</h3><p>{lang['card2_desc']}</p></div>", unsafe_allow_html=True)
+    ocr_file = st.file_uploader(lang["uploader_ocr"], type=["jpg", "png", "jpeg", "pdf"], key="ocr_main")
+    if ocr_file and st.button(lang["btn_ocr"]):
+        full_text = pytesseract.image_to_string(Image.open(ocr_file), lang='ara+eng+fra+urd')
+        st.text_area("", value=full_text, height=320)
+        st_copy_to_clipboard(text=full_text, before_copy_label=lang["btn_copy"], after_copy_label=lang["copied"])
+
+st.markdown(f"<div class='footer'>المحاسب الذكي Pro | {lang['motto']} | 2026 ©</div>", unsafe_allow_html=True)
