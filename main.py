@@ -3,7 +3,6 @@ import streamlit.components.v1 as components
 import tabula
 import pandas as pd
 import io
-import base64
 from PIL import Image
 import pytesseract
 import fitz  # PyMuPDF
