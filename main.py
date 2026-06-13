@@ -32,7 +32,7 @@ selected_lang = st.selectbox(
     key="language_selector"
 )
 
-# --- 4. قاموس الترجمة للغات الثلاث (تم تصحيح مفتاح اردو) ---
+# --- 4. قاموس الترجمة للغات الثلاث ---
 translations = {
     "العربية": {
         "direction": "rtl",
@@ -128,7 +128,7 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. ستايل النيون المتطور وتخصيص جذري لألوان خيارات صندوق اللغة (CSS) ---
+# --- 5. ستايل النيون المتطور وتخصيص جذري للمظهر والألوان (CSS) ---
 def apply_neon_style(direction, align):
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -136,10 +136,9 @@ def apply_neon_style(direction, align):
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap');
     
-    html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea {{
+    /* تطبيق الخط والاتجاه الأساسي على النصوص والمحتويات العامة دون تخريب مكونات النظام */
+    html, body, p, h1, h2, h3, span, label, textarea {{
         font-family: 'Cairo', sans-serif !important;
-        direction: {direction} !important;
-        text-align: {align} !important;
     }}
 
     .stApp {{
@@ -156,12 +155,13 @@ def apply_neon_style(direction, align):
         padding: 1rem 5rem 8rem 5rem;
     }}
 
-    /* === تخصيص جذري للقائمة المنسدلة والخيارات المنبثقة لـ Streamlit === */
+    /* === ضبط القائمة المنسدلة لخيارات اللغة ومنع التداخل البصري === */
     [data-testid="stSelectbox"] label p {{
         font-size: 18px !important;
         font-weight: bold !important;
         color: #58a6ff !important;
         text-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
+        text-align: {align} !important;
     }}
     
     [data-testid="stSelectbox"] div[data-baseweb="select"] {{
@@ -200,6 +200,39 @@ def apply_neon_style(direction, align):
         color: #ffffff !important;
     }}
 
+    /* === تخصيص وحماية الـ File Uploader لإصلاح كلمة Uploadupload === */
+    [data-testid="stFileUploader"] {{
+        background-color: rgba(22, 27, 34, 0.7) !important;
+        border: 2px dashed #21262d !important;
+        border-radius: 20px !important;
+        padding: 30px !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        transition: all 0.4s ease;
+    }}
+    
+    [data-testid="stFileUploader"]:hover {{
+        border-color: #58a6ff !important;
+        background-color: rgba(28, 33, 40, 0.9) !important;
+        box-shadow: 0 0 25px rgba(88, 166, 255, 0.25);
+        transform: translateY(-4px);
+    }}
+
+    /* حماية مكونات نصوص الرفع الداخلية من تكرار الأحرف الناجم عن تغيير الاتجاه */
+    [data-testid="stFileUploader"] section {{
+        direction: ltr !important;
+    }}
+
+    [data-testid="stFileUploader"] section div, 
+    [data-testid="stFileUploader"] section span, 
+    [data-testid="stFileUploader"] section p {{
+        color: #ffffff !important;
+    }}
+    
+    /* ضبط اتجاه وعرض النصوص الفرعية داخل صندوق الرفع لتتناسب مع الواجهة */
+    [data-testid="stFileUploaderDropzone"] div {{
+        font-family: 'Cairo', sans-serif !important;
+    }}
+
     /* ================================================================= */
 
     .stTabs [data-baseweb="tab-list"] {{
@@ -208,6 +241,7 @@ def apply_neon_style(direction, align):
         padding: 8px;
         border-radius: 12px;
         border: 1px solid #21262d;
+        direction: {direction} !important;
     }}
 
     .stTabs [data-baseweb="tab"] {{
@@ -226,29 +260,6 @@ def apply_neon_style(direction, align):
         color: white !important;
         box-shadow: 0 0 15px rgba(31, 111, 235, 0.6);
         transform: scale(1.02);
-    }}
-
-    [data-testid="stFileUploader"] {{
-        background-color: rgba(22, 27, 34, 0.7) !important;
-        border: 2px dashed #21262d !important;
-        border-radius: 20px !important;
-        padding: 30px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        transition: all 0.4s ease;
-    }}
-    
-    [data-testid="stFileUploader"]:hover {{
-        border-color: #58a6ff !important;
-        background-color: rgba(28, 33, 40, 0.9) !important;
-        box-shadow: 0 0 25px rgba(88, 166, 255, 0.25);
-        transform: translateY(-4px);
-    }}
-
-    [data-testid="stFileUploader"] section *, 
-    [data-testid="stFileUploader"] div, 
-    [data-testid="stFileUploader"] span, 
-    [data-testid="stFileUploader"] p {{
-        color: #ffffff !important;
     }}
 
     .icon-container {{
@@ -321,6 +332,8 @@ def apply_neon_style(direction, align):
         color: #e6edf3 !important;
         border: 1px solid #30363d !important;
         border-radius: 12px !important;
+        text-align: {align} !important;
+        direction: {direction} !important;
     }}
 
     .stCopyButton button {{
