@@ -15,14 +15,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. التحقق وجوجل أدسنس في الخلفية ---
+# --- 2. دمج كود جوجل أدسنس والتحقق في الخلفية بشكل آمن ---
 components.html("""
 <meta name="google-adsense-account" content="ca-pub-1091631464795781">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1091631464795781"
      crossorigin="anonymous"></script>
 """, height=0, width=0)
 
-# --- 3. قاموس الترجمة المصلح والشامل منعا لأي KeyError ---
+# --- 3. قاموس الترجمة المصلح والمستقر بالكامل لتفادي KeyError ---
 translations = {
     "العربية": {
         "direction": "rtl",
@@ -59,7 +59,7 @@ translations = {
         "tool_ocr": "🔍 Smart Text Extraction (OCR)",
         "tool_merge": "📂 Merge Multiple PDF Files",
         "tool_delete": "✂️ Delete Pages from PDF",
-        "tool_reorder": "order PDF Pages",
+        "tool_reorder": "🔀 Reorder PDF Pages",
         "tool_sign": "✍️ Digital Signature on Document",
         "uploader_pdf": "Drag and drop your PDF table files here",
         "uploader_ocr": "Upload invoice/document image (JPG, PNG) or scanned PDF file",
@@ -101,14 +101,14 @@ translations = {
     }
 }
 
-# --- 4. القائمة الجانبية المستقرة والفخمة ---
+# --- 4. بناء لوحة التحكم الجانبية الثابتة ---
 with st.sidebar:
     st.markdown("<h2 style='text-align:center; color:#00f2fe; text-shadow: 0 0 15px rgba(0,242,254,0.6); font-weight:900;'>⚙️ CONTROL PANEL</h2>", unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
     
     selected_lang = st.selectbox(
         "🌐 Language / اللغة",
-        list(translations.keys()),
+        ["العربية", "English", "اردو"],
         index=0,
         key="language_selector"
     )
@@ -117,11 +117,10 @@ lang = translations[selected_lang]
 
 with st.sidebar:
     st.markdown("<hr style='border-color:#1e293b;'>", unsafe_allow_html=True)
-    # خريطة الأدوات لتفادي الـ KeyError عند تغيير اللغة ديناميكياً
     tool_options = [lang["tool_excel"], lang["tool_ocr"], lang["tool_merge"], lang["tool_delete"], lang["tool_reorder"], lang["tool_sign"]]
     current_tool = st.radio(lang["menu_title"], tool_options)
 
-# --- 5. ستايل النيون المتوهج والمتحرك الخارق (CSS التجميلي الفاخر) ---
+# --- 5. نظام الـ CSS المتطور للنيون والتوهج وحل مشاكل تداخل الاستايل بالكامل ---
 def apply_premium_neon_style(direction, align):
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -134,46 +133,44 @@ def apply_premium_neon_style(direction, align):
         text-align: {align} !important;
     }}
 
-    /* خلفية فضاء النيون الفخمة للموقع */
+    /* خلفية فخمة داكنة للموقع بالكامل مع إخفاء الهيدر الافتراضي */
     .stApp {{
         background: radial-gradient(circle at 50% 50%, #0b0f19 0%, #04060a 100%) !important;
         color: #f8fafc !important;
     }}
 
-    /* القائمة الجانبية بتصميم زجاجي احترافي Dark-Glass */
-    [data-testid="stSidebar"] {{
-        background: rgba(10, 15, 26, 0.95) !important;
-        border-right: 2px solid #1e293b !important;
-        box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
-    }}
-
-    header, [data-testid="stHeader"] {{
+    [data-testid="stHeader"] {{
         visibility: hidden;
         display: none;
     }}
 
-    /* البطاقات التعريفية المتوهجة والمتحركة */
+    /* تصميم القائمة الجانبية بشكل زجاجي فخم */
+    [data-testid="stSidebar"] {{
+        background-color: rgba(10, 15, 26, 0.95) !important;
+        border-right: 2px solid #1e293b !important;
+    }}
+
+    /* بطاقات الواجهة المتحركة والمتوهجة */
     .custom-card {{
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        border: 1px solid rgba(0, 242, 254, 0.2);
-        border-radius: 20px;
-        padding: 30px;
-        text-align: center;
-        margin-bottom: 25px;
-        box-shadow: 0 8px 32px 0 rgba(0, 242, 254, 0.05);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+        border: 1px solid rgba(0, 242, 254, 0.2) !important;
+        border-radius: 20px !important;
+        padding: 30px !important;
+        text-align: center !important;
+        margin-bottom: 25px !important;
+        transition: all 0.4s ease-in-out !important;
     }}
     .custom-card:hover {{
-        transform: translateY(-5px);
-        border-color: #00f2fe;
-        box-shadow: 0 15px 35px rgba(0, 242, 254, 0.25);
+        transform: translateY(-5px) !important;
+        border-color: #00f2fe !important;
+        box-shadow: 0 15px 35px rgba(0, 242, 254, 0.25) !important;
     }}
 
     .icon-container {{
-        font-size: 60px;
-        margin-bottom: 15px;
-        display: inline-block;
-        animation: pulse 2s infinite;
+        font-size: 60px !important;
+        margin-bottom: 15px !important;
+        display: inline-block !important;
+        animation: pulse 2s infinite !important;
     }}
     @keyframes pulse {{
         0% {{ transform: scale(1); opacity: 0.9; }}
@@ -181,19 +178,18 @@ def apply_premium_neon_style(direction, align):
         100% {{ transform: scale(1); opacity: 0.9; }}
     }}
     
-    .excel-icon {{ color: #00f2fe; text-shadow: 0 0 25px #00f2fe; }}
-    .ocr-icon {{ color: #4facfe; text-shadow: 0 0 25px #4facfe; }}
-    .pdf-tool-icon {{ color: #ff5e62; text-shadow: 0 0 25px #ff5e62; }}
+    .excel-icon {{ color: #00f2fe !important; text-shadow: 0 0 25px #00f2fe !important; }}
+    .ocr-icon {{ color: #4facfe !important; text-shadow: 0 0 25px #4facfe !important; }}
+    .pdf-tool-icon {{ color: #ff5e62 !important; text-shadow: 0 0 25px #ff5e62 !important; }}
 
     h1 {{
         font-weight: 900 !important;
         background: linear-gradient(to right, #ffffff, #00f2fe, #4facfe);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 30px rgba(0, 242, 254, 0.1);
     }}
 
-    /* الأزرار المتوهجة والمتحركة بشكل مذهل الفاخر الرائع */
+    /* أزرار النيون المتوهجة والمتحركة الفخمة */
     .stButton>button {{
         background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%) !important;
         color: #000000 !important;
@@ -202,49 +198,35 @@ def apply_premium_neon_style(direction, align):
         padding: 0.8rem 2rem !important;
         font-weight: 900 !important;
         font-size: 17px !important;
-        width: 100%;
-        box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
-        transition: all 0.3s ease-in-out;
-        cursor: pointer;
+        width: 100% !important;
+        box-shadow: 0 0 15px rgba(0, 242, 254, 0.4) !important;
+        transition: all 0.3s ease-in-out !important;
     }}
     .stButton>button:hover {{
-        transform: scale(1.02);
-        box-shadow: 0 0 30px #00f2fe, 0 0 50px #4facfe;
+        transform: scale(1.01) !important;
+        box-shadow: 0 0 30px #00f2fe, 0 0 50px #4facfe !important;
         color: #ffffff !important;
     }}
 
-    /* أزرار التنزيل باللون الأخضر المتوهج الهادئ */
+    /* أزرار التنزيل */
     [data-testid="stDownloadButton"] button {{
         background: linear-gradient(90deg, #2ea043 0%, #238636 100%) !important;
         color: white !important;
         font-weight: 700 !important;
-        box-shadow: 0 0 15px rgba(46, 160, 67, 0.4);
-    }}
-    [data-testid="stDownloadButton"] button:hover {{
-        box-shadow: 0 0 30px #2ea043;
+        box-shadow: 0 0 15px rgba(46, 160, 67, 0.4) !important;
     }}
 
-    /* تنظيف واجهة ومربع إسقاط الرفع (حل مشكلة التداخل بالكامل) */
+    /* حل مشكلة تداخل ونصوص صناديق الرفع */
     [data-testid="stFileUploader"] {{
         background: #0f172a !important;
         border: 2px dashed rgba(0, 242, 254, 0.3) !important;
         border-radius: 16px !important;
-        padding: 20px !important;
     }}
-    [data-testid="stFileUploader"] section div div {{
-        color: #00f2fe !important;
-    }}
-    /* إخفاء نصوص الـ Upload المتكررة المشوهة الافتراضية في ستريمليت */
     [data-testid="stFileUploader"] button span span {{
         display: none !important;
     }}
-    [data-testid="stFileUploader"] button {{
-        background: #1e293b !important;
-        color: #ffffff !important;
-        border: 1px solid #334155 !important;
-    }}
 
-    /* تصحيح شكل وتكامل القوائم المنسدلة وصناديق الخيارات وحل اختفائها */
+    /* إصلاح القوائم المنسدلة */
     div[data-baseweb="select"] {{
         background: #0f172a !important;
         border: 1px solid #334155 !important;
@@ -252,14 +234,6 @@ def apply_premium_neon_style(direction, align):
     }}
     div[data-baseweb="select"] * {{
         color: #ffffff !important;
-    }}
-    div[data-baseweb="popover"] li {{
-        background-color: #0f172a !important;
-        color: #ffffff !important;
-    }}
-    div[data-baseweb="popover"] li:hover {{
-        background-color: #00f2fe !important;
-        color: #000000 !important;
     }}
 
     .stTextArea textarea, .stTextInput input, .stNumberInput input {{
@@ -269,7 +243,7 @@ def apply_premium_neon_style(direction, align):
         border-radius: 12px !important;
     }}
 
-    /* التذييل الاحترافي المتوهج السفلي */
+    /* التذييل الاحترافي المتوهج */
     .footer {{
         position: fixed;
         bottom: 0;
@@ -283,14 +257,13 @@ def apply_premium_neon_style(direction, align):
         border-top: 1px solid #1e293b;
         font-size: 14px;
         z-index: 999;
-        box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
     }}
     </style>
     """, unsafe_allow_html=True)
 
 apply_premium_neon_style(lang["direction"], lang["align"])
 
-# --- 6. عنوان الواجهة اللامع ---
+# --- 6. عنوان الواجهة الرئيسي ---
 st.markdown(f"""
 <div style='text-align: {lang["align"]}; margin-bottom: 15px;'>
     <h1>{lang["title"]}</h1>
@@ -308,7 +281,7 @@ if current_tool == lang["tool_excel"]:
     <div class="custom-card">
         <div class="icon-container excel-icon"><i class="fa-solid fa-file-excel"></i></div>
         <h3 style='margin:0; color:#fff;'>تحويل الجداول الرقمية إلى Excel</h3>
-        <p style='font-size:14px; color:#94a3b8; margin:5px 0;'>ارفع الكشوفات والتقارير المالية (مثل كشف الإنماء) لتحويلها تلقائياً إلى ملفات إكسيل مبوبة بدقة</p>
+        <p style='font-size:14px; color:#94a3b8; margin:5px 0;'>ارفع الكشوفات والتقارير المالية لتحويلها تلقائياً إلى ملفات إكسيل منسقة بدقة</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -434,7 +407,7 @@ elif current_tool == lang["tool_reorder"]:
     st.markdown("""
     <div class="custom-card"><div class="icon-container pdf-tool-icon"><i class="fa-solid fa-file-signature"></i></div>
     <h3 style='margin:0; color:#fff;'>🔀 إعادة ترتيب وتنظيم الصفحات</h3>
-    <p style='font-size:14px; color:#94a3b8; margin:5px 0;'>أعد صياغة هيكلية الصفحات بالترتيب المحاسبي المتوافق مع متطلبات المراجعة</p></div>
+    <p style='font-size:14px; color:#94a3b8; margin:5px 0;'>أعد صياغة هيكلية الصفحات بالترتيب المتوافق مع متطلباتك</p></div>
     """, unsafe_allow_html=True)
     
     reorder_file = st.file_uploader("ارفع الملف لإعادة ترتيبه:", type=["pdf"], key="reorder_up")
@@ -501,7 +474,7 @@ elif current_tool == lang["tool_sign"]:
             except Exception as e:
                 st.error(f"حدث خطأ أثناء التوقيع: {e}")
 
-# --- 7. مساحة إعلانية متجاوبة آمنة في الأسفل ومغلقة بالكامل ---
+# --- 7. مساحة إعلانية متجاوبة آمنة ومغلقة بالكامل في الأسفل ---
 st.markdown("<br><br>", unsafe_allow_html=True)
 ads_code = """
 <div style="text-align: center; width: 100%;">
