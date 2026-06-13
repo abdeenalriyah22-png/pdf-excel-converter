@@ -113,7 +113,7 @@ with st.sidebar:
         key="language_selector"
     )
 
-# استخدام .get للحماية القصوى من KeyError وضمان عدم انهيار التطبيق
+# استخدام دالة .get لضمان الحماية المطلقة في حال اختلاف التشفير للنص
 lang = translations.get(selected_lang, translations["العربية"])
 
 with st.sidebar:
@@ -121,11 +121,11 @@ with st.sidebar:
     tool_options = [lang["tool_excel"], lang["tool_ocr"], lang["tool_merge"], lang["tool_delete"], lang["tool_reorder"], lang["tool_sign"]]
     current_tool = st.radio(lang["menu_title"], tool_options)
 
-# --- 5. نظام الـ CSS الاحترافي (تم إصلاحه ليعمل كمكون HTML مستقل لمنع ظهوره كنص عالي) ---
-css_injection = """
+# --- 5. الحل الجذري: حقن الـ CSS داخل مكون الـ HTML الآمن والمنفصل تماماً عن نصوص واجهة التطبيق مستنداً على شعارك المهني ---
+css_code = """
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;600;700;900&display=swap');
 
 html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea, input {
     font-family: 'Cairo', sans-serif !important;
@@ -155,7 +155,6 @@ html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textar
     margin-bottom: 25px !important;
     transition: all 0.4s ease-in-out !important;
 }
-
 .custom-card:hover {
     transform: translateY(-5px) !important;
     border-color: #00f2fe !important;
@@ -207,8 +206,6 @@ h1 {
     border: 2px dashed rgba(0, 242, 254, 0.3) !important;
     border-radius: 16px !important;
 }
-
-/* إصلاح تشوه نصوص الرفع الافتراضية للـ Uploader */
 [data-testid="stFileUploader"] section div div {
     color: #94a3b8 !important;
 }
@@ -229,20 +226,19 @@ h1 {
 }
 </style>
 """
-st.markdown(css_injection, unsafe_allow_html=True)
 
-# تفعيل اتجاهات النصوص والـ RTL بشكل منفصل تماماً لتفادي تداخل الحروف ونصوص البايثون
-direction = lang["direction"]
-alignment = lang["align"]
-direction_injection = f"""
+# تمرير التنسيق عبر الكومبوننت لضمان عدم خروجه كـ نصوص عادية مشوهة على الشاشة
+components.html(css_code, height=0, width=0)
+
+# تفعيل الإتجاهات البرمجية الصارمة بشكل منفصل تماماً
+st.markdown(f"""
 <style>
 html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea, input {{
-    direction: {direction} !important;
-    text-align: {alignment} !important;
+    direction: {lang["direction"]} !important;
+    text-align: {lang["align"]} !important;
 }}
 </style>
-"""
-st.markdown(direction_injection, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # --- 6. عنوان الواجهة الرئيسي ---
 st.markdown(f"""
@@ -472,10 +468,9 @@ ads_code = """
 """
 components.html(ads_code, height=110)
 
-# التذييل الاحترافي المتوهج الثابت في قاع الموقع بالشعار المهني المستقر
-footer_html = f"""
+# التذييل الاحترافي المتوهج الثابت في قاع الموقع بالشعار المهني المستقر والمحدث
+st.markdown(f"""
     <div class="footer">
         المحاسب الذكي Pro | <span style="color:#00f2fe; text-shadow: 0 0 5px #00f2fe;">{lang["motto"]}</span> | 2026 ©
     </div>
-"""
-st.markdown(footer_html, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
