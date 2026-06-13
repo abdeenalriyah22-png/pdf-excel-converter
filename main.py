@@ -1,4 +1,4 @@
-خلاص انا اخترت هذا الكود. import streamlit as st
+import streamlit as st
 import streamlit.components.v1 as components
 import tabula
 import pandas as pd
