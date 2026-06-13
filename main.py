@@ -32,7 +32,7 @@ selected_lang = st.selectbox(
     key="language_selector"
 )
 
-# --- 4. قاموس الترجمة للغات الثلاث ---
+# --- 4. قاموس الترجمة للغات الثلاث (تم تصحيح مفتاح اردو) ---
 translations = {
     "العربية": {
         "direction": "rtl",
@@ -116,7 +116,7 @@ translations = {
         "warning_no_tables": "⚠️ اس فائل میں کوئی واضح عددی ٹیبل نہیں ملا۔",
         "warning_no_text": "معذرت، اس دستاویز میں کوئی پڑھنے کے قابل حروف یا متن نہیں ملا۔",
         "download_excel": "📥 نکالی گئی ایکسل فائل ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
-        "download_txt": "📥 متن کو TXT فائل کے طور بر ڈاؤن لوڈ کریں",
+        "download_txt": "📥 متن کو TXT فائل کے طور پر ڈاؤن لوڈ کریں",
         "ocr_result_header": "#### ✅ نکالا گیا متن:",
         "opt1": "📋 پہلا آپشن:",
         "opt2": "📥 دوسرا آپشن:",
@@ -128,7 +128,7 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. ستايل النيون المتطور وتخصيص جذري للمظهر والألوان (CSS الأصلي المستقر) ---
+# --- 5. ستايل النيون المتطور وتخصيص جذري لألوان خيارات صندوق اللغة (CSS) ---
 def apply_neon_style(direction, align):
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -198,15 +198,6 @@ def apply_neon_style(direction, align):
     div[data-baseweb="popover"] li:hover, li[role="option"]:hover {{
         background-color: #1f6feb !important;
         color: #ffffff !important;
-    }}
-
-    /* === حل مشكلة تكرار كلمة Upload بداخل أزرار الرفع بدون لمس التصميم الأساسي === */
-    [data-testid="stFileUploader"] button span span {{
-        display: none !important;  /* إخفاء النص الخلفي المكرر من نظام ستريمليت */
-    }}
-    [data-testid="stFileUploader"] button span::after {{
-        content: "Upload" !important; /* فرض ظهور كلمة واحدة فقط وبشكل نظيف وثابت */
-        color: white !important;
     }}
 
     /* ================================================================= */
