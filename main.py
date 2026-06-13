@@ -120,148 +120,145 @@ with st.sidebar:
     tool_options = [lang["tool_excel"], lang["tool_ocr"], lang["tool_merge"], lang["tool_delete"], lang["tool_reorder"], lang["tool_sign"]]
     current_tool = st.radio(lang["menu_title"], tool_options)
 
-# --- 5. نظام الـ CSS المتطور للنيون والتوهج وحل مشاكل تداخل الاستايل بالكامل ---
-def apply_premium_neon_style(direction, align):
-    st.markdown(f"""
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;600;700;900&display=swap');
-    
-    html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea, input {{
-        font-family: 'Cairo', sans-serif !important;
-        direction: {direction} !important;
-        text-align: {align} !important;
-    }}
+# --- 5. نظام الـ CSS المتطور للنيون والتوهج مفصول كلياً لحل مشكلة الظهور كنصوص ---
+st.markdown(r"""
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;600;700;900&display=swap');
 
-    /* خلفية فخمة داكنة للموقع بالكامل مع إخفاء الهيدر الافتراضي */
-    .stApp {{
-        background: radial-gradient(circle at 50% 50%, #0b0f19 0%, #04060a 100%) !important;
-        color: #f8fafc !important;
-    }}
+html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea, input {
+    font-family: 'Cairo', sans-serif !important;
+}
 
-    [data-testid="stHeader"] {{
-        visibility: hidden;
-        display: none;
-    }}
+.stApp {
+    background: radial-gradient(circle at 50% 50%, #0b0f19 0%, #04060a 100%) !important;
+    color: #f8fafc !important;
+}
 
-    /* تصميم القائمة الجانبية بشكل زجاجي فخم */
-    [data-testid="stSidebar"] {{
-        background-color: rgba(10, 15, 26, 0.95) !important;
-        border-right: 2px solid #1e293b !important;
-    }}
+[data-testid="stHeader"] {
+    visibility: hidden;
+    display: none;
+}
 
-    /* بطاقات الواجهة المتحركة والمتوهجة */
-    .custom-card {{
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
-        border: 1px solid rgba(0, 242, 254, 0.2) !important;
-        border-radius: 20px !important;
-        padding: 30px !important;
-        text-align: center !important;
-        margin-bottom: 25px !important;
-        transition: all 0.4s ease-in-out !important;
-    }}
-    .custom-card:hover {{
-        transform: translateY(-5px) !important;
-        border-color: #00f2fe !important;
-        box-shadow: 0 15px 35px rgba(0, 242, 254, 0.25) !important;
-    }}
+[data-testid="stSidebar"] {
+    background-color: rgba(10, 15, 26, 0.95) !important;
+    border-right: 2px solid #1e293b !important;
+}
 
-    .icon-container {{
-        font-size: 60px !important;
-        margin-bottom: 15px !important;
-        display: inline-block !important;
-        animation: pulse 2s infinite !important;
-    }}
-    @keyframes pulse {{
-        0% {{ transform: scale(1); opacity: 0.9; }}
-        50% {{ transform: scale(1.05); opacity: 1; }}
-        100% {{ transform: scale(1); opacity: 0.9; }}
-    }}
-    
-    .excel-icon {{ color: #00f2fe !important; text-shadow: 0 0 25px #00f2fe !important; }}
-    .ocr-icon {{ color: #4facfe !important; text-shadow: 0 0 25px #4facfe !important; }}
-    .pdf-tool-icon {{ color: #ff5e62 !important; text-shadow: 0 0 25px #ff5e62 !important; }}
+.custom-card {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+    border: 1px solid rgba(0, 242, 254, 0.2) !important;
+    border-radius: 20px !important;
+    padding: 30px !important;
+    text-align: center !important;
+    margin-bottom: 25px !important;
+    transition: all 0.4s ease-in-out !important;
+}
+.custom-card:hover {
+    transform: translateY(-5px) !important;
+    border-color: #00f2fe !important;
+    box-shadow: 0 15px 35px rgba(0, 242, 254, 0.25) !important;
+}
 
-    h1 {{
-        font-weight: 900 !important;
-        background: linear-gradient(to right, #ffffff, #00f2fe, #4facfe);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }}
+.icon-container {
+    font-size: 60px !important;
+    margin-bottom: 15px !important;
+    display: inline-block !important;
+    animation: pulse 2s infinite !important;
+}
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.9; }
+}
 
-    /* أزرار النيون المتوهجة والمتحركة الفخمة */
-    .stButton>button {{
-        background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%) !important;
-        color: #000000 !important;
-        border: none !important;
-        border-radius: 14px !important;
-        padding: 0.8rem 2rem !important;
-        font-weight: 900 !important;
-        font-size: 17px !important;
-        width: 100% !important;
-        box-shadow: 0 0 15px rgba(0, 242, 254, 0.4) !important;
-        transition: all 0.3s ease-in-out !important;
-    }}
-    .stButton>button:hover {{
-        transform: scale(1.01) !important;
-        box-shadow: 0 0 30px #00f2fe, 0 0 50px #4facfe !important;
-        color: #ffffff !important;
-    }}
+.excel-icon { color: #00f2fe !important; text-shadow: 0 0 25px #00f2fe !important; }
+.ocr-icon { color: #4facfe !important; text-shadow: 0 0 25px #4facfe !important; }
+.pdf-tool-icon { color: #ff5e62 !important; text-shadow: 0 0 25px #ff5e62 !important; }
 
-    /* أزرار التنزيل */
-    [data-testid="stDownloadButton"] button {{
-        background: linear-gradient(90deg, #2ea043 0%, #238636 100%) !important;
-        color: white !important;
-        font-weight: 700 !important;
-        box-shadow: 0 0 15px rgba(46, 160, 67, 0.4) !important;
-    }}
+h1 {
+    font-weight: 900 !important;
+    background: linear-gradient(to right, #ffffff, #00f2fe, #4facfe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 
-    /* حل مشكلة تداخل ونصوص صناديق الرفع */
-    [data-testid="stFileUploader"] {{
-        background: #0f172a !important;
-        border: 2px dashed rgba(0, 242, 254, 0.3) !important;
-        border-radius: 16px !important;
-    }}
-    [data-testid="stFileUploader"] button span span {{
-        display: none !important;
-    }}
+.stButton>button {
+    background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%) !important;
+    color: #000000 !important;
+    border: none !important;
+    border-radius: 14px !important;
+    padding: 0.8rem 2rem !important;
+    font-weight: 900 !important;
+    font-size: 17px !important;
+    width: 100% !important;
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.4) !important;
+    transition: all 0.3s ease-in-out !important;
+}
+.stButton>button:hover {
+    transform: scale(1.01) !important;
+    box-shadow: 0 0 30px #00f2fe, 0 0 50px #4facfe !important;
+    color: #ffffff !important;
+}
 
-    /* إصلاح القوائم المنسدلة */
-    div[data-baseweb="select"] {{
-        background: #0f172a !important;
-        border: 1px solid #334155 !important;
-        border-radius: 12px !important;
-    }}
-    div[data-baseweb="select"] * {{
-        color: #ffffff !important;
-    }}
+[data-testid="stDownloadButton"] button {
+    background: linear-gradient(90deg, #2ea043 0%, #238636 100%) !important;
+    color: white !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 15px rgba(46, 160, 67, 0.4) !important;
+}
 
-    .stTextArea textarea, .stTextInput input, .stNumberInput input {{
-        background-color: #0f172a !important;
-        color: #ffffff !important;
-        border: 1px solid #334155 !important;
-        border-radius: 12px !important;
-    }}
+[data-testid="stFileUploader"] {
+    background: #0f172a !important;
+    border: 2px dashed rgba(0, 242, 254, 0.3) !important;
+    border-radius: 16px !important;
+}
+[data-testid="stFileUploader"] button span span {
+    display: none !important;
+}
 
-    /* التذييل الاحترافي المتوهج */
-    .footer {{
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background-color: rgba(15, 23, 42, 0.95);
-        backdrop-filter: blur(10px);
-        color: #94a3b8;
-        text-align: center;
-        padding: 12px;
-        border-top: 1px solid #1e293b;
-        font-size: 14px;
-        z-index: 999;
-    }}
-    </style>
-    """, unsafe_allow_html=True)
+div[data-baseweb="select"] {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 12px !important;
+}
+div[data-baseweb="select"] * {
+    color: #ffffff !important;
+}
 
-apply_premium_neon_style(lang["direction"], lang["align"])
+.stTextArea textarea, .stTextInput input, .stNumberInput input {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+    border: 1px solid #334155 !important;
+    border-radius: 12px !important;
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    color: #94a3b8;
+    text-align: center;
+    padding: 12px;
+    border-top: 1px solid #1e293b;
+    font-size: 14px;
+    z-index: 999;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# تفعيل الإتجاهات حسب اللغة
+st.markdown(f"""
+<style>
+html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea, input {{
+    direction: {lang["direction"]} !important;
+    text-align: {lang["align"]} !important;
+}}
+</style>
+""", unsafe_allow_html=True)
 
 # --- 6. عنوان الواجهة الرئيسي ---
 st.markdown(f"""
