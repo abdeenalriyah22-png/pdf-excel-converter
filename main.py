@@ -89,7 +89,7 @@ translations = {
         "download_txt": "📥 Download text as TXT file",
         "ocr_result_header": "#### ✅ Extracted Text:",
         "opt1": "📋 Option 1:",
-        "opt2": "📥 Option 2:",
+        "opt2": "📥 Option 1:",
         "btn_copy": "📋 Copy Full Text",
         "copied": "✅ Copied Successfully!",
         "motto": "Separation of liability... connection in trust"
@@ -392,10 +392,16 @@ with tab1:
                 if st.button(f"{lang['btn_convert']}{uploaded_pdf.name}"):
                     try:
                         with st.spinner(lang["status_loading"]):
-                            # محاولة القراءة بالطريقة الافتراضية الذكية أولاً (لقراءة الكشوفات مثل الإنماء)
-                            dfs = tabula.read_pdf(uploaded_pdf, pages='all', multiple_tables=True, stream=True)
+                            # الطريقة الشاملة والمحسنة لقراءة كافة أسطر الجداول وتفادي الاختصار
+                            dfs = tabula.read_pdf(
+                                uploaded_pdf, 
+                                pages='all', 
+                                multiple_tables=True, 
+                                stream=True, 
+                                guess=False
+                            )
                             
-                            # إذا لم تنجح أو جاءت فارغة، يحول تلقائياً إلى نظام قراءة الحدود المغلقة Lattice
+                            # إذا فشلت أو جاءت ناقصة، يتم الانتقال تلقائياً لنظام الشبكة Lattice الكاملة
                             if not dfs or len(dfs) == 0 or (len(dfs) == 1 and dfs[0].empty):
                                 dfs = tabula.read_pdf(uploaded_pdf, pages='all', multiple_tables=True, lattice=True)
                             
