@@ -120,8 +120,8 @@ with st.sidebar:
     tool_options = [lang["tool_excel"], lang["tool_ocr"], lang["tool_merge"], lang["tool_delete"], lang["tool_reorder"], lang["tool_sign"]]
     current_tool = st.radio(lang["menu_title"], tool_options)
 
-# --- 5. نظام الـ CSS المتطور للنيون والتوهج مفصول كلياً لحل مشكلة الظهور كنصوص ---
-st.markdown(r"""
+# --- 5. نظام الـ CSS المتطور والآمن لمنع ظهور الأكواد كنصوص ---
+css_style = """
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;600;700;900&display=swap');
@@ -213,9 +213,6 @@ h1 {
     border: 2px dashed rgba(0, 242, 254, 0.3) !important;
     border-radius: 16px !important;
 }
-[data-testid="stFileUploader"] button span span {
-    display: none !important;
-}
 
 div[data-baseweb="select"] {
     background: #0f172a !important;
@@ -248,17 +245,19 @@ div[data-baseweb="select"] * {
     z-index: 999;
 }
 </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(css_style, unsafe_allow_html=True)
 
-# تفعيل الإتجاهات حسب اللغة
-st.markdown(f"""
+# تفعيل اتجاهات النصوص حسب لغة واجهة الاختيار بشكل ديناميكي آمن
+direction_style = f"""
 <style>
 html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea, input {{
     direction: {lang["direction"]} !important;
     text-align: {lang["align"]} !important;
 }}
 </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(direction_style, unsafe_allow_html=True)
 
 # --- 6. عنوان الواجهة الرئيسي ---
 st.markdown(f"""
@@ -475,8 +474,6 @@ elif current_tool == lang["tool_sign"]:
 st.markdown("<br><br>", unsafe_allow_html=True)
 ads_code = """
 <div style="text-align: center; width: 100%;">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1091631464795781"
-         crossorigin="anonymous"></script>
     <ins class="adsbygoogle"
          style="display:block; min-width:300px; max-width:970px; width:100%; height:90px; margin:auto;"
          data-ad-client="ca-pub-1091631464795781"
@@ -491,8 +488,9 @@ ads_code = """
 components.html(ads_code, height=110)
 
 # التذييل الاحترافي المتوهج الثابت في قاع الموقع
-st.markdown(f"""
+footer_html = f"""
     <div class="footer">
         المحاسب الذكي Pro | <span style="color:#00f2fe; text-shadow: 0 0 5px #00f2fe;">{lang["motto"]}</span> | 2026 ©
     </div>
-""", unsafe_allow_html=True)
+"""
+st.markdown(footer_html, unsafe_allow_html=True)
