@@ -6,15 +6,14 @@ import io
 import base64
 from PIL import Image
 import pytesseract
-import fitz  # PyMuPDF
-from st_copy_to_clipboard import st_copy_to_clipboard
+import fitz  # PyMuPDF المعتمدة لكل العمليات الجديدة
 
 # --- 1. إعدادات الصفحة الأساسية ---
 st.set_page_config(
     page_title="المحاسب الذكي Pro / Smart Accountant",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"  # جعل القائمة الجانبية تفتح تلقائياً لتسهيل التنقل
 )
 
 # --- 2. دمج كود جوجل أدسنس والتحقق في الخلفية ---
@@ -24,111 +23,112 @@ components.html("""
      crossorigin="anonymous"></script>
 """, height=0, width=0)
 
-# --- 3. اختيار اللغة في أعلى الموقع ---
-selected_lang = st.selectbox(
-    "🌐 Choose Language / اختر اللغة / زبان کا انتخاب کریں",
-    ["العربية", "English", "اردو"],
-    index=0,
-    key="language_selector"
-)
+# --- 3. اختيار اللغة في أعلى القائمة الجانبية ---
+with st.sidebar:
+    st.markdown("<h2 style='text-align:center; color:#58a6ff; margin-bottom:20px;'>⚙️ لوحة التحكم</h2>", unsafe_allow_html=True)
+    selected_lang = st.selectbox(
+        "🌐 Language / اللغة / زبان",
+        ["العربية", "English", "اردو"],
+        index=0,
+        key="language_selector"
+    )
 
-# --- 4. قاموس الترجمة للغات الثلاث (تم تصحيح مفتاح اردو) ---
+# --- 4. قاموس الترجمة للغات الثلاث ---
 translations = {
     "العربية": {
         "direction": "rtl",
         "align": "right",
         "title": "📊 المحاسب الذكي <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
-        "subtitle": "النظام السحابي المطور لمعالجة الجداول والبيانات ذكياً",
-        "tab1_title": "📊 تحويل PDF إلى جداول Excel",
-        "tab2_title": "🔍 استخراج النصوص الذكي (OCR)",
-        "card1_title": "مستخرج جداول البيانات",
-        "card1_desc": "ارفع ملفاتك لتحويل أي جدول صامت داخل الـ PDF إلى ملف إكسيل منسق تلقائياً",
-        "card2_title": "قارئ النصوص والماسح الضوئي",
-        "card2_desc": "استخراج النصوص العربية والإنجليزية والأوردو بدقة كاملة من المستندات المصورة والـ PDF",
+        "subtitle": "المنصة السحابية المتكاملة لإدارة ومعالجة ملفات وجداول PDF ذكياً",
+        "menu_title": "🛠️ اختر الأداة المطلوبة:",
+        "tool_excel": "📊 تحويل PDF إلى جداول Excel",
+        "tool_ocr": "🔍 استخراج النصوص الذكي (OCR)",
+        "tool_merge": "📂 دمج ملفات PDF متعددة",
+        "tool_delete": "✂️ حذف صفحات من ملف PDF",
+        "tool_reorder": "🔀 إعادة ترتيب صفحات PDF",
+        "tool_sign": "✍️ التوقيع الإلكتروني على المستند",
         "uploader_pdf": "قم بسحب وإفلات ملفات الـ PDF الخاصة بالجداول هنا",
         "uploader_ocr": "ارفع صورة الفاتورة/المستند (JPG, PNG) أو ملف PDF الممسوح",
         "btn_convert": "بدأ تحويل وجدولة: ",
         "btn_ocr": "🚀 اطلَق الذكاء الاصطناعي لقراءة النص",
         "status_preparing": "📁 ملف قيد التحضير: ",
-        "status_loading": "جاري تفكيك الجداول وهيكلتها...",
-        "status_ocr_loading": "جاري المسح الضوئي للمستند وتفسير الحروف...",
-        "success_convert": "🚀 اكتمل التحويل بنجاح وبأعلى دقة!",
+        "status_loading": "جاري تفكيك البيانات وهيكلتها...",
+        "success_convert": "🚀 اكتملت العملية بنجاح وبأعلى دقة!",
         "warning_no_tables": "⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.",
         "warning_no_text": "نعتذر، لم نكتشف حروفاً أو نصوصاً مقروءة في هذا المستند.",
         "download_excel": "📥 اضغط هنا لتحميل ملف Excel المستخرج",
         "download_txt": "📥 تحميل النص كملف TXT",
         "ocr_result_header": "#### ✅ النصوص التي تم العثور عليها ومسحها:",
-        "opt1": "📋 الخيار الأول:",
-        "opt2": "📥 الخيار الثاني:",
         "btn_copy": "📋 نسخ النص بالكامل",
-        "copied": "✅ تم النسخ بنجاح!",
         "motto": "الفصل في الذمة.. الوصل في الأمانة"
     },
     "English": {
         "direction": "ltr",
         "align": "left",
         "title": "📊 Smart Accountant <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
-        "subtitle": "Advanced cloud system for smart data and table processing",
-        "tab1_title": "📊 Convert PDF to Excel",
-        "tab2_title": "🔍 Smart Text Extraction (OCR)",
-        "card1_title": "Data Table Extractor",
-        "card1_desc": "Upload your files to automatically convert any silent table inside PDF into a formatted Excel file",
-        "card2_title": "Text Reader & Scanner",
-        "card2_desc": "Extract Arabic, English, and Urdu text with full accuracy from scanned documents and images",
+        "subtitle": "Integrated cloud platform for smart PDF management, processing and table extraction",
+        "menu_title": "🛠️ Select Required Tool:",
+        "tool_excel": "📊 Convert PDF to Excel Tables",
+        "tool_ocr": "🔍 Smart Text Extraction (OCR)",
+        "tool_merge": "📂 Merge Multiple PDF Files",
+        "tool_delete": "✂️ Delete Pages from PDF",
+        "tool_reorder": "🔀 Reorder PDF Pages",
+        "tool_sign": "✍️ Digital Signature on Document",
         "uploader_pdf": "Drag and drop your PDF table files here",
         "uploader_ocr": "Upload invoice/document image (JPG, PNG) or scanned PDF file",
-        "btn_convert": "Start Converting & Scheduling: ",
+        "btn_convert": "Start Converting: ",
         "btn_ocr": "🚀 Launch AI to Read Text",
         "status_preparing": "📁 File preparing: ",
-        "status_loading": "Deconstructing and structuring tables...",
-        "status_ocr_loading": "Scanning document and interpreting characters...",
-        "success_convert": "🚀 Conversion completed successfully with highest accuracy!",
-        "warning_no_tables": "⚠️ No clear numerical tables detected in this file.",
-        "warning_no_text": "Sorry, no readable characters or text detected in this document.",
-        "download_excel": "📥 Click here to download the extracted Excel file",
+        "status_loading": "Processing and structuring data...",
+        "success_convert": "🚀 Process completed successfully with highest accuracy!",
+        "warning_no_tables": "⚠️ No clear numerical tables detected.",
+        "warning_no_text": "Sorry, no readable text detected in this document.",
+        "download_excel": "📥 Click here to download Excel file",
         "download_txt": "📥 Download text as TXT file",
         "ocr_result_header": "#### ✅ Extracted Text:",
-        "opt1": "📋 Option 1:",
-        "opt2": "📥 Option 2:",
         "btn_copy": "📋 Copy Full Text",
-        "copied": "✅ Copied Successfully!",
         "motto": "Separation of liability... connection in trust"
     },
     "اردو": {
         "direction": "rtl",
         "align": "right",
         "title": "📊 سمارٹ اکاؤنٹنٹ <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
-        "subtitle": "سمارٹ ڈیٹا اور ٹیبل پروسیسنگ کے لیے جدید کلاؤڈ سسٹم",
-        "tab1_title": "📊 پی ڈی ایف کو ایکسل میں تبدیل کریں",
-        "tab2_title": "🔍 سمارٹ ٹیکسٹ نکالنا (OCR)",
-        "card1_title": "ڈیٹا ٹیبل ایکسٹریکٹر",
-        "card1_desc": "پی ڈی ایف کے اندر موجود کسی بھی پوشیدہ ٹیبل کو خودکار طور پر فارمیٹ شدہ ایکسل فائل میں تبدیل کرنے کے لیے اپنی فائلیں اپ لوڈ کریں",
-        "card2_title": "ٹیکسٹ ریڈر اور اسكينر",
-        "card2_desc": "اسکین شدہ दस्तावेजات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
+        "subtitle": "سمارٹ ڈیٹا، پی ڈی ایف مینجمنٹ اور ٹیبل پروسیسنگ کے لیے جدید کلاؤڈ سسٹم",
+        "menu_title": "🛠️ مطلوبہ ٹول منتخب کریں:",
+        "tool_excel": "📊 پی ڈی ایف کو ایکسل میں تبدیل کریں",
+        "tool_ocr": "🔍 سمارٹ ٹیکسٹ نکالنا (OCR)",
+        "tool_merge": "📂 متعدد پی ڈی ایف فائلیں ضم کریں",
+        "tool_delete": "✂️ پی ڈی ایف سے صفحات حذف کریں",
+        "tool_reorder": "🔀 پی ڈی ایف صفحات کو دوبارہ ترتیب دیں",
+        "tool_sign": "✍️ دستاویز پر ڈیجیٹل دستخط کریں",
         "uploader_pdf": "اپنی پی ڈی ایف ٹیبل فائلیں یہاں ڈریگ اور ڈراپ کریں",
         "uploader_ocr": "انوائس/دستاویز کی تصویر (JPG, PNG) أو اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
-        "btn_convert": "تبدیلی اور شیڈولنگ شروع کریں: ",
+        "btn_convert": "تبدیلی شروع کریں: ",
         "btn_ocr": "🚀 ٹیکسٹ پڑھنے کے لیے AI لانچ کریں",
         "status_preparing": "📁 فائل کی تیاری: ",
-        "status_loading": "ٹیبلز کو ڈی کنسٹریکٹ اور سٹرکچر کیا جا رہا ہے...",
-        "status_ocr_loading": "دستاویز کو اسکین اور حروف کی تشریح کی جا رہی ہے...",
-        "success_convert": "🚀 اعلیٰ ترین درستگی کے ساتھ تبدیلی کامیابی سے مکمل ہو گئی!",
-        "warning_no_tables": "⚠️ اس فائل میں کوئی واضح عددی ٹیبل نہیں ملا۔",
-        "warning_no_text": "معذرت، اس دستاویز میں کوئی پڑھنے کے قابل حروف یا متن نہیں ملا۔",
-        "download_excel": "📥 نکالی گئی ایکسل فائل ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
+        "status_loading": "ڈیٹا پر کارروائی کی جا رہی ہے...",
+        "success_convert": "🚀 عمل اعلیٰ ترین درستگی کے ساتھ کامیابی سے مکمل ہو گیا!",
+        "warning_no_tables": "⚠️ کوئی واضح ٹیبل نہیں ملا۔",
+        "warning_no_text": "معذرت، اس دستاویز میں کوئی پڑھنے کے قابل متن نہیں ملا۔",
+        "download_excel": "📥 ایکسل فائل ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
         "download_txt": "📥 متن کو TXT فائل کے طور پر ڈاؤن لوڈ کریں",
         "ocr_result_header": "#### ✅ نکالا گیا متن:",
-        "opt1": "📋 پہلا آپشن:",
-        "opt2": "📥 دوسرا آپشن:",
         "btn_copy": "📋 پورا متن کاپی کریں",
-        "copied": "✅ کامیابی سے کاپی ہو گیا!",
         "motto": "الفصل في الذمة.. الوصل في الأمانة"
     }
 }
 
 lang = translations[selected_lang]
 
-# --- 5. ستايل النيون المتطور وتخصيص جذري لألوان خيارات صندوق اللغة (CSS) ---
+# --- 5. شريط التنقل الجانبي بين الأدوات المتعددة ---
+with st.sidebar:
+    st.markdown("<br>", unsafe_allow_html=True)
+    current_tool = st.radio(
+        lang["menu_title"],
+        [lang["tool_excel"], lang["tool_ocr"], lang["tool_merge"], lang["tool_delete"], lang["tool_reorder"], lang["tool_sign"]]
+    )
+
+# --- 6. ستايل النيون المتطور وتخصيص جذري للمظهر والألوان (CSS المستقر) ---
 def apply_neon_style(direction, align):
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -147,6 +147,17 @@ def apply_neon_style(direction, align):
         color: #e6edf3;
     }}
 
+    /* تخصيص قاع القائمة الجانبية لتتناسب مع التصميم المظلم */
+    [data-testid="stSidebar"] {{
+        background-color: #0d1117 !important;
+        border-right: 1px solid #30363d !important;
+    }}
+
+    [data-testid="stSidebar"] * {{
+        direction: {direction} !important;
+        text-align: {align} !important;
+    }}
+
     header, [data-testid="stHeader"] {{
         visibility: hidden;
         display: none;
@@ -156,118 +167,13 @@ def apply_neon_style(direction, align):
         padding: 1rem 5rem 8rem 5rem;
     }}
 
-    /* === تخصيص جذري للقائمة المنسدلة والخيارات المنبثقة لـ Streamlit === */
-    [data-testid="stSelectbox"] label p {{
-        font-size: 18px !important;
-        font-weight: bold !important;
-        color: #58a6ff !important;
-        text-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
+    /* تحسين خيارات الرفع لمنع تكرار الكلمات */
+    [data-testid="stFileUploader"] button span span {{
+        display: none !important;
     }}
-    
-    [data-testid="stSelectbox"] div[data-baseweb="select"] {{
-        background-color: rgba(22, 27, 34, 0.9) !important;
-        border: 1px solid #30363d !important;
-        border-radius: 12px !important;
-    }}
-    
-    [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
-        color: #ffffff !important;
-        font-weight: bold !important;
-    }}
-    
-    [data-testid="stSelectbox"] div[data-baseweb="select"]:hover {{
-        border-color: #58a6ff !important;
-        box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
-    }}
-
-    div[data-baseweb="popover"] {{
-        background-color: #161b22 !important;
-    }}
-    
-    div[data-baseweb="popover"] li {{
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        background-color: transparent !important;
-    }}
-
-    li[role="option"], li[role="option"] span, div[role="listbox"] div, div[role="listbox"] span {{
-        color: #ffffff !important;
-        font-weight: 600 !important;
-    }}
-    
-    div[data-baseweb="popover"] li:hover, li[role="option"]:hover {{
-        background-color: #1f6feb !important;
-        color: #ffffff !important;
-    }}
-
-    /* ================================================================= */
-
-    .stTabs [data-baseweb="tab-list"] {{
-        gap: 15px;
-        background-color: rgba(22, 27, 34, 0.5);
-        padding: 8px;
-        border-radius: 12px;
-        border: 1px solid #21262d;
-    }}
-
-    .stTabs [data-baseweb="tab"] {{
-        height: 48px;
-        background-color: transparent;
-        border-radius: 8px;
-        color: #8b949e;
-        border: none;
-        padding: 0 25px;
-        font-weight: bold;
-        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }}
-
-    .stTabs [aria-selected="true"] {{
-        background: linear-gradient(135deg, #1f6feb 0%, #0d44a5 100%) !important;
+    [data-testid="stFileUploader"] button span::after {{
+        content: "Upload" !important;
         color: white !important;
-        box-shadow: 0 0 15px rgba(31, 111, 235, 0.6);
-        transform: scale(1.02);
-    }}
-
-    [data-testid="stFileUploader"] {{
-        background-color: rgba(22, 27, 34, 0.7) !important;
-        border: 2px dashed #21262d !important;
-        border-radius: 20px !important;
-        padding: 30px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        transition: all 0.4s ease;
-    }}
-    
-    [data-testid="stFileUploader"]:hover {{
-        border-color: #58a6ff !important;
-        background-color: rgba(28, 33, 40, 0.9) !important;
-        box-shadow: 0 0 25px rgba(88, 166, 255, 0.25);
-        transform: translateY(-4px);
-    }}
-
-    [data-testid="stFileUploader"] section *, 
-    [data-testid="stFileUploader"] div, 
-    [data-testid="stFileUploader"] span, 
-    [data-testid="stFileUploader"] p {{
-        color: #ffffff !important;
-    }}
-
-    .icon-container {{
-        font-size: 55px;
-        margin-bottom: 15px;
-        transition: all 0.4s ease;
-        display: inline-block;
-    }}
-    
-    .excel-icon {{ color: #2ea043; text-shadow: 0 0 20px rgba(46, 160, 67, 0.4); }}
-    .ocr-icon {{ color: #58a6ff; text-shadow: 0 0 20px rgba(88, 166, 255, 0.4); }}
-    
-    .custom-card:hover .excel-icon {{
-        transform: scale(1.15) translateY(-5px);
-        filter: drop-shadow(0 0 15px #2ea043);
-    }}
-    .custom-card:hover .ocr-icon {{
-        transform: scale(1.15) rotate(10deg);
-        filter: drop-shadow(0 0 15px #58a6ff);
     }}
 
     .custom-card {{
@@ -277,8 +183,17 @@ def apply_neon_style(direction, align):
         padding: 25px;
         text-align: center;
         margin-bottom: 20px;
-        transition: 0.3s;
     }}
+
+    .icon-container {{
+        font-size: 55px;
+        margin-bottom: 15px;
+        display: inline-block;
+    }}
+    
+    .excel-icon {{ color: #2ea043; text-shadow: 0 0 20px rgba(46, 160, 67, 0.4); }}
+    .ocr-icon {{ color: #58a6ff; text-shadow: 0 0 20px rgba(88, 166, 255, 0.4); }}
+    .pdf-tool-icon {{ color: #ff7b72; text-shadow: 0 0 20px rgba(255, 123, 114, 0.4); }}
 
     h1 {{
         color: #ffffff !important;
@@ -298,11 +213,11 @@ def apply_neon_style(direction, align):
         font-size: 16px !important;
         width: 100%;
         box-shadow: 0 4px 12px rgba(46, 160, 67, 0.2);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: all 0.3s ease;
     }}
     
     .stButton>button:hover {{
-        transform: translateY(-3px);
+        transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(46, 160, 67, 0.5);
     }}
 
@@ -311,8 +226,6 @@ def apply_neon_style(direction, align):
         color: white !important;
         border: none !important;
         border-radius: 12px !important;
-        box-shadow: 0 4px 12px rgba(31, 111, 235, 0.2);
-        transition: all 0.3s ease;
         width: 100%;
     }}
 
@@ -321,15 +234,6 @@ def apply_neon_style(direction, align):
         color: #e6edf3 !important;
         border: 1px solid #30363d !important;
         border-radius: 12px !important;
-    }}
-
-    .stCopyButton button {{
-        background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%) !important;
-        color: white !important;
-        border-radius: 12px !important;
-        border: none !important;
-        font-weight: bold !important;
-        width: 100%;
     }}
 
     .footer {{
@@ -351,7 +255,7 @@ def apply_neon_style(direction, align):
 
 apply_neon_style(lang["direction"], lang["align"])
 
-# --- 6. واجهة البرنامج الرئيسية المترجمة ---
+# --- 7. واجهة البرنامج الرئيسية ---
 st.markdown(f"""
 <div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
     <h1>{lang["title"]}</h1>
@@ -361,68 +265,58 @@ st.markdown(f"""
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
-
-# --- التبويب الأول: تحويل الجداول لـ Excel ---
-with tab1:
+# =========================================================================
+# 1. أداة تحويل PDF إلى جداول إكسيل
+# =========================================================================
+if current_tool == lang["tool_excel"]:
     st.markdown(f"""
     <div class="custom-card">
         <div class="icon-container excel-icon"><i class="fa-solid fa-file-excel"></i></div>
-        <h3 style='margin:0; color:#ffffff;'>{lang["card1_title"]}</h3>
-        <p style='font-size:14px; color:#8b949e; margin:5px 0;'>{lang["card1_desc"]}</p>
+        <h3 style='margin:0; color:#ffffff;'>تحويل الجداول الرقمية إلى Excel</h3>
+        <p style='font-size:14px; color:#8b949e; margin:5px 0;'>ارفع الكشوفات والتقارير المالية لتحويلها تلقائياً إلى جداول بيانات ميكروسوفت إكسيل منسقة</p>
     </div>
     """, unsafe_allow_html=True)
     
     pdf_files = st.file_uploader(lang["uploader_pdf"], type=["pdf"], key="pdf_main", accept_multiple_files=True)
-    
     if pdf_files:
         for uploaded_pdf in pdf_files:
-            st.write("")
-            with st.container():
-                st.info(f"{lang['status_preparing']}{uploaded_pdf.name}")
-                if st.button(f"{lang['btn_convert']}{uploaded_pdf.name}"):
-                    try:
-                        with st.spinner(lang["status_loading"]):
-                            dfs = tabula.read_pdf(uploaded_pdf, pages='all', multiple_tables=True, lattice=True)
-                            
-                            if dfs:
-                                output = io.BytesIO()
-                                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                                    current_row = 0
-                                    for df in dfs:
-                                        df = df.fillna('').replace([float('inf'), float('-inf')], 0)
-                                        df.to_excel(writer, index=False, startrow=current_row, sheet_name='Data')
-                                        current_row += len(df) + 2
-                                    
-                                st.success(lang["success_convert"])
-                                st.download_button(
-                                    label=lang["download_excel"],
-                                    data=output.getvalue(),
-                                    file_name=f"Excel_{uploaded_pdf.name.replace('.pdf', '')}.xlsx",
-                                    mime="application/vnd.ms-excel"
-                                )
-                            else:
-                                st.warning(lang["warning_no_tables"])
-                    except Exception as e:
-                        st.error(f"Error: {str(e)}")
+            if st.button(f"{lang['btn_convert']}{uploaded_pdf.name}"):
+                try:
+                    with st.spinner(lang["status_loading"]):
+                        dfs = tabula.read_pdf(uploaded_pdf, pages='all', multiple_tables=True, lattice=True)
+                        if dfs:
+                            output = io.BytesIO()
+                            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                                current_row = 0
+                                for df in dfs:
+                                    df = df.fillna('').replace([float('inf'), float('-inf')], 0)
+                                    df.to_excel(writer, index=False, startrow=current_row, sheet_name='Data')
+                                    current_row += len(df) + 2
+                            st.success(lang["success_convert"])
+                            st.download_button(label=lang["download_excel"], data=output.getvalue(), file_name=f"Excel_{uploaded_pdf.name.replace('.pdf', '')}.xlsx", mime="application/vnd.ms-excel")
+                        else:
+                            st.warning(lang["warning_no_tables"])
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
 
-# --- التبويب الثاني: استخراج النصوص OCR ---
-with tab2:
+# =========================================================================
+# 2. أداة استخراج النصوص الذكي (OCR)
+# =========================================================================
+elif current_tool == lang["tool_ocr"]:
     st.markdown(f"""
     <div class="custom-card">
         <div class="icon-container ocr-icon"><i class="fa-solid fa-eye"></i></div>
-        <h3 style='margin:0; color:#ffffff;'>{lang["card2_title"]}</h3>
-        <p style='font-size:14px; color:#8b949e; margin:5px 0;'>{lang["card2_desc"]}</p>
+        <h3 style='margin:0; color:#ffffff;'>قارئ النصوص والماسح الضوئي الذكي</h3>
+        <p style='font-size:14px; color:#8b949e; margin:5px 0;'>استخرج الحروف والكلمات بدقة من الفواتير والملفات المصورة والممسوحة ضوئياً</p>
     </div>
     """, unsafe_allow_html=True)
     
     ocr_file = st.file_uploader(lang["uploader_ocr"], type=["jpg", "png", "jpeg", "pdf"], key="ocr_main")
-    
     if ocr_file:
         if st.button(lang["btn_ocr"]):
             full_text = ""
             try:
-                with st.spinner(lang["status_ocr_loading"]):
+                with st.spinner(lang["status_loading"]):
                     if ocr_file.type == "application/pdf":
                         doc = fitz.open(stream=ocr_file.read(), filetype="pdf")
                         for page in doc:
@@ -439,29 +333,143 @@ with tab2:
 
                 if full_text.strip():
                     st.markdown(lang["ocr_result_header"])
-                    st.text_area("", value=full_text, height=320)
-                    
-                    col1, col2 = st.columns(2)
-                    
-                    with col1:
-                        st.markdown(f"<p style='font-size:14px; color:#8b949e; margin-bottom:5px;'>{lang['opt1']}</p>", unsafe_allow_html=True)
-                        st_copy_to_clipboard(text=full_text, before_copy_label=lang["btn_copy"], after_copy_label=lang["copied"])
-                        
-                    with col2:
-                        st.markdown(f"<p style='font-size:14px; color:#8b949e; margin-bottom:5px;'>{lang['opt2']}</p>", unsafe_allow_html=True)
-                        st.download_button(
-                            label=lang["download_txt"],
-                            data=full_text,
-                            file_name="extracted_text.txt"
-                        )
+                    st.text_area("", value=full_text, height=250)
+                    st.download_button(label=lang["download_txt"], data=full_text, file_name="extracted_text.txt")
                 else:
                     st.warning(lang["warning_no_text"])
             except Exception as e:
                 st.error(f"OCR Error: {e}")
 
-# --- 7. مساحة إعلانية مخصصة ومتجاوبة في أسفل المحتوى ---
-st.markdown("<br><br>", unsafe_allow_html=True)
+# =========================================================================
+# 3. أداة دمج ملفات PDF
+# =========================================================================
+elif current_tool == lang["tool_merge"]:
+    st.markdown("""
+    <div class="custom-card"><div class="icon-container pdf-tool-icon"><i class="fa-solid fa-file-medical"></i></div>
+    <h3 style='margin:0; color:#ffffff;'>📂 دمج ملفات PDF متعددة</h3>
+    <p style='font-size:14px; color:#8b949e; margin:5px 0;'>قم برفع كشوفات ومستندات متعددة ليتم تجميعها فوراً في ملف PDF واحد متسلسل</p></div>
+    """, unsafe_allow_html=True)
+    
+    merge_files = st.file_uploader("اختر ملفات PDF لدمجها معاً:", type=["pdf"], accept_multiple_files=True, key="merge_up")
+    if merge_files and len(merge_files) >= 2:
+        if st.button("🚀 ابدأ دمج المستندات الآن"):
+            try:
+                with st.spinner("جاري دمج وترتيب الصفحات..."):
+                    main_doc = fitz.open()
+                    for f in merge_files:
+                        sub_doc = fitz.open(stream=f.read(), filetype="pdf")
+                        main_doc.insert_pdf(sub_doc)
+                    output_bytes = main_doc.write()
+                    st.success(lang["success_convert"])
+                    st.download_button("📥 تحميل ملف PDF المدمج الجديد", data=output_bytes, file_name="Merged_Document.pdf", mime="application/pdf")
+            except Exception as e:
+                st.error(f"حدث خطأ أثناء الدمج: {e}")
 
+# =========================================================================
+# 4. أداة حذف صفحات من ملف PDF
+# =========================================================================
+elif current_tool == lang["tool_delete"]:
+    st.markdown("""
+    <div class="custom-card"><div class="icon-container pdf-tool-icon"><i class="fa-solid fa-file-circle-minus"></i></div>
+    <h3 style='margin:0; color:#ffffff;'>✂️ حذف صفحات معينة من المستند</h3>
+    <p style='font-size:14px; color:#8b949e; margin:5px 0;'>تخلص من الصفحات الفارغة أو الزائدة داخل التقارير عبر تحديد أرقامها بسهولة</p></div>
+    """, unsafe_allow_html=True)
+    
+    del_file = st.file_uploader("ارفع ملف الـ PDF المراد تعديله:", type=["pdf"], key="del_up")
+    if del_file:
+        pages_to_del = st.text_input("أدخل أرقام الصفحات المراد حذفها مفصولة بفاصلة (مثال: 2, 5, 7):")
+        if st.button("❌ احذف الصفحات المحددة"):
+            try:
+                with st.spinner("جاري تنقيح الملف وفصل الصفحات..."):
+                    doc = fitz.open(stream=del_file.read(), filetype="pdf")
+                    # تحويل المدخلات إلى أرقام ترتيبية (بدءاً من الصفر)
+                    indices = sorted([int(p.strip()) - 1 for p in pages_to_del.split(",") if p.strip().isdigit()], reverse=True)
+                    for idx in indices:
+                        if 0 <= idx < len(doc):
+                            doc.delete_page(idx)
+                    output_bytes = doc.write()
+                    st.success(lang["success_convert"])
+                    st.download_button("📥 تحميل المستند المنقح", data=output_bytes, file_name="Edited_Document.pdf", mime="application/pdf")
+            except Exception as e:
+                st.error(f"حدث خطأ: {e}")
+
+# =========================================================================
+# 5. أداة إعادة ترتيب صفحات PDF
+# =========================================================================
+elif current_tool == lang["tool_reorder"]:
+    st.markdown("""
+    <div class="custom-card"><div class="icon-container pdf-tool-icon"><i class="fa-solid fa-file-signature"></i></div>
+    <h3 style='margin:0; color:#ffffff;'>🔀 إعادة ترتيب وتنظيم الصفحات</h3>
+    <p style='font-size:14px; color:#8b949e; margin:5px 0;'>قم بإعادة صياغة هيكل الصفحات بالترتيب المناسب لاعتماداتك المالية</p></div>
+    """, unsafe_allow_html=True)
+    
+    reorder_file = st.file_uploader("ارفع الملف لإعادة ترتيبه:", type=["pdf"], key="reorder_up")
+    if reorder_file:
+        doc = fitz.open(stream=reorder_file.read(), filetype="pdf")
+        st.info(f"💡 هذا المستند يحتوي على إجمالي: ({len(doc)}) صفحات.")
+        order_input = st.text_input("اكتب الترتيب الجديد للصفحات مفصولة بفاصلة (مثال: 3, 1, 2, 4):")
+        if st.button("⚙️ تطبيق الهيكلة الجديدة"):
+            try:
+                with st.spinner("جاري تبديل مواضع الصفحات..."):
+                    new_order = [int(x.strip()) - 1 for x in order_input.split(",") if x.strip().isdigit()]
+                    new_doc = fitz.open()
+                    for idx in new_order:
+                        if 0 <= idx < len(doc):
+                            new_doc.insert_pdf(doc, from_page=idx, to_page=idx)
+                    output_bytes = new_doc.write()
+                    st.success(lang["success_convert"])
+                    st.download_button("📥 تحميل الملف بالترتيب الجديد", data=output_bytes, file_name="Reordered_Document.pdf", mime="application/pdf")
+            except Exception as e:
+                st.error(f"حدث خطأ: {e}")
+
+# =========================================================================
+# 6. أداة التوقيع الإلكتروني على المستند
+# =========================================================================
+elif current_tool == lang["tool_sign"]:
+    st.markdown("""
+    <div class="custom-card"><div class="icon-container pdf-tool-icon"><i class="fa-solid fa-pen-nib"></i></div>
+    <h3 style='margin:0; color:#ffffff;'>✍️ التوقيع الإلكتروني الذكي على المستندات</h3>
+    <p style='font-size:14px; color:#8b949e; margin:5px 0;'>قم بإسقاط وتثبيت ختمك أو توقيعك الشخصي فوق أي مستند رسمي بمرونة مذهلة</p></div>
+    """, unsafe_allow_html=True)
+    
+    col_f1, col_f2 = st.columns(2)
+    with col_f1:
+        main_pdf = st.file_uploader("1. ارفع ملف المستند أو الفاتورة (PDF):", type=["pdf"], key="sign_pdf")
+    with col_f2:
+        sign_img = st.file_uploader("2. ارفع صورة توقيعك أو الختم (يفضل PNG بخلفية شفافة):", type=["png", "jpg", "jpeg"], key="sign_img")
+        
+    if main_pdf and sign_img:
+        st.markdown("---")
+        st.markdown("#### 🎯 لوحة التحكم بإحداثيات وأبعاد التوقيع:")
+        doc = fitz.open(stream=main_pdf.read(), filetype="pdf")
+        
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            target_page = st.number_input("رقم الصفحة المستهدفة للتوقيع:", min_value=1, max_value=len(doc), value=1)
+        with c2:
+            sig_width = st.slider("عرض التوقيع (الحجم الحجمي):", min_value=50, max_value=300, value=120, step=10)
+        with c3:
+            x_pos = st.slider("الموضع الأفقي (اليمين واليسار):", min_value=0, max_value=600, value=400, step=10)
+        with c4:
+            y_pos = st.slider("الموضع العمودي (الأعلى والأسفل):", min_value=0, max_value=800, value=700, step=10)
+            
+        if st.button("✍️ دمج وختم التوقيع داخل الـ PDF"):
+            try:
+                with st.spinner("جاري تثبيت الختم وحماية المستند..."):
+                    page = doc[target_page - 1]
+                    # تحويل مخرجات الرفع إلى بايتات لقراءتها بواسطة PyMuPDF
+                    sign_bytes = sign_img.getvalue()
+                    rect = fitz.Rect(x_pos, y_pos, x_pos + sig_width, y_pos + int(sig_width * 0.6))
+                    page.insert_image(rect, stream=sign_bytes)
+                    
+                    output_bytes = doc.write()
+                    st.success("✍️ تم دمج وختم التوقيع الإلكتروني على الصفحة المحددة بنجاح!")
+                    st.download_button("📥 تحميل المستند الموقع والمختوم جاهزاً", data=output_bytes, file_name="Signed_Document.pdf", mime="application/pdf")
+            except Exception as e:
+                st.error(f"حدث خطأ أثناء التوقيع: {e}")
+
+# --- 8. مساحة إعلانية متجاوبة في الأسفل ---
+st.markdown("<br><br>", unsafe_allow_html=True)
 ads_code = """
 <div style="text-align: center; width: 100%;">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1091631464795781"
