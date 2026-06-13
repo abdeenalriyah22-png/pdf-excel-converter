@@ -7,6 +7,7 @@ import base64
 from PIL import Image
 import pytesseract
 import fitz  # PyMuPDF
+from st_copy_to_clipboard import st_copy_to_clipboard
 
 # --- 1. إعدادات الصفحة الأساسية ---
 st.set_page_config(
@@ -197,6 +198,7 @@ def apply_neon_style():
         border-radius: 12px !important;
         box-shadow: 0 4px 12px rgba(31, 111, 235, 0.2);
         transition: all 0.3s ease;
+        width: 100%;
     }
     [data-testid="stDownloadButton"] button:hover {
         transform: translateY(-2px);
@@ -209,6 +211,15 @@ def apply_neon_style():
         color: #e6edf3 !important;
         border: 1px solid #30363d !important;
         border-radius: 12px !important;
+    }
+
+    /* تجميل زر النسخ وتوسيطه ليتماشى مع النيون */
+    .stCopyButton button {
+        background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%) !important;
+        color: white !important;
+        border-radius: 12px !important;
+        border: none !important;
+        font-weight: bold !important;
     }
 
     /* التذييل الثابت والسفلي الفخم */
@@ -325,11 +336,23 @@ with tab2:
                 if full_text.strip():
                     st.markdown("#### ✅ النصوص التي تم العثور عليها ومسحها:")
                     st.text_area("", value=full_text, height=320)
-                    st.download_button(
-                        label="📥 حفظ النص بالكامل كملف TXT",
-                        data=full_text,
-                        file_name="extracted_text.txt"
-                    )
+                    
+                    # --- إنشاء عمودين متساويين للأزرار الجديدة الخيار الأول والثاني ---
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown("<p style='font-size:14px; color:#8b949e; margin-bottom:5px;'>📋 الخيار الأول:</p>", unsafe_allow_html=True)
+                        # ميزة نسخ النص الذكي التفاعلي للحافظة طوالي
+                        st_copy_to_clipboard(text=full_text, before_copy_label="📋 نسخ النص بالكامل", after_copy_label="✅ تم النسخ بنجاح!")
+                        
+                    with col2:
+                        st.markdown("<p style='font-size:14px; color:#8b949e; margin-bottom:5px;'>📥 الخيار الثاني:</p>", unsafe_allow_html=True)
+                        # ميزة تحميل الملف النصي
+                        st.download_button(
+                            label="📥 تحميل النص كملف TXT",
+                            data=full_text,
+                            file_name="extracted_text.txt"
+                        )
                 else:
                     st.warning("نعتذر، لم نكتشف حروفاً أو نصوصاً مقروءة في هذا المستند.")
             except Exception as e:
