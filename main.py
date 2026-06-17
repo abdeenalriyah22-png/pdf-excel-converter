@@ -17,42 +17,39 @@ translations = {
     "اردو": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالیں", "up": "فائل اپ لوڈ کریں", "btn": "شروع"}
 }
 
-# شريط اللغة (يؤثر على بقية الصفحة)
+# شريط اختيار اللغة
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# --- التصميم الديناميكي الكامل ---
-# هنا يتم تغيير الاتجاه والمحاذاة والموقع بناءً على المتغيرات
+# التصميم الديناميكي الشامل
 st.markdown(f"""
 <style>
-    /* إخفاء الأزرار */
+    /* إخفاء أزرار النظام (القلم والمشاركة) */
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
     
-    /* التأثيرات الديناميكية */
-    .stApp {{ 
-        direction: {lang['dir']} !important; 
-        text-align: {lang['align']} !important; 
-        background-color: #F8F9FA !important; 
-    }}
-    
+    /* تثبيت شريط اللغة في الأعلى (ديناميكي يمين أو يسار) */
     [data-testid="stSelectbox"] {{
-        position: fixed !important; top: 10px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important;
+        position: fixed !important; top: 15px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important;
     }}
     
-    .main-container {{ 
-        max-width: 900px; margin: 0 auto; padding-top: 100px !important; 
-        direction: {lang['dir']} !important; text-align: {lang['align']} !important; 
-    }}
+    /* توسيط المحتوى وتنسيق الاتجاه */
+    .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; text-align: {lang['align']} !important; }}
+    .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; }}
     
-    /* المستطيل النيون الأخضر */
+    /* المستطيل المتوهج أخضر نيون */
     [data-testid="stFileUploader"] {{ 
-        border: 2px solid #2ea043 !important; border-radius: 15px !important; 
+        border: 2px solid #2ea043 !important; 
+        border-radius: 15px !important; 
         box-shadow: 0 0 15px rgba(46, 160, 67, 0.4) !important;
+        background: #FFFFFF !important;
     }}
+    
+    /* تذييل الحقوق */
+    .footer {{ text-align: center; padding: 20px; color: #555; font-weight: bold; margin-top: 50px; }}
 </style>
 """, unsafe_allow_html=True)
 
-# المحتوى الرئيسي
+# محتوى الصفحة
 with st.container():
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
     st.markdown(f"<h1>{lang['title']}</h1><p>{lang['subtitle']}</p>", unsafe_allow_html=True)
@@ -77,5 +74,8 @@ with st.container():
         if img and st.button(lang["btn"]):
             full_text = pytesseract.image_to_string(Image.open(img), lang='ara+eng')
             st.text_area("النص:", value=full_text, height=300)
-            
+    
     st.markdown('</div>', unsafe_allow_html=True)
+
+# الحقوق في الأسفل
+st.markdown('<div class="footer">المحاسب الذكي Pro | جميع الحقوق محفوظة © 2026</div>', unsafe_allow_html=True)
