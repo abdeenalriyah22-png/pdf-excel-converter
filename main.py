@@ -21,7 +21,7 @@ translations = {
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# --- التصميم الشامل (التوهج + التمركز + المحاذاة) ---
+# --- التصميم (تعديل العنوان للنيون فقط) ---
 st.markdown(f"""
 <style>
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
@@ -29,9 +29,15 @@ st.markdown(f"""
     
     .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; }}
     .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; }}
-    h1, p {{ text-align: {lang['align']} !important; color: #202124 !important; }}
     
-    /* التوهج الأخضر للمستطيل والزر */
+    /* إضافة توهج النيون للعنوان */
+    h1 {{ 
+        text-align: {lang['align']} !important; 
+        color: #202124 !important; 
+        text-shadow: 0 0 10px #28a745, 0 0 20px #28a745 !important; 
+    }}
+    p {{ text-align: {lang['align']} !important; color: #202124 !important; }}
+    
     [data-testid="stFileUploader"] {{ border: 2px solid #28a745 !important; border-radius: 12px !important; box-shadow: 0 0 15px rgba(40, 167, 69, 0.3) !important; background: #ffffff !important; }}
     div.stButton > button {{ border: 2px solid #28a745 !important; transition: 0.3s; }}
     div.stButton > button:active {{ box-shadow: 0 0 20px #28a745 !important; }}
@@ -76,7 +82,6 @@ with st.container():
                     
                     st.text_area("النص:", value=full_text, height=300)
                     
-                    # زر النسخ الاحترافي
                     if full_text.strip():
                         copy_btn_code = f"""
                         <button style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: sans-serif;" onclick="navigator.clipboard.writeText(`{full_text.replace('`', '')}`)">
