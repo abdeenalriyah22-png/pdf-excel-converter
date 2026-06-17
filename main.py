@@ -1,33 +1,25 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import tabula
 import pandas as pd
 import io
 from PIL import Image
 import pytesseract
 import fitz
-from st_copy_to_clipboard import st_copy_to_clipboard
 
 # إعدادات الصفحة
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
-# --- إخفاء كل أزرار النظام ورفع شريط اللغة للأعلى ---
+# --- 1. إخفاء أزرار النظام (القلم والمشاركة) ---
 st.markdown("""
 <style>
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {
         display: none !important;
         visibility: hidden !important;
     }
-    /* جعل حاوية شريط اللغة في أقصى الأعلى */
-    [data-testid="stSidebar"] { display: none !important; }
-    div[data-testid="stVerticalBlock"] > div:first-child { margin-top: -50px !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# شريط اختيار اللغة (في الأعلى تماماً)
-selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
-
-# قاموس اللغات
+# --- 2. شريط اللغة في الأعلى ---
 translations = {
     "العربية": {"dir": "rtl", "align": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF هنا", "btn": "بدء المعالجة"},
     "English": {"dir": "ltr", "align": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF to Excel", "tab2": "🔍 OCR Text", "up": "Upload PDF", "btn": "Start"},
@@ -35,9 +27,10 @@ translations = {
     "اردو": {"dir": "rtl", "align": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالیں", "up": "فائل اپ لوڈ کریں", "btn": "شروع"}
 }
 
+selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# التصميم الفاتح
+# --- 3. بقية التصميم ---
 st.markdown(f"""
 <style>
     html, body, .stApp {{ 
@@ -46,17 +39,17 @@ st.markdown(f"""
         background-color: #F8F9FA !important; 
         color: #202124 !important; 
     }}
-    h1 {{ color: #1A73E8 !important; margin-top: 20px !important; }}
+    h1 {{ color: #1A73E8 !important; margin-top: 10px !important; }}
     [data-testid="stFileUploader"] {{ border: 2px solid #1A73E8 !important; background: #FFFFFF !important; border-radius: 12px !important; }}
     .footer {{ position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; background: #F8F9FA; color: #1A73E8; font-weight: bold; border-top: 1px solid #1A73E8; z-index: 999; }}
 </style>
 """, unsafe_allow_html=True)
 
-# واجهة البرنامج
+# واجهة البرنامج (رجعت لمكانها الصحيح بعد اللغة)
 st.markdown(f"<h1>{lang['title']}</h1><p>{lang['subtitle']}</p>", unsafe_allow_html=True)
 tab1, tab2 = st.tabs([lang["tab1"], lang["tab2"]])
 
-# منطق المعالجة (كما هو)
+# منطق المعالجة (محفوظ كما هو)
 with tab1:
     files = st.file_uploader(lang["up"], type=["pdf"], accept_multiple_files=True)
     if files:
