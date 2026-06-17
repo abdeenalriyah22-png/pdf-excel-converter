@@ -9,7 +9,7 @@ import fitz
 # إعدادات الصفحة
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
-# قاموس اللغات (أضفنا خاصية pos للتحكم في مكان الشريط)
+# قاموس اللغات
 translations = {
     "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF هنا", "btn": "بدء المعالجة"},
     "English": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF to Excel", "tab2": "🔍 OCR Text", "up": "Upload PDF", "btn": "Start"},
@@ -21,23 +21,24 @@ translations = {
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# --- التصميم الديناميكي ---
+# --- تنسيق وتوزيع العناصر ---
 st.markdown(f"""
 <style>
     /* إخفاء أزرار ستريمليت */
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
     
-    /* تحديد موقع الشريط بناءً على اللغة */
+    /* شريط اللغة يظل في الأعلى */
     [data-testid="stSelectbox"] {{
         position: fixed !important;
         top: 10px !important;
-        {lang['pos']}: 20px !important; /* يتغير ديناميكياً يمين أو يسار */
+        {lang['pos']}: 20px !important;
         z-index: 9999 !important;
         width: 150px !important;
     }}
 
+    /* إنزال المحتوى الرئيسي للأسفل (Padding-top زاد إلى 120px) */
     .stApp {{ background-color: #F8F9FA !important; color: #202124 !important; direction: {lang['dir']} !important; }}
-    .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 60px; text-align: {lang['align']} !important; }}
+    .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 120px !important; text-align: {lang['align']} !important; }}
 </style>
 """, unsafe_allow_html=True)
 
