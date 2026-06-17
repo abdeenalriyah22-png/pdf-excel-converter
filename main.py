@@ -3,15 +3,16 @@ import streamlit.components.v1 as components
 import tabula
 import pandas as pd
 import io
+import base64
 from PIL import Image
 import pytesseract
 import fitz
 from st_copy_to_clipboard import st_copy_to_clipboard
 
-# --- 1. إعدادات الصفحة ---
+# إعدادات الصفحة
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
-# --- 2. قاموس الترجمة ---
+# قاموس الترجمة
 translations = {
     "العربية": {
         "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول",
@@ -23,41 +24,30 @@ translations = {
 }
 lang = translations["العربية"]
 
-# --- 3. تصميم Material Design 3 (تباين عالي) ---
+# تصميم Google Material Design 3 (تباين عالي)
 st.markdown("""
 <style>
-    /* إعدادات الخطوط والتباين */
+    /* الخطوط والتباين */
     html, body, [class*="st-emotion-cache"] { font-family: 'Segoe UI', Roboto, sans-serif !important; }
     h1 { font-size: 3.5rem !important; color: #FFFFFF !important; font-weight: 700 !important; }
     p, span, label { font-size: 1.2rem !important; color: #B0B0B0 !important; }
-    
-    /* خلفية سوداء عميقة */
     .stApp { background-color: #000000 !important; }
 
-    /* مستطيل الرفع (إطار أبيض عريض) */
-    [data-testid="stFileUploader"] {
-        border: 3px solid #FFFFFF !important;
-        background-color: #121212 !important;
-        border-radius: 20px !important;
-    }
+    /* تنسيق القائمة العلوية */
+    [data-testid="stSelectbox"] { width: 250px !important; margin-bottom: 20px !important; }
     
-    /* الأزرار (أبيض على أسود) */
-    .stButton > button {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        border-radius: 50px !important;
-        padding: 15px 40px !important;
-        font-weight: 900 !important;
-        font-size: 1.2rem !important;
-    }
+    /* تنسيق الرفع والأزرار */
+    [data-testid="stFileUploader"] { border: 3px solid #FFFFFF !important; background-color: #121212 !important; border-radius: 20px !important; }
+    .stButton > button { background-color: #FFFFFF !important; color: #000000 !important; border-radius: 50px !important; padding: 15px 40px !important; font-weight: 900 !important; font-size: 1.2rem !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. الواجهة ---
+# واجهة المستخدم
 st.markdown(f"<h1>{lang['title']}</h1><p>{lang['subtitle']}</p>", unsafe_allow_html=True)
+selected_lang = st.selectbox("🌐", ["العربية"], index=0, key="lang_selector")
 tab1, tab2 = st.tabs([lang["tab1"], lang["tab2"]])
 
-# --- 5. منطق معالجة الملفات (بدون تعديل) ---
+# --- منطق المعالجة (محفوظ كما هو تماماً من الملف الأصلي) ---
 with tab1:
     pdf_files = st.file_uploader(lang["up"], type=["pdf"], accept_multiple_files=True)
     if pdf_files:
