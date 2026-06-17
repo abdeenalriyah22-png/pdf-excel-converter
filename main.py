@@ -21,20 +21,20 @@ translations = {
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# التصميم الديناميكي الشامل
+# التصميم الديناميكي الكامل
 st.markdown(f"""
 <style>
-    /* إخفاء أزرار النظام (القلم والمشاركة) */
+    /* إخفاء الأزرار المزعجة */
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
     
-    /* تثبيت شريط اللغة في الأعلى (ديناميكي يمين أو يسار) */
+    /* تثبيت شريط اللغة */
     [data-testid="stSelectbox"] {{
         position: fixed !important; top: 15px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important;
     }}
     
-    /* توسيط المحتوى وتنسيق الاتجاه */
-    .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; text-align: {lang['align']} !important; }}
-    .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; }}
+    /* توسيط المحتوى مع جعل العنوان يميل لليمين عند العربية */
+    .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; }}
+    .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; text-align: {lang['align']} !important; }}
     
     /* المستطيل المتوهج أخضر نيون */
     [data-testid="stFileUploader"] {{ 
@@ -44,8 +44,12 @@ st.markdown(f"""
         background: #FFFFFF !important;
     }}
     
-    /* تذييل الحقوق */
-    .footer {{ text-align: center; padding: 20px; color: #555; font-weight: bold; margin-top: 50px; }}
+    /* تذييل الحقوق ثابت في الأسفل خالص */
+    .footer {{ 
+        position: fixed; left: 0; bottom: 0; width: 100%; 
+        text-align: center; padding: 15px; background: #F8F9FA; 
+        color: #555; font-weight: bold; border-top: 1px solid #ddd;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -77,5 +81,5 @@ with st.container():
     
     st.markdown('</div>', unsafe_allow_html=True)
 
-# الحقوق في الأسفل
+# الحقوق في الأسفل خالص
 st.markdown('<div class="footer">المحاسب الذكي Pro | جميع الحقوق محفوظة © 2026</div>', unsafe_allow_html=True)
