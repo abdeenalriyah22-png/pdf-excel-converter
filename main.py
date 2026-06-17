@@ -22,27 +22,27 @@ translations = {
 # --- تنسيق وتوزيع العناصر ---
 st.markdown("""
 <style>
-    /* إخفاء أزرار ستريمليت */
+    /* إخفاء أزرار ستريمليت المزعجة */
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"], [data-testid="stStatusWidget"] {
         display: none !important;
     }
     
-    /* رفع شريط اللغة للمكان الذي أشرت إليه (النقطة الحمراء) */
+    /* رفع شريط اللغة لأعلى اليمين كما طلبت */
     [data-testid="stSelectbox"] {
         position: fixed !important;
         top: 10px !important;
-        left: 20px !important;
+        right: 20px !important;
         z-index: 9999 !important;
         width: 150px !important;
     }
 
-    /* توسيط المحتوى الرئيسي */
+    /* توسيط المحتوى */
     .stApp { background-color: #F8F9FA !important; color: #202124 !important; }
     .main-container { max-width: 900px; margin: 0 auto; padding-top: 60px; }
 </style>
 """, unsafe_allow_html=True)
 
-# اختيار اللغة (يظهر في الأعلى يساراً)
+# اختيار اللغة (يظهر في الأعلى يميناً)
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
@@ -78,4 +78,4 @@ with tab2:
         full_text = pytesseract.image_to_string(Image.open(img), lang='ara+eng')
         st.text_area("النص:", value=full_text, height=300)
 
-st.markdown('</div>', unsafe_allow_html=True) # إغلاق حاوية المنتصف
+st.markdown('</div>', unsafe_allow_html=True)
