@@ -19,56 +19,47 @@ translations = {
     "اردو": {"dir": "rtl", "align": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "ڈیٹا پروسیسنگ کا جدید نظام", "tab1": "📊 پی ڈی ایف کو ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالنا (OCR)", "up": "فائل یہاں ڈریگ کریں", "btn": "شروع کریں"}
 }
 
-# --- 3. القائمة المنسدلة (في أعلى قمة الصفحة) ---
-selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
-lang = translations[selected_lang]
-
-# --- 4. التنسيق (النيون الأخضر + القائمة العلوية) ---
-st.markdown(f"""
+# --- 3. التنسيق (رفع القائمة للأعلى + نيون أخضر) ---
+st.markdown("""
 <style>
-    /* جعل القائمة في أعلى القمة */
-    div[data-testid="stVerticalBlock"] {{ gap: 0rem; }}
-    
-    /* تنسيق القائمة المنسدلة باللون الأخضر */
-    [data-testid="stSelectbox"] div[data-baseweb="select"] {{ 
+    /* رفع المحتوى للأعلى مباشرة */
+    .block-container { padding-top: 0rem !important; }
+    div[data-testid="stVerticalBlock"] { gap: 0rem !important; }
+
+    /* تنسيق القائمة المنسدلة (الأخضر النيوني) */
+    [data-testid="stSelectbox"] { margin-top: -20px !important; }
+    [data-testid="stSelectbox"] div[data-baseweb="select"] { 
         background-color: #000 !important; 
         border: 2px solid #2ea043 !important; 
         color: #2ea043 !important; 
-    }}
+    }
     
-    /* توحيد الألوان والنصوص */
-    html, body, div, p, h1, h2, h3, span, label {{ 
-        direction: {lang['dir']} !important; 
-        text-align: {lang['align']} !important; 
+    /* توحيد النصوص باللون الأبيض */
+    html, body, div, p, h1, h2, h3, span, label { 
         color: #ffffff !important; 
-    }}
+    }
     
-    .stApp {{ background-color: #07090e !important; }}
+    .stApp { background-color: #07090e !important; }
 
-    /* مستطيل الرفع (توهج أخضر) */
-    [data-testid="stFileUploader"] {{
-        background-color: #0d0d0d !important;
+    /* مستطيل الرفع */
+    [data-testid="stFileUploader"] {
         border: 2px solid #2ea043 !important;
         border-radius: 15px !important;
-    }}
-    [data-testid="stFileUploader"]:hover {{
-        box-shadow: 0 0 15px #2ea043 !important;
-    }}
-
-    /* أزرار النيون الأخضر */
-    .stButton > button {{
-        background: transparent !important;
+    }
+    
+    /* الأزرار */
+    .stButton > button {
         border: 2px solid #2ea043 !important;
         color: #2ea043 !important;
         border-radius: 50px !important;
-    }}
-    .stButton > button:hover {{
-        background: #2ea043 !important;
-        color: #ffffff !important;
-        box-shadow: 0 0 20px #2ea043 !important;
-    }}
+        background: transparent !important;
+    }
 </style>
 """, unsafe_allow_html=True)
+
+# --- 4. القائمة المنسدلة (أول عنصر في الكود) ---
+selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0)
+lang = translations[selected_lang]
 
 # --- 5. الواجهة ---
 st.markdown(f"<h1>{lang['title']}</h1><p>{lang['subtitle']}</p>", unsafe_allow_html=True)
