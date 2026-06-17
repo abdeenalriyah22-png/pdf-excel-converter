@@ -1,64 +1,52 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import tabula
 import pandas as pd
 import io
 from PIL import Image
 import pytesseract
 import fitz
-from st_copy_to_clipboard import st_copy_to_clipboard
 
 # إعدادات الصفحة
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
-# قاموس اللغات
+# قاموس اللغات (أضفنا خاصية pos للتحكم في مكان الشريط)
 translations = {
-    "العربية": {"dir": "rtl", "align": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF هنا", "btn": "بدء المعالجة"},
-    "English": {"dir": "ltr", "align": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF to Excel", "tab2": "🔍 OCR Text", "up": "Upload PDF", "btn": "Start"},
-    "Français": {"dir": "ltr", "align": "left", "title": "📊 Comptable Intelligent Pro", "subtitle": "Système cloud avancé", "tab1": "📊 PDF vers Excel", "tab2": "🔍 OCR Texte", "up": "Charger PDF", "btn": "Démarrer"},
-    "اردو": {"dir": "rtl", "align": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالیں", "up": "فائل اپ لوڈ کریں", "btn": "شروع"}
+    "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF هنا", "btn": "بدء المعالجة"},
+    "English": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF to Excel", "tab2": "🔍 OCR Text", "up": "Upload PDF", "btn": "Start"},
+    "Français": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Comptable Intelligent Pro", "subtitle": "Système cloud avancé", "tab1": "📊 PDF vers Excel", "tab2": "🔍 OCR Texte", "up": "Charger PDF", "btn": "Démarrer"},
+    "اردو": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالیں", "up": "فائل اپ لوڈ کریں", "btn": "شروع"}
 }
 
-# --- تنسيق وتوزيع العناصر ---
-st.markdown("""
-<style>
-    /* إخفاء أزرار ستريمليت المزعجة */
-    #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"], [data-testid="stStatusWidget"] {
-        display: none !important;
-    }
-    
-    /* رفع شريط اللغة لأعلى اليمين كما طلبت */
-    [data-testid="stSelectbox"] {
-        position: fixed !important;
-        top: 10px !important;
-        right: 20px !important;
-        z-index: 9999 !important;
-        width: 150px !important;
-    }
-
-    /* توسيط المحتوى */
-    .stApp { background-color: #F8F9FA !important; color: #202124 !important; }
-    .main-container { max-width: 900px; margin: 0 auto; padding-top: 60px; }
-</style>
-""", unsafe_allow_html=True)
-
-# اختيار اللغة (يظهر في الأعلى يميناً)
+# اختيار اللغة
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# المحتوى الرئيسي في منتصف الصفحة
-st.markdown('<div class="main-container">', unsafe_allow_html=True)
-
+# --- التصميم الديناميكي ---
 st.markdown(f"""
-<div style='text-align: center;'>
-    <h1 style='color: #1A73E8;'>{lang['title']}</h1>
-    <p>{lang['subtitle']}</p>
-</div>
+<style>
+    /* إخفاء أزرار ستريمليت */
+    #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
+    
+    /* تحديد موقع الشريط بناءً على اللغة */
+    [data-testid="stSelectbox"] {{
+        position: fixed !important;
+        top: 10px !important;
+        {lang['pos']}: 20px !important; /* يتغير ديناميكياً يمين أو يسار */
+        z-index: 9999 !important;
+        width: 150px !important;
+    }}
+
+    .stApp {{ background-color: #F8F9FA !important; color: #202124 !important; direction: {lang['dir']} !important; }}
+    .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 60px; text-align: {lang['align']} !important; }}
+</style>
 """, unsafe_allow_html=True)
+
+# المحتوى الرئيسي
+st.markdown('<div class="main-container">', unsafe_allow_html=True)
+st.markdown(f"<h1>{lang['title']}</h1><p>{lang['subtitle']}</p>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs([lang["tab1"], lang["tab2"]])
 
-# منطق المعالجة
 with tab1:
     files = st.file_uploader(lang["up"], type=["pdf"], accept_multiple_files=True)
     if files:
@@ -69,7 +57,7 @@ with tab1:
                     output = io.BytesIO()
                     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                         for i, df in enumerate(dfs): df.to_excel(writer, index=False, sheet_name=f'Sheet{i+1}')
-                    st.success("تم التحويل!")
+                    st.success("تم!")
                     st.download_button("📥 تحميل", output.getvalue(), f"{f.name}.xlsx")
 
 with tab2:
