@@ -11,7 +11,7 @@ from st_copy_to_clipboard import st_copy_to_clipboard
 # إعدادات الصفحة
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
-# قاموس اللغات (شامل الفرنسية)
+# قاموس اللغات
 translations = {
     "العربية": {"dir": "rtl", "align": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF هنا", "btn": "بدء المعالجة"},
     "English": {"dir": "ltr", "align": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF to Excel", "tab2": "🔍 OCR Text", "up": "Upload PDF", "btn": "Start"},
@@ -19,40 +19,32 @@ translations = {
     "اردو": {"dir": "rtl", "align": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالیں", "up": "فائل اپ لوڈ کریں", "btn": "شروع"}
 }
 
+# --- إخفاء كل أزرار النظام (القلم، القائمة، المشاركة) ---
+st.markdown("""
+<style>
+    #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# شريط اختيار اللغة في الأعلى
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# التصميم النهائي (إخفاء كل أزرار النظام + خلفية فاتحة + نيون)
+# التصميم الفاتح
 st.markdown(f"""
 <style>
-    /* إخفاء القلم، القائمة، والمشاركة من ستريمليت */
-    #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{
-        display: none !important;
-        visibility: hidden !important;
-    }}
-    
-    /* الخلفية الفاتحة والنصوص */
     html, body, .stApp {{ 
         direction: {lang['dir']} !important; 
         text-align: {lang['align']} !important; 
         background-color: #F8F9FA !important; 
         color: #202124 !important; 
     }}
-    
-    /* المستطيل النيون */
-    [data-testid="stFileUploader"] {{ 
-        border: 2px solid #1A73E8 !important; 
-        border-radius: 15px !important; 
-        background: #FFFFFF !important;
-        box-shadow: 0 0 10px rgba(26, 115, 232, 0.2) !important;
-    }}
-    
-    /* تذييل الحقوق */
-    .footer {{ 
-        position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; 
-        padding: 10px; background: #F8F9FA; color: #1A73E8; font-weight: bold; 
-        border-top: 1px solid #1A73E8; z-index: 999;
-    }}
+    h1 {{ color: #1A73E8 !important; }}
+    [data-testid="stFileUploader"] {{ border: 2px solid #1A73E8 !important; background: #FFFFFF !important; border-radius: 12px !important; }}
+    .footer {{ position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; background: #F8F9FA; color: #1A73E8; font-weight: bold; border-top: 1px solid #1A73E8; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -60,7 +52,7 @@ st.markdown(f"""
 st.markdown(f"<h1>{lang['title']}</h1><p>{lang['subtitle']}</p>", unsafe_allow_html=True)
 tab1, tab2 = st.tabs([lang["tab1"], lang["tab2"]])
 
-# منطق المعالجة (كما هو تماماً)
+# منطق المعالجة كما هو
 with tab1:
     files = st.file_uploader(lang["up"], type=["pdf"], accept_multiple_files=True)
     if files:
