@@ -5,22 +5,23 @@ import io
 from PIL import Image
 import pytesseract
 import fitz
+import streamlit.components.v1 as components
 
 # إعدادات الصفحة
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
-# قاموس اللغات (كما كان)
+# قاموس اللغات
 translations = {
-    "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF هنا", "btn": "بدء المعالجة", "copy": "نسخ النص"},
-    "English": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF to Excel", "tab2": "🔍 OCR Text", "up": "Upload PDF", "btn": "Start", "copy": "Copy Text"},
-    "Français": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Comptable Intelligent Pro", "subtitle": "Système cloud avancé", "tab1": "📊 PDF vers Excel", "tab2": "🔍 OCR Texte", "up": "Charger PDF", "btn": "Démarrer", "copy": "Copier"},
-    "اردو": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالیں", "up": "فائل اپ لوڈ کریں", "btn": "شروع", "copy": "کاپی کریں"}
+    "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF هنا", "btn": "بدء المعالجة", "copy": "📋 نسخ النص بالكامل"},
+    "English": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF to Excel", "tab2": "🔍 OCR Text", "up": "Upload PDF", "btn": "Start", "copy": "📋 Copy All Text"},
+    "Français": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Comptable Intelligent Pro", "subtitle": "Système cloud avancé", "tab1": "📊 PDF vers Excel", "tab2": "🔍 OCR Texte", "up": "Charger PDF", "btn": "Démarrer", "copy": "📋 Copier tout"},
+    "اردو": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالیں", "up": "فائل اپ لوڈ کریں", "btn": "شروع", "copy": "📋 پورا ٹیکسٹ کاپی کریں"}
 }
 
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# --- التنسيق الأساسي (الذي اتفقنا عليه) مع تحسين ألوان الحواف فقط ---
+# --- التصميم الشامل (التوهج + التمركز + المحاذاة) ---
 st.markdown(f"""
 <style>
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
@@ -30,15 +31,12 @@ st.markdown(f"""
     .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; }}
     h1, p {{ text-align: {lang['align']} !important; color: #202124 !important; }}
     
-    /* إطار الرفع بتوهج أخضر مريح */
-    [data-testid="stFileUploader"] {{ 
-        border: 2px solid #28a745 !important; 
-        border-radius: 12px !important; 
-        background-color: #ffffff !important;
-    }}
+    /* التوهج الأخضر للمستطيل والزر */
+    [data-testid="stFileUploader"] {{ border: 2px solid #28a745 !important; border-radius: 12px !important; box-shadow: 0 0 15px rgba(40, 167, 69, 0.3) !important; background: #ffffff !important; }}
+    div.stButton > button {{ border: 2px solid #28a745 !important; transition: 0.3s; }}
+    div.stButton > button:active {{ box-shadow: 0 0 20px #28a745 !important; }}
     
-    /* الحقوق */
-    .footer {{ position: fixed; left: 0; bottom: 0; width: 100%; text-align: center; padding: 10px; color: #888; font-size: 12px; }}
+    .footer {{ position: fixed; left: 0; bottom: 0; width: 100%; text-align: center; padding: 10px; color: #888; font-size: 12px; border-top: 1px solid #ddd; background: #F8F9FA; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -64,7 +62,7 @@ with st.container():
     with tab2:
         file = st.file_uploader(lang["up"], type=["jpg", "png", "pdf"])
         if file and st.button(f"{lang['btn']}", key="btn2"):
-            with st.spinner("..."):
+            with st.spinner("جاري المعالجة..."):
                 try:
                     full_text = ""
                     if file.type == "application/pdf":
@@ -77,6 +75,15 @@ with st.container():
                         full_text = pytesseract.image_to_string(Image.open(file), lang='ara+eng')
                     
                     st.text_area("النص:", value=full_text, height=300)
+                    
+                    # زر النسخ الاحترافي
+                    if full_text.strip():
+                        copy_btn_code = f"""
+                        <button style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: sans-serif;" onclick="navigator.clipboard.writeText(`{full_text.replace('`', '')}`)">
+                            {lang['copy']}
+                        </button>
+                        """
+                        components.html(copy_btn_code, height=60)
                 except Exception:
                     st.error("خطأ في المعالجة")
     st.markdown('</div>', unsafe_allow_html=True)
