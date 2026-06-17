@@ -4,7 +4,7 @@ import pandas as pd
 import io
 from PIL import Image
 import pytesseract
-import fitz
+import fitz  # PyMuPDF
 from st_copy_to_clipboard import st_copy_to_clipboard
 
 # إعدادات الصفحة
@@ -21,7 +21,7 @@ translations = {
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# --- التصميم الديناميكي ---
+# --- التصميم الديناميكي وتوهج الزر ---
 st.markdown(f"""
 <style>
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
@@ -29,7 +29,13 @@ st.markdown(f"""
     .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; }}
     .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; text-align: {lang['align']} !important; }}
     h1, p {{ text-align: {lang['align']} !important; }}
+    
+    /* المستطيل المتوهج أخضر نيون */
     [data-testid="stFileUploader"] {{ border: 2px solid #2ea043 !important; border-radius: 15px !important; box-shadow: 0 0 15px rgba(46, 160, 67, 0.4) !important; background: #FFFFFF !important; }}
+    
+    /* توهج الزر عند الضغط (استخدام CSS للزر النشط) */
+    div.stButton > button:active {{ box-shadow: 0 0 20px #2ea043 !important; border-color: #2ea043 !important; }}
+    
     .footer {{ position: fixed; left: 0; bottom: 0; width: 100%; text-align: center; padding: 15px; background: #F8F9FA; color: #555; font-weight: bold; border-top: 1px solid #ddd; }}
 </style>
 """, unsafe_allow_html=True)
@@ -45,23 +51,31 @@ with st.container():
         files = st.file_uploader(lang["up"], type=["pdf"], accept_multiple_files=True)
         if files:
             for f in files:
-                if st.button(f"{lang['btn']}", key=f"btn1_{f.name}"): # زر موحد
-                    with st.spinner("..."):
-                        dfs = tabula.read_pdf(f, pages='all', multiple_tables=True, lattice=True)
-                        if dfs:
-                            output = io.BytesIO()
-                            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                                for i, df in enumerate(dfs): df.to_excel(writer, index=False, sheet_name=f'Sheet{i+1}')
-                            st.download_button("📥 تحميل", output.getvalue(), f"{f.name}.xlsx")
+                if st.button(f"{lang['btn']}", key=f"btn1_{f.name}"):
+                    dfs = tabula.read_pdf(f, pages='all', multiple_tables=True, lattice=True)
+                    if dfs:
+                        output = io.BytesIO()
+                        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                            for i, df in enumerate(dfs): df.to_excel(writer, index=False, sheet_name=f'Sheet{i+1}')
+                        st.download_button("📥 تحميل", output.getvalue(), f"{f.name}.xlsx")
 
     with tab2:
-        img = st.file_uploader(lang["up"], type=["jpg", "png", "pdf"])
-        if img:
-            if st.button(f"{lang['btn']}", key="btn2"): # زر موحد
-                full_text = pytesseract.image_to_string(Image.open(img), lang='ara+eng')
-                text_area = st.text_area("النص:", value=full_text, height=300)
-                # إضافة زر النسخ هنا
-                st_copy_to_clipboard(full_text, label=lang["copy"], before_copy_label=lang["copy"])
+        file = st.file_uploader(lang["up"], type=["jpg", "png", "pdf"])
+        if file and st.button(f"{lang['btn']}", key="btn2"):
+            full_text = ""
+            if file.type == "application/pdf":
+                # معالجة PDF بتحويل الصفحات إلى صور
+                doc = fitz.open(stream=file.read(), filetype="pdf")
+                for page in doc:
+                    pix = page.get_pixmap()
+                    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                    full_text += pytesseract.image_to_string(img, lang='ara+eng')
+            else:
+                # معالجة الصور العادية
+                full_text = pytesseract.image_to_string(Image.open(file), lang='ara+eng')
+            
+            st.text_area("النص:", value=full_text, height=300)
+            st_copy_to_clipboard(full_text, label=lang["copy"], before_copy_label=lang["copy"])
     
     st.markdown('</div>', unsafe_allow_html=True)
 
