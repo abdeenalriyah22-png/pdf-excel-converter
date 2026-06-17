@@ -21,17 +21,24 @@ translations = {
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# --- التصميم ---
+# --- التنسيق الثابت (مع ضمان محاذاة العنوان لليمين) ---
 st.markdown(f"""
 <style>
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
     [data-testid="stSelectbox"] {{ position: fixed !important; top: 15px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important; }}
-    .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; }}
-    .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; text-align: {lang['align']} !important; }}
     
-    /* توهج الزر عند الضغط (أخضر نيون) */
+    /* توسيط الصفحة كاملة، مع إجبار النصوص على اليمين إذا كانت العربية */
+    .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; }}
+    
+    .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; }}
+    
+    /* هنا السر: تحديد محاذاة العنوان بناءً على اللغة بشكل منفصل */
+    h1, p {{ text-align: {lang['align']} !important; }}
+    
     div.stButton > button:active {{ box-shadow: 0 0 20px #2ea043 !important; border-color: #2ea043 !important; }}
     [data-testid="stFileUploader"] {{ border: 2px solid #2ea043 !important; border-radius: 15px !important; box-shadow: 0 0 15px rgba(46, 160, 67, 0.4) !important; background: #FFFFFF !important; }}
+    
+    .footer {{ position: fixed; left: 0; bottom: 0; width: 100%; text-align: center; padding: 15px; background: #F8F9FA; color: #555; font-weight: bold; border-top: 1px solid #ddd; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -70,11 +77,11 @@ with st.container():
                         full_text = pytesseract.image_to_string(Image.open(file), lang='ara+eng')
                     
                     st.text_area("النص:", value=full_text, height=300)
-                    
-                    # زر النسخ يظهر فقط إذا وجد نص
                     if full_text.strip():
                         st_copy_to_clipboard(full_text, label=lang["copy"], before_copy_label=lang["copy"])
                 except Exception as e:
-                    st.error("حدث خطأ أثناء المعالجة، يرجى التأكد من الملف.")
+                    st.error("حدث خطأ أثناء المعالجة.")
     
     st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown('<div class="footer">المحاسب الذكي Pro | جميع الحقوق محفوظة © 2026</div>', unsafe_allow_html=True)
