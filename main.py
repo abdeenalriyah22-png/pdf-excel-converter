@@ -20,31 +20,43 @@ translations = {
     "اردو": {"dir": "rtl", "align": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "ڈیٹا پروسیسنگ کا جدید نظام", "tab1": "📊 PDF کو ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالنا (OCR)", "up": "فائل یہاں ڈریگ کریں", "btn": "شروع کریں"}
 }
 
-# --- 3. التنسيق الجذري (النيون + المحاذاة + القائمة المصغرة) ---
-st.markdown("""
-<style>
-    /* القائمة المنسدلة مصغرة في الأعلى */
-    div[data-testid="stSelectbox"] { width: 250px !important; margin-bottom: 20px !important; }
-    div[data-testid="stSelectbox"] div[data-baseweb="select"] { background-color: #000 !important; border: 2px solid #2ea043 !important; color: #2ea043 !important; }
-    
-    /* خلفية وتوحيد الخطوط */
-    .stApp { background-color: #07090e !important; color: #ffffff !important; }
-    
-    /* مستطيل الرفع نيون */
-    [data-testid="stFileUploader"] { border: 2px solid #2ea043 !important; border-radius: 15px !important; background: #0d0d0d !important; }
-    
-    /* الأزرار نيون */
-    .stButton > button { border: 2px solid #2ea043 !important; color: #ffffff !important; background: transparent !important; border-radius: 50px !important; }
-    .stButton > button:hover { background: #2ea043 !important; box-shadow: 0 0 20px #2ea043 !important; }
-</style>
-""", unsafe_allow_html=True)
-
-# --- 4. اختيار اللغة ---
-selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0)
+# --- 3. اختيار اللغة (في الأعلى) ---
+selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# تطبيق الاتجاه والمحاذاة ديناميكياً
-st.markdown(f"""<style>.stApp {{ direction: {lang['dir']} !important; text-align: {lang['align']} !important; }}</style>""", unsafe_allow_html=True)
+# --- 4. التنسيق الجذري (تصحيح المحاذاة والألوان) ---
+st.markdown(f"""
+<style>
+    /* فرض الاتجاه والمحاذاة على كامل الصفحة */
+    html, body, .stApp {{
+        direction: {lang['dir']} !important;
+        text-align: {lang['align']} !important;
+        background-color: #07090e !important;
+        color: #ffffff !important;
+    }}
+    
+    /* تصغير قائمة اللغة ووضعها في الأعلى */
+    div[data-testid="stSelectbox"] {{
+        width: 250px !important;
+        margin-{lang['align']}: 0 !important;
+    }}
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] {{
+        background-color: #000 !important;
+        border: 2px solid #2ea043 !important;
+        color: #2ea043 !important;
+    }}
+
+    /* ضمان بقاء كل النصوص بيضاء */
+    h1, h2, h3, p, div, span, label, .stMarkdown {{
+        color: #ffffff !important;
+    }}
+
+    /* مستطيل الرفع والأزرار */
+    [data-testid="stFileUploader"] {{ border: 2px solid #2ea043 !important; border-radius: 15px !important; background: #0d0d0d !important; }}
+    .stButton > button {{ border: 2px solid #2ea043 !important; color: #ffffff !important; background: transparent !important; border-radius: 50px !important; }}
+    .stButton > button:hover {{ background: #2ea043 !important; box-shadow: 0 0 20px #2ea043 !important; }}
+</style>
+""", unsafe_allow_html=True)
 
 # --- 5. الواجهة ---
 st.markdown(f"<h1>{lang['title']}</h1><p>{lang['subtitle']}</p>", unsafe_allow_html=True)
