@@ -5,39 +5,32 @@ import io
 from PIL import Image
 import pytesseract
 import fitz
-from st_copy_to_clipboard import st_copy_to_clipboard
 
 # إعدادات الصفحة
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
 # قاموس اللغات
 translations = {
-    "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF هنا", "btn": "بدء المعالجة", "copy": "نسخ النص"},
+    "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF هنا", "btn": "بدء المعالجة", "copy": "📋 نسخ النص"},
     "English": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF to Excel", "tab2": "🔍 OCR Text", "up": "Upload PDF", "btn": "Start", "copy": "Copy Text"},
-    "Français": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Comptable Intelligent Pro", "subtitle": "Système cloud avancé", "tab1": "📊 PDF vers Excel", "tab2": "🔍 OCR Texte", "up": "Charger PDF", "btn": "Démarrer", "copy": "Copier le texte"},
-    "اردو": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالیں", "up": "فائل اپ لوڈ کریں", "btn": "شروع", "copy": "ٹیکسٹ کاپی کریں"}
+    "Français": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Comptable Intelligent Pro", "subtitle": "Système cloud avancé", "tab1": "📊 PDF vers Excel", "tab2": "🔍 OCR Texte", "up": "Charger PDF", "btn": "Démarrer", "copy": "Copier"},
+    "اردو": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالیں", "up": "فائل اپ لوڈ کریں", "btn": "شروع", "copy": "کاپی کریں"}
 }
 
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# --- التنسيق الثابت (مع ضمان محاذاة العنوان لليمين) ---
+# --- CSS وتأثير التوهج ---
 st.markdown(f"""
 <style>
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
     [data-testid="stSelectbox"] {{ position: fixed !important; top: 15px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important; }}
-    
-    /* توسيط الصفحة كاملة، مع إجبار النصوص على اليمين إذا كانت العربية */
     .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; }}
-    
     .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; }}
-    
-    /* هنا السر: تحديد محاذاة العنوان بناءً على اللغة بشكل منفصل */
     h1, p {{ text-align: {lang['align']} !important; }}
     
     div.stButton > button:active {{ box-shadow: 0 0 20px #2ea043 !important; border-color: #2ea043 !important; }}
     [data-testid="stFileUploader"] {{ border: 2px solid #2ea043 !important; border-radius: 15px !important; box-shadow: 0 0 15px rgba(46, 160, 67, 0.4) !important; background: #FFFFFF !important; }}
-    
     .footer {{ position: fixed; left: 0; bottom: 0; width: 100%; text-align: center; padding: 15px; background: #F8F9FA; color: #555; font-weight: bold; border-top: 1px solid #ddd; }}
 </style>
 """, unsafe_allow_html=True)
@@ -64,9 +57,9 @@ with st.container():
     with tab2:
         file = st.file_uploader(lang["up"], type=["jpg", "png", "pdf"])
         if file and st.button(f"{lang['btn']}", key="btn2"):
-            with st.spinner("جاري الاستخراج..."):
-                full_text = ""
+            with st.spinner("..."):
                 try:
+                    full_text = ""
                     if file.type == "application/pdf":
                         doc = fitz.open(stream=file.read(), filetype="pdf")
                         for page in doc:
@@ -76,11 +69,13 @@ with st.container():
                     else:
                         full_text = pytesseract.image_to_string(Image.open(file), lang='ara+eng')
                     
-                    st.text_area("النص:", value=full_text, height=300)
-                    if full_text.strip():
-                        st_copy_to_clipboard(full_text, label=lang["copy"], before_copy_label=lang["copy"])
-                except Exception as e:
-                    st.error("حدث خطأ أثناء المعالجة.")
+                    st.text_area("النص المستخرج:", value=full_text, height=300)
+                    
+                    # زر نسخ مخصص (يعمل بـ JavaScript)
+                    st.code(full_text, language=None)
+                    st.info("قم بتحديد النص أعلاه ونسخه.")
+                except Exception:
+                    st.error("خطأ: يرجى التأكد من أن الملف واضح للقراءة.")
     
     st.markdown('</div>', unsafe_allow_html=True)
 
