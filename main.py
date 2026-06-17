@@ -21,7 +21,7 @@ translations = {
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# التصميم الديناميكي الكامل
+# --- التصميم الديناميكي الكامل ---
 st.markdown(f"""
 <style>
     /* إخفاء الأزرار المزعجة */
@@ -32,9 +32,16 @@ st.markdown(f"""
         position: fixed !important; top: 15px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important;
     }}
     
-    /* توسيط المحتوى مع جعل العنوان يميل لليمين عند العربية */
+    /* تنسيق الحاوية الرئيسية للتحكم بالاتجاه */
     .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; }}
-    .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; text-align: {lang['align']} !important; }}
+    
+    .main-container {{ 
+        max-width: 900px; margin: 0 auto; padding-top: 100px !important; 
+        text-align: {lang['align']} !important; 
+    }}
+    
+    /* إجبار العنوان على اتباع محاذاة الحاوية */
+    h1, p {{ text-align: {lang['align']} !important; }}
     
     /* المستطيل المتوهج أخضر نيون */
     [data-testid="stFileUploader"] {{ 
@@ -49,6 +56,7 @@ st.markdown(f"""
         position: fixed; left: 0; bottom: 0; width: 100%; 
         text-align: center; padding: 15px; background: #F8F9FA; 
         color: #555; font-weight: bold; border-top: 1px solid #ddd;
+        direction: ltr !important; /* الحقوق تبقى ثابتة دائماً */
     }}
 </style>
 """, unsafe_allow_html=True)
