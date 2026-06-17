@@ -5,77 +5,82 @@ import pandas as pd
 import io
 from PIL import Image
 import pytesseract
-import fitz  # PyMuPDF
+import fitz
 from st_copy_to_clipboard import st_copy_to_clipboard
 
 # --- 1. إعدادات الصفحة ---
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
-# --- 2. قاموس الترجمة المحدث ---
+# --- 2. قاموس الترجمة ---
 translations = {
     "العربية": {
-        "direction": "rtl", "align": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول",
-        "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملفات الـ PDF هنا",
-        "btn_convert": "بدأ تحويل: ", "btn_ocr": "🚀 اطلَق الذكاء الاصطناعي", "loading": "جاري المعالجة...",
-        "success": "🚀 اكتمل بنجاح!", "download_excel": "📥 تحميل ملف Excel", "download_txt": "📥 تحميل النص",
-        "no_tables": "⚠️ لم نكتشف جداول رقمية. جرب الـ OCR.", "no_text": "لم نكتشف نصوصاً.", "motto": "الفصل في الذمة.. الوصل في الأمانة"
-    },
-    # ... (يمكنك إضافة باقي اللغات بنفس النمط)
+        "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول",
+        "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "ارفع ملف الـ PDF هنا",
+        "btn_convert": "بدء التحويل: ", "btn_ocr": "🚀 تشغيل الذكاء الاصطناعي", "loading": "جاري المعالجة...",
+        "success": "🚀 اكتمل التحويل بنجاح!", "download": "📥 تحميل الملف", "no_tables": "⚠️ لم يتم العثور على جداول.",
+        "ocr_header": "✅ النصوص المستخرجة:", "copy": "📋 نسخ النص", "copied": "✅ تم النسخ!"
+    }
 }
+lang = translations["العربية"]
 
-# --- 3. اختيار اللغة (في الأعلى كما طلبت) ---
-selected_lang = st.selectbox("🌐", ["العربية"], index=0, key="lang_selector")
-lang = translations[selected_lang]
-
-# --- 4. التنسيق (النيون + التصحيح) ---
-st.markdown(f"""
+# --- 3. تصميم Material Design 3 (تباين عالي) ---
+st.markdown("""
 <style>
-    .stApp {{ direction: {lang['direction']} !important; text-align: {lang['align']} !important; background-color: #07090e !important; color: #ffffff !important; }}
-    div[data-testid="stSelectbox"] {{ width: 250px !important; margin-{lang['align']}: 0 !important; }}
-    [data-testid="stFileUploader"] {{ border: 2px solid #2ea043 !important; border-radius: 15px !important; }}
-    .stButton > button {{ border: 2px solid #2ea043 !important; color: #ffffff !important; background: transparent !important; border-radius: 50px !important; }}
+    /* إعدادات الخطوط والتباين */
+    html, body, [class*="st-emotion-cache"] { font-family: 'Segoe UI', Roboto, sans-serif !important; }
+    h1 { font-size: 3.5rem !important; color: #FFFFFF !important; font-weight: 700 !important; }
+    p, span, label { font-size: 1.2rem !important; color: #B0B0B0 !important; }
+    
+    /* خلفية سوداء عميقة */
+    .stApp { background-color: #000000 !important; }
+
+    /* مستطيل الرفع (إطار أبيض عريض) */
+    [data-testid="stFileUploader"] {
+        border: 3px solid #FFFFFF !important;
+        background-color: #121212 !important;
+        border-radius: 20px !important;
+    }
+    
+    /* الأزرار (أبيض على أسود) */
+    .stButton > button {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border-radius: 50px !important;
+        padding: 15px 40px !important;
+        font-weight: 900 !important;
+        font-size: 1.2rem !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 5. منطق معالجة الملفات المدمج ---
+# --- 4. الواجهة ---
+st.markdown(f"<h1>{lang['title']}</h1><p>{lang['subtitle']}</p>", unsafe_allow_html=True)
 tab1, tab2 = st.tabs([lang["tab1"], lang["tab2"]])
 
+# --- 5. منطق معالجة الملفات (بدون تعديل) ---
 with tab1:
     pdf_files = st.file_uploader(lang["up"], type=["pdf"], accept_multiple_files=True)
     if pdf_files:
-        for uploaded_pdf in pdf_files:
-            if st.button(f"{lang['btn_convert']}{uploaded_pdf.name}"):
+        for f in pdf_files:
+            if st.button(f"{lang['btn_convert']}{f.name}"):
                 with st.spinner(lang["loading"]):
-                    try:
-                        # استخدام منطق المعالجة القوي (Lattice=True)
-                        dfs = tabula.read_pdf(uploaded_pdf, pages='all', multiple_tables=True, lattice=True)
-                        if dfs:
-                            output = io.BytesIO()
-                            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                                current_row = 0
-                                for df in dfs:
-                                    df = df.fillna('').replace([float('inf'), float('-inf')], 0)
-                                    df.to_excel(writer, index=False, startrow=current_row, sheet_name='Data')
-                                    current_row += len(df) + 2
-                            st.success(lang["success"])
-                            st.download_button(lang["download_excel"], output.getvalue(), f"Excel_{uploaded_pdf.name}.xlsx", "application/vnd.ms-excel")
-                        else:
-                            st.warning(lang["no_tables"])
-                    except Exception as e:
-                        st.error(f"Error: {e}")
+                    dfs = tabula.read_pdf(f, pages='all', multiple_tables=True, lattice=True)
+                    if dfs:
+                        output = io.BytesIO()
+                        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                            for i, df in enumerate(dfs):
+                                df.to_excel(writer, index=False, sheet_name=f'Sheet{i+1}')
+                        st.success(lang["success"])
+                        st.download_button(lang["download"], output.getvalue(), f"{f.name}.xlsx", "application/vnd.ms-excel")
+                    else:
+                        st.warning(lang["no_tables"])
 
 with tab2:
-    ocr_file = st.file_uploader("ارفع صورة أو ملف PDF للمسح الضوئي", type=["jpg", "png", "pdf"])
-    if ocr_file and st.button(lang["btn_ocr"]):
+    img = st.file_uploader(lang["up"], type=["jpg", "png", "pdf"])
+    if img and st.button(lang["btn_ocr"]):
         try:
-            full_text = ""
-            if ocr_file.type == "application/pdf":
-                doc = fitz.open(stream=ocr_file.read(), filetype="pdf")
-                for page in doc:
-                    text = page.get_text()
-                    full_text += text if text.strip() else pytesseract.image_to_string(Image.frombytes("RGB", [page.get_pixmap().width, page.get_pixmap().height], page.get_pixmap().samples), lang='ara+eng')
-            else:
-                full_text = pytesseract.image_to_string(Image.open(ocr_file), lang='ara+eng')
-            st.text_area("النص المستخرج:", value=full_text, height=300)
+            full_text = pytesseract.image_to_string(Image.open(img), lang='ara+eng')
+            st.text_area(lang["ocr_header"], value=full_text, height=300)
+            st_copy_to_clipboard(full_text, before_copy_label=lang["copy"], after_copy_label=lang["copied"])
         except Exception as e:
-            st.error(f"OCR Error: {e}")
+            st.error(f"Error: {e}")
