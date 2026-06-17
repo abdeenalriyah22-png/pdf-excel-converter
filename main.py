@@ -11,7 +11,7 @@ from st_copy_to_clipboard import st_copy_to_clipboard
 # إعدادات الصفحة
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
-# قاموس اللغات
+# قاموس اللغات (شامل الفرنسية)
 translations = {
     "العربية": {"dir": "rtl", "align": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF هنا", "btn": "بدء المعالجة"},
     "English": {"dir": "ltr", "align": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF to Excel", "tab2": "🔍 OCR Text", "up": "Upload PDF", "btn": "Start"},
@@ -22,13 +22,16 @@ translations = {
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# التصميم (خلفية فاتحة، نيون على الحواف فقط، إخفاء القلم)
+# التصميم النهائي (إخفاء كل أزرار النظام + خلفية فاتحة + نيون)
 st.markdown(f"""
 <style>
-    /* إخفاء القلم */
-    [data-testid="stDecoration"] {{ display: none !important; }}
+    /* إخفاء القلم، القائمة، والمشاركة من ستريمليت */
+    #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{
+        display: none !important;
+        visibility: hidden !important;
+    }}
     
-    /* خلفية بيضاء/رمادية فاتحة ونصوص داكنة */
+    /* الخلفية الفاتحة والنصوص */
     html, body, .stApp {{ 
         direction: {lang['dir']} !important; 
         text-align: {lang['align']} !important; 
@@ -36,7 +39,7 @@ st.markdown(f"""
         color: #202124 !important; 
     }}
     
-    /* مستطيل الرفع نيون (توهج على خلفية فاتحة) */
+    /* المستطيل النيون */
     [data-testid="stFileUploader"] {{ 
         border: 2px solid #1A73E8 !important; 
         border-radius: 15px !important; 
@@ -45,7 +48,11 @@ st.markdown(f"""
     }}
     
     /* تذييل الحقوق */
-    .footer {{ position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; background: #F8F9FA; color: #1A73E8; font-weight: bold; border-top: 1px solid #1A73E8; }}
+    .footer {{ 
+        position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; 
+        padding: 10px; background: #F8F9FA; color: #1A73E8; font-weight: bold; 
+        border-top: 1px solid #1A73E8; z-index: 999;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -53,6 +60,7 @@ st.markdown(f"""
 st.markdown(f"<h1>{lang['title']}</h1><p>{lang['subtitle']}</p>", unsafe_allow_html=True)
 tab1, tab2 = st.tabs([lang["tab1"], lang["tab2"]])
 
+# منطق المعالجة (كما هو تماماً)
 with tab1:
     files = st.file_uploader(lang["up"], type=["pdf"], accept_multiple_files=True)
     if files:
