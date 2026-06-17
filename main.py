@@ -11,11 +11,11 @@ from st_copy_to_clipboard import st_copy_to_clipboard
 # --- 1. إعدادات الصفحة ---
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
-# --- 2. قاموس الترجمة ---
+# --- 2. قاموس الترجمة الشامل (عربي، إنجليزي، فرنسي، أوردو) ---
 translations = {
     "العربية": {
         "direction": "rtl", "align": "right",
-        "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول والبيانات",
+        "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول",
         "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)",
         "uploader_pdf": "اسحب ملفات الـ PDF هنا", "uploader_ocr": "ارفع صورة أو ملف PDF",
         "btn_convert": "بدأ التحويل: ", "btn_ocr": "🚀 تشغيل الذكاء الاصطناعي",
@@ -36,14 +36,22 @@ translations = {
         "uploader_pdf": "Glissez et déposez vos fichiers PDF", "uploader_ocr": "Téléchargez une image ou un PDF",
         "btn_convert": "Commencer la conversion: ", "btn_ocr": "🚀 Lancer l'IA",
         "success": "🚀 Conversion réussie!", "download": "📥 Télécharger le fichier"
+    },
+    "اردو": {
+        "direction": "rtl", "align": "right",
+        "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "ڈیٹا پروسیسنگ کے لیے جدید سسٹم",
+        "tab1": "📊 PDF کو ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالنا (OCR)",
+        "uploader_pdf": "PDF فائلیں یہاں ڈریگ کریں", "uploader_ocr": "تصویر یا PDF اپ لوڈ کریں",
+        "btn_convert": "تبدیلی شروع کریں: ", "btn_ocr": "🚀 AI چلائیں",
+        "success": "🚀 تبدیلی مکمل ہوئی!", "download": "📥 فائل ڈاؤن لوڈ کریں"
     }
 }
 
 # --- 3. اختيار اللغة ---
-selected_lang = st.selectbox("🌐 Choose Language / اختر اللغة", ["العربية", "English", "Français"], index=0)
+selected_lang = st.selectbox("🌐 Choose Language / اختر اللغة", ["العربية", "English", "Français", "اردو"], index=0)
 lang = translations[selected_lang]
 
-# --- 4. التنسيق (النيون الواضح) ---
+# --- 4. التنسيق (نيون واضح) ---
 st.markdown(f"""
 <style>
     html, body, [class*="st-emotion-cache"] {{ 
@@ -52,25 +60,11 @@ st.markdown(f"""
         background-color: #07090e !important; 
         color: #e6edf3 !important; 
     }}
-    
-    /* قائمة اللغات بيضاء */
-    [data-testid="stSelectbox"] div[data-baseweb="select"] {{ 
-        background-color: #ffffff !important; 
-        color: #000000 !important; 
-    }}
-
-    /* أزرار النيون */
-    .stButton > button {{ 
-        background: #000 !important; 
-        color: #fff !important; 
-        border: 2px solid #2ea043 !important; 
-        box-shadow: 0 0 10px #2ea043 !important; 
-        border-radius: 8px !important; 
-    }}
-    .stButton > button:hover {{ 
-        background: #2ea043 !important; 
-        box-shadow: 0 0 20px #2ea043 !important; 
-    }}
+    /* قائمة بيضاء */
+    [data-testid="stSelectbox"] div[data-baseweb="select"] {{ background-color: #ffffff !important; color: #000000 !important; }}
+    /* أزرار نيون */
+    .stButton > button {{ background: #000 !important; color: #fff !important; border: 2px solid #2ea043 !important; box-shadow: 0 0 10px #2ea043 !important; border-radius: 8px !important; }}
+    .stButton > button:hover {{ background: #2ea043 !important; box-shadow: 0 0 20px #2ea043 !important; }}
 </style>
 """, unsafe_allow_html=True)
 
