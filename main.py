@@ -11,38 +11,41 @@ from st_copy_to_clipboard import st_copy_to_clipboard
 # إعدادات الصفحة
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
-# قاموس اللغات (شامل الفرنسية)
+# قاموس اللغات
 translations = {
-    "العربية": {"dir": "rtl", "align": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب أو اختر ملف PDF", "btn": "بدء المعالجة", "loading": "جاري المعالجة...", "success": "🚀 تم!", "download": "📥 تحميل", "no_tables": "⚠️ لا توجد جداول."},
-    "English": {"dir": "ltr", "align": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF to Excel", "tab2": "🔍 OCR Text", "up": "Upload PDF", "btn": "Start", "loading": "Processing...", "success": "🚀 Done!", "download": "📥 Download", "no_tables": "⚠️ No tables."},
-    "Français": {"dir": "ltr", "align": "left", "title": "📊 Comptable Intelligent Pro", "subtitle": "Système cloud avancé", "tab1": "📊 PDF vers Excel", "tab2": "🔍 OCR Texte", "up": "Charger PDF", "btn": "Démarrer", "loading": "Traitement...", "success": "🚀 Succès!", "download": "📥 Télécharger", "no_tables": "⚠️ Aucun tableau."},
-    "اردو": {"dir": "rtl", "align": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالیں", "up": "فائل اپ لوڈ کریں", "btn": "شروع", "loading": "عمل جاری ہے...", "success": "🚀 مکمل!", "download": "📥 ڈاؤن لوڈ", "no_tables": "⚠️ ٹیبل نہیں ملا۔"}
+    "العربية": {"dir": "rtl", "align": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF هنا", "btn": "بدء المعالجة"},
+    "English": {"dir": "ltr", "align": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF to Excel", "tab2": "🔍 OCR Text", "up": "Upload PDF", "btn": "Start"},
+    "Français": {"dir": "ltr", "align": "left", "title": "📊 Comptable Intelligent Pro", "subtitle": "Système cloud avancé", "tab1": "📊 PDF vers Excel", "tab2": "🔍 OCR Texte", "up": "Charger PDF", "btn": "Démarrer"},
+    "اردو": {"dir": "rtl", "align": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالیں", "up": "فائل اپ لوڈ کریں", "btn": "شروع"}
 }
 
-# اختيار اللغة
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# التصميم (النيون + إخفاء القلم + الحقوق)
+# التصميم (خلفية فاتحة، نيون على الحواف فقط، إخفاء القلم)
 st.markdown(f"""
 <style>
-    /* إخفاء شريط القلم (Edit) */
+    /* إخفاء القلم */
     [data-testid="stDecoration"] {{ display: none !important; }}
     
-    /* اتجاه وتنسيق عام */
-    html, body, .stApp {{ direction: {lang['dir']} !important; text-align: {lang['align']} !important; background-color: #07090e !important; color: #ffffff !important; }}
-    
-    /* مستطيل رفع نيون متوهج */
-    [data-testid="stFileUploader"] {{ 
-        border: 2px solid #2ea043 !important; 
-        border-radius: 15px !important; 
-        background: #0d0d0d !important;
-        box-shadow: 0 0 15px rgba(46, 160, 67, 0.3) !important;
+    /* خلفية بيضاء/رمادية فاتحة ونصوص داكنة */
+    html, body, .stApp {{ 
+        direction: {lang['dir']} !important; 
+        text-align: {lang['align']} !important; 
+        background-color: #F8F9FA !important; 
+        color: #202124 !important; 
     }}
-    [data-testid="stFileUploader"]:hover {{ box-shadow: 0 0 30px rgba(46, 160, 67, 0.6) !important; }}
     
-    /* الحقوق في الأسفل */
-    .footer {{ position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; background: #000; color: #58a6ff; font-weight: bold; border-top: 1px solid #2ea043; }}
+    /* مستطيل الرفع نيون (توهج على خلفية فاتحة) */
+    [data-testid="stFileUploader"] {{ 
+        border: 2px solid #1A73E8 !important; 
+        border-radius: 15px !important; 
+        background: #FFFFFF !important;
+        box-shadow: 0 0 10px rgba(26, 115, 232, 0.2) !important;
+    }}
+    
+    /* تذييل الحقوق */
+    .footer {{ position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; background: #F8F9FA; color: #1A73E8; font-weight: bold; border-top: 1px solid #1A73E8; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -50,21 +53,18 @@ st.markdown(f"""
 st.markdown(f"<h1>{lang['title']}</h1><p>{lang['subtitle']}</p>", unsafe_allow_html=True)
 tab1, tab2 = st.tabs([lang["tab1"], lang["tab2"]])
 
-# منطق المعالجة (محفوظ كما طلبت)
 with tab1:
     files = st.file_uploader(lang["up"], type=["pdf"], accept_multiple_files=True)
     if files:
         for f in files:
             if st.button(f"{lang['btn']} {f.name}"):
-                with st.spinner(lang["loading"]):
-                    dfs = tabula.read_pdf(f, pages='all', multiple_tables=True, lattice=True)
-                    if dfs:
-                        output = io.BytesIO()
-                        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                            for i, df in enumerate(dfs): df.to_excel(writer, index=False, sheet_name=f'Sheet{i+1}')
-                        st.success(lang["success"])
-                        st.download_button(lang["download"], output.getvalue(), f"{f.name}.xlsx", "application/vnd.ms-excel")
-                    else: st.warning(lang["no_tables"])
+                dfs = tabula.read_pdf(f, pages='all', multiple_tables=True, lattice=True)
+                if dfs:
+                    output = io.BytesIO()
+                    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                        for i, df in enumerate(dfs): df.to_excel(writer, index=False, sheet_name=f'Sheet{i+1}')
+                    st.success("تم!")
+                    st.download_button("📥 تحميل", output.getvalue(), f"{f.name}.xlsx")
 
 with tab2:
     img = st.file_uploader(lang["up"], type=["jpg", "png", "pdf"])
@@ -72,5 +72,4 @@ with tab2:
         full_text = pytesseract.image_to_string(Image.open(img), lang='ara+eng')
         st.text_area("النص:", value=full_text, height=300)
 
-# تذييل الحقوق
 st.markdown('<div class="footer">المحاسب الذكي Pro | جميع الحقوق محفوظة © 2026</div>', unsafe_allow_html=True)
