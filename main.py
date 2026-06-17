@@ -3,7 +3,6 @@ import streamlit.components.v1 as components
 import tabula
 import pandas as pd
 import io
-import base64
 from PIL import Image
 import pytesseract
 import fitz
@@ -14,40 +13,38 @@ st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊",
 
 # قاموس الترجمة
 translations = {
-    "العربية": {
-        "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول",
-        "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "ارفع ملف الـ PDF هنا",
-        "btn_convert": "بدء التحويل: ", "btn_ocr": "🚀 تشغيل الذكاء الاصطناعي", "loading": "جاري المعالجة...",
-        "success": "🚀 اكتمل التحويل بنجاح!", "download": "📥 تحميل الملف", "no_tables": "⚠️ لم يتم العثور على جداول.",
-        "ocr_header": "✅ النصوص المستخرجة:", "copy": "📋 نسخ النص", "copied": "✅ تم النسخ!"
-    }
+    "العربية": {"dir": "rtl", "align": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "ارفع ملف الـ PDF هنا", "btn_convert": "بدء التحويل: ", "btn_ocr": "🚀 تشغيل الذكاء الاصطناعي", "loading": "جاري المعالجة...", "success": "🚀 اكتمل التحويل!", "download": "📥 تحميل الملف", "no_tables": "⚠️ لم يتم العثور على جداول."},
+    "English": {"dir": "ltr", "align": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system for data processing", "tab1": "📊 Convert PDF to Excel", "tab2": "🔍 Smart Text Extraction (OCR)", "up": "Upload your PDF file here", "btn_convert": "Start conversion: ", "btn_ocr": "🚀 Run AI", "loading": "Processing...", "success": "🚀 Done!", "download": "📥 Download", "no_tables": "⚠️ No tables found."},
+    "اردو": {"dir": "rtl", "align": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "ڈیٹا پروسیسنگ کا جدید نظام", "tab1": "📊 PDF کو ایکسل میں بدلیں", "tab2": "🔍 ٹیکسٹ نکالنا (OCR)", "up": "فائل یہاں اپ لوڈ کریں", "btn_convert": "تبدیلی شروع کریں: ", "btn_ocr": "🚀 AI چلائیں", "loading": "پروسیسنگ...", "success": "🚀 مکمل ہوا!", "download": "📥 فائل ڈاؤن لوڈ کریں", "no_tables": "⚠️ کوئی ٹیبل نہیں ملا۔"}
 }
-lang = translations["العربية"]
 
-# تصميم Google Material Design 3 (تباين عالي)
-st.markdown("""
+# اختيار اللغة
+selected_lang = st.selectbox("🌐", ["العربية", "English", "اردو"], index=0, key="lang_selector")
+lang = translations[selected_lang]
+
+# تصميم جوجل الجديد (خلفية فاتحة + تباين عالي)
+st.markdown(f"""
 <style>
-    /* الخطوط والتباين */
-    html, body, [class*="st-emotion-cache"] { font-family: 'Segoe UI', Roboto, sans-serif !important; }
-    h1 { font-size: 3.5rem !important; color: #FFFFFF !important; font-weight: 700 !important; }
-    p, span, label { font-size: 1.2rem !important; color: #B0B0B0 !important; }
-    .stApp { background-color: #000000 !important; }
-
-    /* تنسيق القائمة العلوية */
-    [data-testid="stSelectbox"] { width: 250px !important; margin-bottom: 20px !important; }
+    /* تطبيق الاتجاه والمحاذاة بناءً على اللغة */
+    html, body, .stApp {{ 
+        direction: {lang['dir']} !important; 
+        text-align: {lang['align']} !important; 
+        background-color: #F8F9FA !important; /* خلفية رمادية فاتحة جداً ونظيفة */
+        color: #202124 !important; /* لون نص داكن مريح للعين */
+    }}
+    
+    h1 {{ color: #1A73E8 !important; font-size: 3rem !important; }} /* اللون الأزرق المميز لجوجل */
     
     /* تنسيق الرفع والأزرار */
-    [data-testid="stFileUploader"] { border: 3px solid #FFFFFF !important; background-color: #121212 !important; border-radius: 20px !important; }
-    .stButton > button { background-color: #FFFFFF !important; color: #000000 !important; border-radius: 50px !important; padding: 15px 40px !important; font-weight: 900 !important; font-size: 1.2rem !important; }
+    [data-testid="stFileUploader"] {{ border: 2px solid #DADCE0 !important; background-color: #FFFFFF !important; border-radius: 12px !important; }}
+    .stButton > button {{ background-color: #1A73E8 !important; color: #FFFFFF !important; border-radius: 8px !important; font-weight: bold !important; }}
 </style>
 """, unsafe_allow_html=True)
 
-# واجهة المستخدم
 st.markdown(f"<h1>{lang['title']}</h1><p>{lang['subtitle']}</p>", unsafe_allow_html=True)
-selected_lang = st.selectbox("🌐", ["العربية"], index=0, key="lang_selector")
 tab1, tab2 = st.tabs([lang["tab1"], lang["tab2"]])
 
-# --- منطق المعالجة (محفوظ كما هو تماماً من الملف الأصلي) ---
+# --- منطق معالجة الملفات (كما هو تماماً من الملف الأصلي) ---
 with tab1:
     pdf_files = st.file_uploader(lang["up"], type=["pdf"], accept_multiple_files=True)
     if pdf_files:
@@ -68,9 +65,5 @@ with tab1:
 with tab2:
     img = st.file_uploader(lang["up"], type=["jpg", "png", "pdf"])
     if img and st.button(lang["btn_ocr"]):
-        try:
-            full_text = pytesseract.image_to_string(Image.open(img), lang='ara+eng')
-            st.text_area(lang["ocr_header"], value=full_text, height=300)
-            st_copy_to_clipboard(full_text, before_copy_label=lang["copy"], after_copy_label=lang["copied"])
-        except Exception as e:
-            st.error(f"Error: {e}")
+        full_text = pytesseract.image_to_string(Image.open(img), lang='ara+eng')
+        st.text_area("النص:", value=full_text, height=300)
