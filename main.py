@@ -10,12 +10,15 @@ import streamlit.components.v1 as components
 # إعدادات الصفحة
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
-# قاموس اللغات
+# قاموس اللغات (الـ 4 لغات عادت)
 translations = {
-    "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF/CSV إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF أو CSV أو صورة", "btn": "بدء المعالجة", "copy": "📋 نسخ النص بالكامل"},
+    "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF/CSV إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF أو CSV هنا", "btn": "بدء المعالجة", "copy": "📋 نسخ النص بالكامل"},
+    "English": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF/CSV to Excel", "tab2": "🔍 OCR Text", "up": "Upload PDF or CSV", "btn": "Start", "copy": "📋 Copy All Text"},
+    "Français": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Comptable Intelligent Pro", "subtitle": "Système cloud avancé", "tab1": "📊 PDF/CSV vers Excel", "tab2": "🔍 OCR Texte", "up": "Charger PDF ou CSV", "btn": "Démarrer", "copy": "📋 Copier tout"},
+    "اردو": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 PDF/CSV ایکسل میں", "tab2": "🔍 ٹیکسٹ نکالیں", "up": "فائل اپ لوڈ کریں", "btn": "شروع", "copy": "📋 پورا ٹیکسٹ کاپی کریں"}
 }
 
-selected_lang = st.selectbox("🌐", ["العربية"], index=0, key="lang_selector")
+selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
 # --- التصميم الشامل ---
