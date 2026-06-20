@@ -10,12 +10,12 @@ import streamlit.components.v1 as components
 # إعدادات الصفحة
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
-# قاموس اللغات (الـ 4 لغات عادت)
+# قاموس اللغات (تم تحديث الرسائل لكل تبويب)
 translations = {
-    "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF/CSV إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF أو CSV هنا", "btn": "بدء المعالجة", "copy": "📋 نسخ النص بالكامل"},
-    "English": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF/CSV to Excel", "tab2": "🔍 OCR Text", "up": "Upload PDF or CSV", "btn": "Start", "copy": "📋 Copy All Text"},
-    "Français": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Comptable Intelligent Pro", "subtitle": "Système cloud avancé", "tab1": "📊 PDF/CSV vers Excel", "tab2": "🔍 OCR Texte", "up": "Charger PDF ou CSV", "btn": "Démarrer", "copy": "📋 Copier tout"},
-    "اردو": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 PDF/CSV ایکسل میں", "tab2": "🔍 ٹیکسٹ نکالیں", "up": "فائل اپ لوڈ کریں", "btn": "شروع", "copy": "📋 پورا ٹیکسٹ کاپی کریں"}
+    "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF/CSV إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up1": "اسحب ملف PDF أو CSV هنا", "up2": "اسحب ملف PDF أو صورة هنا", "btn": "بدء المعالجة", "copy": "📋 نسخ النص بالكامل"},
+    "English": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF/CSV to Excel", "tab2": "🔍 OCR Text", "up1": "Upload PDF or CSV", "up2": "Upload PDF or Image", "btn": "Start", "copy": "📋 Copy All Text"},
+    "Français": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Comptable Intelligent Pro", "subtitle": "Système cloud avancé", "tab1": "📊 PDF/CSV vers Excel", "tab2": "🔍 OCR Texte", "up1": "Charger PDF ou CSV", "up2": "Charger PDF ou Image", "btn": "Démarrer", "copy": "📋 Copier tout"},
+    "اردو": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 PDF/CSV ایکسل میں", "tab2": "🔍 ٹیکسٹ نکالیں", "up1": "فائل اپ لوڈ کریں", "up2": "پی ڈی ایف یا تصویر اپ لوڈ کریں", "btn": "شروع", "copy": "📋 پورا ٹیکسٹ کاپی کریں"}
 }
 
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
@@ -30,11 +30,7 @@ st.markdown(f"""
     .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; }}
     .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; }}
     
-    h1 {{ 
-        text-align: {lang['align']} !important; 
-        color: #202124 !important; 
-        text-shadow: 0 0 10px #28a745, 0 0 20px #28a745 !important; 
-    }}
+    h1 {{ text-align: {lang['align']} !important; color: #202124 !important; text-shadow: 0 0 10px #28a745, 0 0 20px #28a745 !important; }}
     p {{ text-align: {lang['align']} !important; color: #202124 !important; }}
     
     [data-testid="stFileUploader"] {{ border: 2px solid #28a745 !important; border-radius: 12px !important; box-shadow: 0 0 15px rgba(40, 167, 69, 0.3) !important; background: #ffffff !important; }}
@@ -45,7 +41,6 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# محتوى الصفحة
 with st.container():
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
     st.markdown(f"<h1>{lang['title']}</h1><p>{lang['subtitle']}</p>", unsafe_allow_html=True)
@@ -53,7 +48,7 @@ with st.container():
     tab1, tab2 = st.tabs([lang["tab1"], lang["tab2"]])
 
     with tab1:
-        files = st.file_uploader(lang["up"], type=["pdf", "csv"], accept_multiple_files=True)
+        files = st.file_uploader(lang["up1"], type=["pdf", "csv"], accept_multiple_files=True)
         if files:
             for f in files:
                 if st.button(f"{lang['btn']}", key=f"btn1_{f.name}"):
@@ -67,7 +62,7 @@ with st.container():
                     st.download_button("📥 تحميل", output.getvalue(), f"{f.name.split('.')[0]}.xlsx")
 
     with tab2:
-        file = st.file_uploader(lang["up"], type=["jpg", "png", "pdf"])
+        file = st.file_uploader(lang["up2"], type=["jpg", "png", "pdf"]) # هنا التعديل
         if file and st.button(f"{lang['btn']}", key="btn2"):
             with st.spinner("جاري المعالجة..."):
                 try:
