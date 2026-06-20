@@ -22,8 +22,14 @@ selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", 
 lang = translations[selected_lang]
 
 # --- التصميم الشامل (النيون + التمركز + المحاذاة) ---
-st.markdown(f"""
-<style>
+st.markdown("""
+    <style>
+        /* هذا السطر هو المسؤول عن إخفاء قائمة الأدوات السفلية (Manage app) */
+        [data-testid="stToolbar"] {
+            display: none !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
     [data-testid="stSelectbox"] {{ position: fixed !important; top: 15px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important; }}
     
