@@ -12,21 +12,21 @@ st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊",
 
 # قاموس اللغات
 translations = {
-    "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF/CSV إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملفك هنا", "btn": "بدء المعالجة", "copy": "📋 نسخ النص بالكامل"},
-    "English": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF/CSV to Excel", "tab2": "🔍 OCR Text", "up": "Upload", "btn": "Start", "copy": "📋 Copy All Text"},
-    "Français": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Comptable Intelligent Pro", "subtitle": "Système cloud avancé", "tab1": "📊 PDF/CSV vers Excel", "tab2": "🔍 OCR Texte", "up": "Charger", "btn": "Démarrer", "copy": "📋 Copier tout"},
-    "اردو": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 PDF/CSV ایکسل میں", "tab2": "🔍 ٹیکسٹ نکالیں", "up": "فائل اپ لوڈ کریں", "btn": "شروع", "copy": "📋 پورا ٹیکسٹ کاپی کریں"}
+    "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF/CSV إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up": "اسحب ملف PDF أو CSV أو صورة", "btn": "بدء المعالجة", "copy": "📋 نسخ النص بالكامل"},
 }
 
-selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
+selected_lang = st.selectbox("🌐", ["العربية"], index=0, key="lang_selector")
 lang = translations[selected_lang]
+
+# --- التصميم الشامل ---
+st.markdown(f"""
+<style>
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
-    [data-testid="stSelectbox"] {{ position: fixed !important; top: 15px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important; }}
+[data-testid="stSelectbox"] {{ position: fixed !important; top: 15px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important; }}
     
     .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; }}
     .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; }}
     
-    /* توهج النيون للعنوان */
     h1 {{ 
         text-align: {lang['align']} !important; 
         color: #202124 !important; 
@@ -34,7 +34,6 @@ lang = translations[selected_lang]
     }}
     p {{ text-align: {lang['align']} !important; color: #202124 !important; }}
     
-    /* التوهج الأخضر للمستطيل والزر */
     [data-testid="stFileUploader"] {{ border: 2px solid #28a745 !important; border-radius: 12px !important; box-shadow: 0 0 15px rgba(40, 167, 69, 0.3) !important; background: #ffffff !important; }}
     div.stButton > button {{ border: 2px solid #28a745 !important; transition: 0.3s; }}
     div.stButton > button:active {{ box-shadow: 0 0 20px #28a745 !important; }}
@@ -57,16 +56,11 @@ with st.container():
                 if st.button(f"{lang['btn']}", key=f"btn1_{f.name}"):
                     output = io.BytesIO()
                     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                        # معالجة ملفات PDF
                         if f.name.endswith('.pdf'):
                             dfs = tabula.read_pdf(f, pages='all', multiple_tables=True, lattice=True)
-                            if dfs:
-                                for i, df in enumerate(dfs): df.to_excel(writer, index=False, sheet_name=f'Sheet{i+1}')
-                        # معالجة ملفات CSV
+                            for i, df in enumerate(dfs): df.to_excel(writer, index=False, sheet_name=f'Sheet{i+1}')
                         else:
-                            df = pd.read_csv(f)
-                            df.to_excel(writer, index=False, sheet_name='Sheet1')
-                    
+                            pd.read_csv(f).to_excel(writer, index=False, sheet_name='Sheet1')
                     st.download_button("📥 تحميل", output.getvalue(), f"{f.name.split('.')[0]}.xlsx")
 
     with tab2:
@@ -85,16 +79,11 @@ with st.container():
                         full_text = pytesseract.image_to_string(Image.open(file), lang='ara+eng')
                     
                     st.text_area("النص:", value=full_text, height=300)
-                    
                     if full_text.strip():
-                        copy_btn_code = f"""
-                        <button style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: sans-serif;" onclick="navigator.clipboard.writeText(`{full_text.replace('`', '')}`)">
-                            {lang['copy']}
-                        </button>
-                        """
-                        components.html(copy_btn_code, height=60)
+                        copy_btn_code = f'<button style="padding:10px; background:#28a745; color:white; border:none; border-radius:5px;" onclick="navigator.clipboard.writeText(`{full_text.replace("`", "")}`)">📋 {lang["copy"]}</button>'
+                        components.html(copy_btn_code, height=50)
                 except Exception:
-                    st.error("خطأ في المعالجة")
+                    st.error("خطأ: يرجى التأكد من أن الملف سليم.")
     st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown('<div class="footer">المحاسب الذكي Pro | جميع الحقوق محفوظة © 2026</div>', unsafe_allow_html=True)
