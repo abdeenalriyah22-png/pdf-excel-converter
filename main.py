@@ -20,31 +20,6 @@ translations = {
 
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
-
-# --- التصميم الشامل (النيون + التمركز + المحاذاة) ---
-# --- التصميم الشامل (النيون + التمركز + المحاذاة) ---
-st.markdown(f"""
-<style>
-    #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
-[data-testid="stSelectbox"] {{ position: fixed !important; top: 15px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important; }}
-    
-    .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; }}
-    .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; }}
-    
-    h1 {{ 
-        text-align: {lang['align']} !important; 
-        color: #202124 !important; 
-        text-shadow: 0 0 10px #28a745, 0 0 20px #28a745 !important; 
-    }}
-    p {{ text-align: {lang['align']} !important; color: #202124 !important; }}
-    
-    [data-testid="stFileUploader"] {{ border: 2px solid #28a745 !important; border-radius: 12px !important; box-shadow: 0 0 15px rgba(40, 167, 69, 0.3) !important; background: #ffffff !important; }}
-    div.stButton > button {{ border: 2px solid #28a745 !important; transition: 0.3s; }}
-    div.stButton > button:active {{ box-shadow: 0 0 20px #28a745 !important; }}
-    
-    .footer {{ position: fixed; left: 0; bottom: 0; width: 100%; text-align: center; padding: 10px; color: #888; font-size: 12px; border-top: 1px solid #ddd; background: #F8F9FA; }}
-</style>
-""", unsafe_allow_html=True)
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
     [data-testid="stSelectbox"] {{ position: fixed !important; top: 15px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important; }}
     
