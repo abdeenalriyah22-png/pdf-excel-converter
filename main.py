@@ -27,7 +27,7 @@ st.markdown(f"""
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
 [data-testid="stSelectbox"] {{ position: fixed !important; top: 15px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important; }}
     
-    .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; }}
+    .stApp {{ background-color: #F8b9FA !important; direction: {lang['dir']} !important; }}
     .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; }}
     
     h1 {{ text-align: {lang['align']} !important; color: #202124 !important; text-shadow: 0 0 10px #28a745, 0 0 20px #28a745 !important; }}
