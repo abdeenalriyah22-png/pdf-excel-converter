@@ -30,7 +30,7 @@ st.markdown(f"""
     .stApp {{ background-color: #F8p9FA !important; direction: {lang['dir']} !important; }}
     .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; }}
     
-    h1 {{ text-align: {lang['align']} !important; color: #202124 !important; text-shadow: 0 0 10px #28a745, 0 0 20px #28a745 !important; }}
+    h1 {{ text-align: {lang['align']} !important; color: #212124 !important; text-shadow: 0 0 10px #28a745, 0 0 20px #28a745 !important; }}
     p {{ text-align: {lang['align']} !important; color: #202124 !important; }}
     
     [data-testid="stFileUploader"] {{ border: 2px solid #28a745 !important; border-radius: 12px !important; box-shadow: 0 0 15px rgba(40, 167, 69, 0.3) !important; background: #ffffff !important; }}
