@@ -8,7 +8,7 @@ import fitz
 import streamlit.components.v1 as components
 
 # إعدادات الصفحة
-st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="green", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
 # قاموس اللغات (تم تحديث الرسائل لكل تبويب)
 translations = {
