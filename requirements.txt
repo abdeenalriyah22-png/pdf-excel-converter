@@ -8,4 +8,3 @@ pytesseract
 pillow
 st-copy-to-clipboard
 pdfplumber
-tabula-py
