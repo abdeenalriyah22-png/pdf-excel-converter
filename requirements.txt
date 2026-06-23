@@ -1,6 +1,10 @@
 streamlit
 pandas
-pdfplumber
+xlsxwriter
 arabic-reshaper
 python-bidi
-xlsxwriter
+pymupdf
+pytesseract
+pillow
+st-copy-to-clipboard
+pdfplumber
