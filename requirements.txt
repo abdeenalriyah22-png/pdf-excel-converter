@@ -1,8 +1,7 @@
 streamlit
-tabula-py
 pandas
-xlsxwriter
+tabula-py
+openpyxl
 Pillow
 pytesseract
 pymupdf
-pdfplumber
