@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 # إعدادات الصفحة
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
 
-# قاموس اللغات (تم تحديث الرسائل لكل تبويب)
+# قاموس اللغات
 translations = {
     "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF/CSV إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up1": "اسحب ملف PDF أو CSV هنا", "up2": "اسحب ملف PDF أو صورة هنا", "btn": "بدء المعالجة", "copy": "📋 نسخ النص بالكامل"},
     "English": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF/CSV to Excel", "tab2": "🔍 OCR Text", "up1": "Upload PDF or CSV", "up2": "Upload PDF or Image", "btn": "Start", "copy": "📋 Copy All Text"},
@@ -21,13 +21,13 @@ translations = {
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# --- التصميم الشامل ---
+# --- التصميم الشامل (النيون + إخفاء القائمة السفلية) ---
 st.markdown(f"""
 <style>
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
-[data-testid="stSelectbox"] {{ position: fixed !important; top: 15px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important; }}
+    [data-testid="stSelectbox"] {{ position: fixed !important; top: 15px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important; }}
     
-    .stApp {{ background-color: #F8p9FA !important; direction: {lang['dir']} !important; }}
+    .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; }}
     .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; }}
     
     h1 {{ text-align: {lang['align']} !important; color: #202124 !important; text-shadow: 0 0 10px #28a745, 0 0 20px #28a745 !important; }}
@@ -41,6 +41,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
+# محتوى الصفحة
 with st.container():
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
     st.markdown(f"<h1>{lang['title']}</h1><p>{lang['subtitle']}</p>", unsafe_allow_html=True)
@@ -56,13 +57,16 @@ with st.container():
                     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                         if f.name.endswith('.pdf'):
                             dfs = tabula.read_pdf(f, pages='all', multiple_tables=True, lattice=True)
-                            for i, df in enumerate(dfs): df.to_excel(writer, index=False, sheet_name=f'Sheet{i+1}')
+                            if dfs:
+                                # دمج جميع الصفحات في جدول واحد
+                                combined_df = pd.concat(dfs, ignore_index=True)
+                                combined_df.to_excel(writer, index=False, sheet_name='Data')
                         else:
-                            pd.read_csv(f).to_excel(writer, index=False, sheet_name='Sheet1')
+                            pd.read_csv(f).to_excel(writer, index=False, sheet_name='Data')
                     st.download_button("📥 تحميل", output.getvalue(), f"{f.name.split('.')[0]}.xlsx")
 
     with tab2:
-        file = st.file_uploader(lang["up2"], type=["jpg", "png", "pdf"]) # هنا التعديل
+        file = st.file_uploader(lang["up2"], type=["jpg", "png", "pdf"])
         if file and st.button(f"{lang['btn']}", key="btn2"):
             with st.spinner("جاري المعالجة..."):
                 try:
