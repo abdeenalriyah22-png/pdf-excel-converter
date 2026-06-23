@@ -19,7 +19,7 @@ def fix_arabic(text):
         return get_display(arabic_reshaper.reshape(text))
     return text
 
-# 3. القاموس (تم دمج اللغات)
+# 3. القاموس الموحد للغات
 translations = {
     "العربية": {"dir": "rtl", "align": "right", "title": "📊 المحاسب الذكي Pro", "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "btn": "بدء المعالجة"},
     "English": {"dir": "ltr", "align": "left", "title": "📊 Smart Accountant Pro", "tab1": "📊 PDF to Excel", "tab2": "🔍 Smart OCR", "btn": "Start Processing"},
@@ -29,7 +29,7 @@ translations = {
 selected_lang = st.selectbox("🌐", ["العربية", "English", "اردو"])
 lang = translations[selected_lang]
 
-# 4. التصميم (CSS النيوني)
+# 4. التصميم النيوني الاحترافي
 st.markdown(f"""
 <style>
     .stApp {{ background: radial-gradient(circle at center, #111723 0%, #07090e 100%) !important; direction: {lang['dir']}; }}
@@ -41,7 +41,7 @@ st.markdown(f"""
 st.title(lang["title"])
 tab1, tab2 = st.tabs([lang["tab1"], lang["tab2"]])
 
-# 5. معالجة الجداول (بدون Tabula لتفادي خطأ Java)
+# 5. التبويب الأول: معالجة الجداول (PDF -> Excel)
 with tab1:
     files = st.file_uploader("ارفع ملف PDF", type=["pdf"], accept_multiple_files=True)
     if files:
@@ -55,7 +55,7 @@ with tab1:
                             for page in pdf.pages:
                                 table = page.extract_table()
                                 if table:
-                                    # تصحيح ذكي للنص قبل وضعه في الإكسل
+                                    # تصحيح ذكي للنص ليعرض بشكل سليم في إكسل
                                     fixed_table = [[fix_arabic(cell) if isinstance(cell, str) else cell for cell in row] for row in table]
                                     all_data.extend(fixed_table)
                         
@@ -64,10 +64,15 @@ with tab1:
                             df.to_excel(writer, index=False, sheet_name='Data')
                             writer.sheets['Data'].right_to_left()
                         
-                        st.success("تم!")
-                        st.download_button("📥 تحميل الإكسل", output.getvalue(), f"Excel_{f.name}.xlsx")
+                        st.success("تمت المعالجة!")
+                        st.download_button("📥 تحميل الإكسل", output.getvalue(), f"Excel_{f.name.replace('.pdf', '')}.xlsx")
                     except Exception as e:
-                        st.error(f"خطأ: {e}")
+                        st.error(f"حدث خطأ: {e}")
 
+# 6. التبويب الثاني: استخراج النصوص (OCR)
 with tab2:
-    st.info("ميزة الـ OCR جاهزة للعمل.")
+    uploaded_ocr = st.file_uploader("ارفع صورة أو ملف PDF للاستخراج", type=["jpg", "png", "pdf"])
+    if uploaded_ocr and st.button("استخراج النص"):
+        full_text = "تجربة استخراج النص..." # هنا يوضع منطق OCR الخاص بك
+        st.text_area("النص المستخرج:", value=full_text)
+        st_copy_to_clipboard(text=full_text)
