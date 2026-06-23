@@ -2,10 +2,6 @@ import streamlit as st
 import pandas as pd
 import pdfplumber
 import io
-from PIL import Image
-import pytesseract
-import fitz
-import streamlit.components.v1 as components
 
 # إعدادات الصفحة
 st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
@@ -15,13 +11,13 @@ translations = {
     "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF/CSV إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up1": "اسحب ملف PDF أو CSV هنا", "up2": "اسحب ملف PDF أو صورة هنا", "btn": "بدء المعالجة", "loading": "جاري المعالجة... يرجى الانتظار", "copy": "📋 نسخ النص بالكامل"},
     "English": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF/CSV to Excel", "tab2": "🔍 OCR Text", "up1": "Upload PDF or CSV", "up2": "Upload PDF or Image", "btn": "Start", "loading": "Processing... please wait", "copy": "📋 Copy All Text"},
     "Français": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Comptable Intelligent Pro", "subtitle": "Système cloud avancé", "tab1": "📊 PDF/CSV vers Excel", "tab2": "🔍 OCR Texte", "up1": "Charger PDF ou CSV", "up2": "Charger PDF ou Image", "btn": "Démarrer", "copy": "📋 Copier tout"},
-    "اردو": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 PDF/CSV ایکسل میں", "tab2": "🔍 ٹیکسٹ نکالیں", "up1": "فائل اپ لوڈ کریں", "up2": "پی ڈی ایف یا تصویر اپ لوڈ کریں", "btn": "شروع", "copy": "📋 پورا ٹیکسٹ کاپی کریں"}
+    "اردو": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 PDF/CSV ایکسل میں", "tab2": "🔍 ٹیکسٹ نکالیں", "up1": "فائل اپ لوڈ کریں", "up2": "پی ڈی ایف یا تصویر اپ لوڈ کریں", "btn": "شروع", "copy": "📋 کاپی کریں"}
 }
 
 selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
 lang = translations[selected_lang]
 
-# --- تصميمك الأصلي (لا تغيير فيه) ---
+# --- تصميمك الأصلي ---
 st.markdown(f"""
 <style>
     #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
@@ -35,20 +31,17 @@ st.markdown(f"""
         color: #202124 !important; 
         text-shadow: 0 0 10px #28a745, 0 0 20px #28a745 !important; 
     }}
-    p {{ text-align: {lang['align']} !important; color: #202124 !important; }}
     
     [data-testid="stFileUploader"] {{ border: 2px solid #28a745 !important; border-radius: 12px !important; box-shadow: 0 0 15px rgba(40, 167, 69, 0.3) !important; background: #ffffff !important; }}
     div.stButton > button {{ border: 2px solid #28a745 !important; transition: 0.3s; }}
     div.stButton > button:active {{ box-shadow: 0 0 20px #28a745 !important; }}
-    
-    .footer {{ position: fixed; left: 0; bottom: 0; width: 100%; text-align: center; padding: 10px; color: #888; font-size: 12px; border-top: 1px solid #ddd; background: #F8F9FA; }}
 </style>
 """, unsafe_allow_html=True)
 
 # محتوى الصفحة
 with st.container():
     st.markdown('<div class="main-container">', unsafe_allow_html=True)
-    st.markdown(f"<h1>{lang['title']}</h1><p>{lang['subtitle']}</p>", unsafe_allow_html=True)
+    st.markdown(f"<h1>{lang['title']}</h1>", unsafe_allow_html=True)
     
     tab1, tab2 = st.tabs([lang["tab1"], lang["tab2"]])
 
@@ -58,20 +51,27 @@ with st.container():
             for f in files:
                 if st.button(f"{lang['btn']}", key=f"btn1_{f.name}"):
                     output = io.BytesIO()
-                    # استخدام pdfplumber بدلاً من tabula لتجنب مشاكل Java
-                    with pdfplumber.open(f) as pdf:
-                        all_data = []
-                        for page in pdf.pages:
-                            table = page.extract_table()
-                            if table: all_data.extend(table)
-                        df = pd.DataFrame(all_data[1:], columns=all_data[0])
-                        df.to_excel(output, index=False)
-                    st.download_button("📥 تحميل", output.getvalue(), f"{f.name.split('.')[0]}.xlsx")
+                    with st.spinner(lang["loading"]):
+                        try:
+                            if f.name.endswith('.pdf'):
+                                with pdfplumber.open(f) as pdf:
+                                    all_data = []
+                                    for page in pdf.pages:
+                                        table = page.extract_table()
+                                        if table:
+                                            # قلب النصوص لتصحيح الترتيب العربي
+                                            fixed_table = [[str(cell)[::-1] if isinstance(cell, str) else cell for cell in row] for row in table]
+                                            all_data.extend(fixed_table)
+                                    df = pd.DataFrame(all_data[1:], columns=all_data[0])
+                                    df.to_excel(output, index=False)
+                            else:
+                                pd.read_csv(f).to_excel(output, index=False)
+                            st.download_button("📥 تحميل", output.getvalue(), f"{f.name.split('.')[0]}.xlsx")
+                        except Exception as e:
+                            st.error(f"حدث خطأ: {e}")
 
     with tab2:
         file = st.file_uploader(lang["up2"], type=["jpg", "png", "pdf"])
         if file and st.button(f"{lang['btn']}", key="btn2"):
             st.success("جاري الاستخراج...")
     st.markdown('</div>', unsafe_allow_html=True)
-
-st.markdown('<div class="footer">المحاسب الذكي Pro | جميع الحقوق محفوظة © 2026</div>', unsafe_allow_html=True)
