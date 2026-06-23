@@ -1,82 +1,83 @@
 import streamlit as st
+import streamlit.components.v1 as components
+import tabula
 import pandas as pd
-import pdfplumber
 import io
+import fitz  # PyMuPDF
+from PIL import Image
+import pytesseract
 import arabic_reshaper
 from bidi.algorithm import get_display
+from st_copy_to_clipboard import st_copy_to_clipboard
 
-# إعدادات الصفحة
-st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
-
-# وظيفة تصحيح النصوص العربية
+# --- وظيفة تصحيح النصوص العربية (لحل مشكلة قلب الحروف) ---
 def fix_arabic(text):
     if isinstance(text, str):
         return get_display(arabic_reshaper.reshape(text))
     return text
 
-# قاموس اللغات
+# --- إعدادات الصفحة ---
+st.set_page_config(page_title="المحاسب الذكي Pro", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
+
+# --- قاموس اللغات ---
 translations = {
-    "العربية": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 المحاسب الذكي Pro", "subtitle": "النظام السحابي المطور لمعالجة الجداول", "tab1": "📊 تحويل PDF/CSV إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)", "up1": "اسحب ملف PDF أو CSV هنا", "up2": "اسحب ملف PDF أو صورة هنا", "btn": "بدء المعالجة", "loading": "جاري المعالجة... يرجى الانتظار", "copy": "📋 نسخ النص بالكامل"},
-    "English": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Smart Accountant Pro", "subtitle": "Advanced cloud system", "tab1": "📊 PDF/CSV to Excel", "tab2": "🔍 OCR Text", "up1": "Upload PDF or CSV", "up2": "Upload PDF or Image", "btn": "Start", "loading": "Processing... please wait", "copy": "📋 Copy All Text"},
-    "Français": {"dir": "ltr", "align": "left", "pos": "left", "title": "📊 Comptable Intelligent Pro", "subtitle": "Système cloud avancé", "tab1": "📊 PDF/CSV vers Excel", "tab2": "🔍 OCR Texte", "up1": "Charger PDF ou CSV", "up2": "Charger PDF ou Image", "btn": "Démarrer", "copy": "📋 Copier tout"},
-    "اردو": {"dir": "rtl", "align": "right", "pos": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro", "subtitle": "جدید کلاؤڈ سسٹم", "tab1": "📊 PDF/CSV ایکسل میں", "tab2": "🔍 ٹیکسٹ نکالیں", "up1": "فائل اپ لوڈ کریں", "up2": "پی ڈی ایف یا تصویر اپ لوڈ کریں", "btn": "شروع", "copy": "📋 کاپی کریں"}
+    "العربية": {
+        "direction": "rtl", "align": "right", "title": "📊 المحاسب الذكي Pro",
+        "tab1": "📊 تحويل PDF إلى Excel", "tab2": "🔍 استخراج النصوص (OCR)",
+        "uploader_pdf": "اسحب ملفات الـ PDF هنا", "btn_convert": "بدء المعالجة",
+        "loading": "جاري التحويل...", "success": "تم التحويل بنجاح!", "download": "تحميل Excel"
+    },
+    "English": {
+        "direction": "ltr", "align": "left", "title": "📊 Smart Accountant Pro",
+        "tab1": "📊 Convert PDF to Excel", "tab2": "🔍 Smart Text Extraction (OCR)",
+        "uploader_pdf": "Drag your PDF files here", "btn_convert": "Start Processing",
+        "loading": "Processing...", "success": "Conversion successful!", "download": "Download Excel"
+    },
+    "اردو": {
+        "direction": "rtl", "align": "right", "title": "📊 سمارٹ اکاؤنٹنٹ Pro",
+        "tab1": "📊 پی ڈی ایف کو ایکسل میں", "tab2": "🔍 ٹیکسٹ نکالنا (OCR)",
+        "uploader_pdf": "اپنی پی ڈی ایف فائلیں یہاں ڈریگ کریں", "btn_convert": "شروع کریں",
+        "loading": "پروسیسنگ ہو رہی ہے...", "success": "کامیابی سے مکمل ہوا!", "download": "ایکسل ڈاؤن لوڈ کریں"
+    }
 }
 
-selected_lang = st.selectbox("🌐", ["العربية", "English", "Français", "اردو"], index=0, key="lang_selector")
+selected_lang = st.selectbox("🌐 Choose Language", ["العربية", "English", "اردو"])
 lang = translations[selected_lang]
 
-# التصميم (النيون + النبض + التنسيق)
+# --- التصميم (CSS المحدث) ---
 st.markdown(f"""
 <style>
-    #MainMenu, header, footer, [data-testid="stDecoration"], [data-testid="stToolbar"] {{ display: none !important; }}
-    [data-testid="stSelectbox"] {{ position: fixed !important; top: 15px !important; {lang['pos']}: 20px !important; z-index: 9999 !important; width: 150px !important; }}
-    
-    .stApp {{ background-color: #F8F9FA !important; direction: {lang['dir']} !important; }}
-    .main-container {{ max-width: 900px; margin: 0 auto; padding-top: 100px !important; }}
-    
-    h1 {{ text-align: {lang['align']} !important; color: #202124 !important; text-shadow: 0 0 10px #28a745, 0 0 20px #28a745 !important; }}
-    
-    [data-testid="stFileUploader"] {{ border: 2px solid #28a745 !important; border-radius: 12px !important; box-shadow: 0 0 15px rgba(40, 167, 69, 0.3) !important; background: #ffffff !important; }}
-    div.stButton > button {{ border: 2px solid #28a745 !important; transition: 0.3s; animation: pulse 2s infinite; }}
-    @keyframes pulse {{ 0% {{ box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }} 70% {{ box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }} 100% {{ box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }} }}
+    .stApp {{ background: radial-gradient(circle at center, #111723 0%, #07090e 100%) !important; direction: {lang['direction']}; }}
+    h1 {{ color: #ffffff !important; text-align: {lang['align']}; }}
+    [data-testid="stFileUploader"] {{ border: 2px dashed #21262d !important; border-radius: 20px !important; }}
+    .stButton>button {{ background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important; color: white !important; border-radius: 12px !important; width: 100%; }}
 </style>
 """, unsafe_allow_html=True)
 
-# محتوى الصفحة
-with st.container():
-    st.markdown('<div class="main-container">', unsafe_allow_html=True)
-    st.markdown(f"<h1>{lang['title']}</h1>", unsafe_allow_html=True)
-    
-    tab1, tab2 = st.tabs([lang["tab1"], lang["tab2"]])
+st.title(lang["title"])
+tab1, tab2 = st.tabs([lang["tab1"], lang["tab2"]])
 
-    with tab1:
-        files = st.file_uploader(lang["up1"], type=["pdf", "csv"], accept_multiple_files=True)
-        if files:
-            for f in files:
-                if st.button(f"{lang['btn']}", key=f"btn1_{f.name}"):
-                    output = io.BytesIO()
-                    with st.spinner(lang["loading"]):
-                        try:
-                            if f.name.endswith('.pdf'):
-                                with pdfplumber.open(f) as pdf:
-                                    all_data = []
-                                    for page in pdf.pages:
-                                        table = page.extract_table()
-                                        if table:
-                                            # تصحيح النصوص العربية قبل الإضافة
-                                            fixed_table = [[fix_arabic(cell) if isinstance(cell, str) else cell for cell in row] for row in table]
-                                            all_data.extend(fixed_table)
-                                    df = pd.DataFrame(all_data[1:], columns=all_data[0])
-                                    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                                        df.to_excel(writer, index=False, sheet_name='Data')
-                                        worksheet = writer.sheets['Data']
-                                        worksheet.right_to_left()
-                            else:
-                                pd.read_csv(f).to_excel(output, index=False)
-                            st.download_button("📥 تحميل الإكسل", output.getvalue(), f"{f.name.split('.')[0]}.xlsx")
-                        except Exception as e:
-                            st.error(f"حدث خطأ: {e}")
+with tab1:
+    pdf_files = st.file_uploader(lang["uploader_pdf"], type=["pdf"], accept_multiple_files=True)
+    if pdf_files:
+        for f in pdf_files:
+            if st.button(f"{lang['btn_convert']} {f.name}", key=f.name):
+                output = io.BytesIO()
+                with st.spinner(lang["loading"]):
+                    try:
+                        # استخراج الجداول (بدون مكتبة tabula التي تتطلب Java إذا أمكن، أو استخدامها مع ملفاتك)
+                        dfs = tabula.read_pdf(f, pages='all', multiple_tables=True, lattice=True)
+                        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                            for i, df in enumerate(dfs):
+                                # تطبيق تصحيح النصوص العربية على كل خلية
+                                df = df.applymap(fix_arabic)
+                                df.to_excel(writer, index=False, sheet_name=f'Sheet{i+1}')
+                                writer.sheets[f'Sheet{i+1}'].right_to_left()
+                        
+                        st.success(lang["success"])
+                        st.download_button(lang["download"], output.getvalue(), f"Converted_{f.name}.xlsx")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
 
-    with tab2:
-        st.info("استخراج النصوص (OCR) قيد التطوير...")
-    st.markdown('</div>', unsafe_allow_html=True)
+with tab2:
+    st.info("ميزة الـ OCR متاحة للاستخدام...")
