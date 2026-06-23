@@ -1,10 +1,10 @@
 streamlit
+tabula-py
 pandas
 xlsxwriter
-pdfplumber
 arabic-reshaper
 python-bidi
-pymupdf
+st-copy-to-clipboard
 pytesseract
 pillow
-st-copy-to-clipboard
+pymupdf
