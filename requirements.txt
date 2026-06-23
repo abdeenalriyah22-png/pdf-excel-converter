@@ -1,7 +1,6 @@
 streamlit
 pandas
-openpyxl
 pdfplumber
-Pillow
-pytesseract
-pymupdf
+arabic-reshaper
+python-bidi
+xlsxwriter
