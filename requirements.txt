@@ -1,9 +1,8 @@
 streamlit
-pandas
 tabula-py
+pandas
 xlsxwriter
 Pillow
 pytesseract
 pymupdf
-st-copy-to-clipboard
 pdfplumber
