@@ -59,13 +59,20 @@ with st.container():
                                     for page in pdf.pages:
                                         table = page.extract_table()
                                         if table:
-                                            # قلب النصوص لتصحيح الترتيب العربي
-                                            fixed_table = [[str(cell)[::-1] if isinstance(cell, str) else cell for cell in row] for row in table]
-                                            all_data.extend(fixed_table)
+                                            # استخراج الخام كما هو بدون أي تحريف
+                                            all_data.extend(table)
+                                    
+                                    # إنشاء DataFrame
                                     df = pd.DataFrame(all_data[1:], columns=all_data[0])
-                                    df.to_excel(output, index=False)
+                                    
+                                    # استخدام XlsxWriter لتنسيق الشيت كـ RTL تلقائياً
+                                    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                                        df.to_excel(writer, index=False, sheet_name='Sheet1')
+                                        worksheet = writer.sheets['Sheet1']
+                                        worksheet.right_to_left() # هذا الأمر يجعل الإكسل يفتح مباشرة من اليمين لليسار
                             else:
                                 pd.read_csv(f).to_excel(output, index=False)
+                            
                             st.download_button("📥 تحميل", output.getvalue(), f"{f.name.split('.')[0]}.xlsx")
                         except Exception as e:
                             st.error(f"حدث خطأ: {e}")
