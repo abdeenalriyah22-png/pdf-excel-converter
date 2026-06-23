@@ -7,4 +7,3 @@ pymupdf
 pytesseract
 pillow
 st-copy-to-clipboard
-pdfplumber
