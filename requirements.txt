@@ -1,10 +1,8 @@
 streamlit
-pandas
-xlsxwriter
 tabula-py
-arabic-reshaper
-python-bidi
-pymupdf
-pytesseract
+pandas
 pillow
+pytesseract
+pymupdf
 st-copy-to-clipboard
+xlsxwriter
