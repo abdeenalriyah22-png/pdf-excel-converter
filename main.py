@@ -115,7 +115,7 @@ translations = {
         "success_convert": "🚀 اعلیٰ ترین درستگی کے ساتھ تبدیلی کامیابی سے مکمل ہو گئی!",
         "warning_no_tables": "⚠️ اس فائل میں کوئی واضح عددی ٹیبل نہیں ملا۔",
         "warning_no_text": "معذرت، اس دستاویز میں کوئی پڑھنے کے قابل حروف یا متن نہیں ملا۔",
-        "download_excel": "📥 نکالی گئی ایکسل فائل ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
+        "download_excel": "📥 can ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
         "download_txt": "📥 متن کو TXT فائل کے طور بر ڈاؤن لوڈ کریں",
         "ocr_result_header": "#### ✅ نکالا گیا متن:",
         "opt1": "📋 پہلا آپشن:",
@@ -152,8 +152,12 @@ def apply_neon_style(direction, align):
         display: none;
     }}
 
+    /* === رفع المحتوى ليلتصق بأعلى المتصفح تماماً وتصفير الـ Padding العلوي === */
     [data-testid="stAppViewBlockContainer"] {{
-        padding: 1rem 5rem 8rem 5rem;
+        padding-top: 0rem !important;
+        padding-bottom: 8rem !important;
+        padding-left: 5rem !important;
+        padding-right: 5rem !important;
     }}
 
     /* === تخصيص جذري وتوهج باللون الأزرق النيوني المضيء لصندوق اللغات === */
@@ -207,10 +211,10 @@ def apply_neon_style(direction, align):
 
     /* === حل مشكلة تكرار كلمة Upload بداخل أزرار الرفع بدون لمس التصميم الأساسي === */
     [data-testid="stFileUploader"] button span span {{
-        display: none !important;  /* إخفاء النص الخلفي المكرر من نظام ستريمليت */
+        display: none !important;  
     }}
     [data-testid="stFileUploader"] button span::after {{
-        content: "Upload" !important; /* فرض ظهور كلمة واحدة فقط وبشكل نظيف وثابت */
+        content: "Upload" !important; 
         color: white !important;
     }}
 
@@ -387,7 +391,6 @@ with tab1:
     </div>
     """, unsafe_allow_html=True)
     
-    # دعم صيغ الـ PDF والـ CSV معاً
     uploaded_files = st.file_uploader(lang["uploader_pdf"], type=["pdf", "csv"], key="table_uploader_main", accept_multiple_files=True)
     
     if uploaded_files:
