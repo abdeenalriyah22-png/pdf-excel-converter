@@ -32,14 +32,14 @@ selected_lang = st.selectbox(
     key="language_selector"
 )
 
-# --- 4. قاموس الترجمة للغات الثلاث (تم تحديثه ليدعم الـ CSV) ---
+# --- 4. قاموس الترجمة للغات الثلاث ---
 translations = {
     "العربية": {
         "direction": "rtl",
         "align": "right",
         "title": "📊 المحاسب الذكي <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
         "subtitle": "النظام السحابي المطور لمعالجة الجداول والبيانات ذكياً",
-        "tab1_title": "📊 تحويل PDF و CSV إلى جداول Excel",
+        "tab1_title": "📊 تحويل PDF و CSV إلى Excel",
         "tab2_title": "🔍 استخراج النصوص الذكي (OCR)",
         "card1_title": "مستخرج جداول البيانات",
         "card1_desc": "ارفع ملفاتك لتحويل أي جدول صامت داخل الـ PDF أو ملفات CSV إلى ملف إكسيل منسق تلقائياً",
@@ -50,7 +50,7 @@ translations = {
         "btn_convert": "بدأ تحويل وجدولة: ",
         "btn_ocr": "🚀 اطلَق الذكاء الاصطناعي لقراءة النص",
         "status_preparing": "📁 ملف قيد التحضير: ",
-        "status_loading": "جاري معالجة البيانات وهيكلتها...",
+        "status_loading": "جاري تفكيك الجداول وهيكلتها...",
         "status_ocr_loading": "جاري المسح الضوئي للمستند وتفسير الحروف...",
         "success_convert": "🚀 اكتمل التحويل بنجاح وبأعلى دقة!",
         "warning_no_tables": "⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.",
@@ -80,7 +80,7 @@ translations = {
         "btn_convert": "Start Converting & Scheduling: ",
         "btn_ocr": "🚀 Launch AI to Read Text",
         "status_preparing": "📁 File preparing: ",
-        "status_loading": "Processing and structuring data...",
+        "status_loading": "Deconstructing and structuring tables...",
         "status_ocr_loading": "Scanning document and interpreting characters...",
         "success_convert": "🚀 Conversion completed successfully with highest accuracy!",
         "warning_no_tables": "⚠️ No clear numerical tables detected in this file.",
@@ -106,11 +106,11 @@ translations = {
         "card2_title": "ٹیکسٹ ریڈر اور اسكينر",
         "card2_desc": "اسکین شدہ दस्तावेजات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
         "uploader_pdf": "اپنی پی ڈی ایف یا سی ایس وی ٹیبل فائلیں یہاں ڈریگ اور ڈراپ کریں",
-        "uploader_ocr": "انوائس/دستاویز की تصویر (JPG, PNG) أو اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
+        "uploader_ocr": "انوائس/دستاویز کی تصویر (JPG, PNG) أو اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
         "btn_convert": "تبدیلی اور شیڈولنگ شروع کریں: ",
         "btn_ocr": "🚀 ٹیکسٹ پڑھنے کے لیے AI لانچ کریں",
         "status_preparing": "📁 فائل کی تیاری: ",
-        "status_loading": "ڈیٹا کو پروسیس اور سٹرکچر کیا جا رہا ہے...",
+        "status_loading": "ٹیبلز کو ڈی کنسٹریکٹ اور سٹرکچر کیا جا رہا ہے...",
         "status_ocr_loading": "دستاویز کو اسکین اور حروف کی تشریح کی جا رہی ہے...",
         "success_convert": "🚀 اعلیٰ ترین درستگی کے ساتھ تبدیلی کامیابی سے مکمل ہو گئی!",
         "warning_no_tables": "⚠️ اس فائل میں کوئی واضح عددی ٹیبل نہیں ملا۔",
@@ -156,18 +156,20 @@ def apply_neon_style(direction, align):
         padding: 1rem 5rem 8rem 5rem;
     }}
 
-    /* === تخصيص جذري للقائمة المنسدلة والخيارات المنبثقة لـ Streamlit === */
+    /* === تخصيص جذري وتوهج باللون الأزرق النيوني المضيء لصندوق اللغات === */
     [data-testid="stSelectbox"] label p {{
         font-size: 18px !important;
         font-weight: bold !important;
         color: #58a6ff !important;
-        text-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
+        text-shadow: 0 0 12px rgba(88, 166, 255, 0.6);
     }}
     
     [data-testid="stSelectbox"] div[data-baseweb="select"] {{
-        background-color: rgba(22, 27, 34, 0.9) !important;
-        border: 1px solid #30363d !important;
+        background: linear-gradient(135deg, rgba(31, 111, 235, 0.25) 0%, rgba(13, 68, 165, 0.4) 100%) !important;
+        border: 2px solid #58a6ff !important;
         border-radius: 12px !important;
+        box-shadow: 0 0 15px rgba(88, 166, 255, 0.45);
+        transition: all 0.3s ease-in-out;
     }}
     
     [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
@@ -177,11 +179,14 @@ def apply_neon_style(direction, align):
     
     [data-testid="stSelectbox"] div[data-baseweb="select"]:hover {{
         border-color: #58a6ff !important;
-        box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
+        background: linear-gradient(135deg, rgba(31, 111, 235, 0.4) 0%, rgba(13, 68, 165, 0.6) 100%) !important;
+        box-shadow: 0 0 25px rgba(88, 166, 255, 0.7);
     }}
 
     div[data-baseweb="popover"] {{
         background-color: #161b22 !important;
+        border: 1px solid #58a6ff !important;
+        box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
     }}
     
     div[data-baseweb="popover"] li {{
@@ -202,12 +207,14 @@ def apply_neon_style(direction, align):
 
     /* === حل مشكلة تكرار كلمة Upload بداخل أزرار الرفع بدون لمس التصميم الأساسي === */
     [data-testid="stFileUploader"] button span span {{
-        display: none !important;  
+        display: none !important;  /* إخفاء النص الخلفي المكرر من نظام ستريمليت */
     }}
     [data-testid="stFileUploader"] button span::after {{
-        content: "Upload" !important; 
+        content: "Upload" !important; /* فرض ظهور كلمة واحدة فقط وبشكل نظيف وثابت */
         color: white !important;
     }}
+
+    /* ================================================================= */
 
     .stTabs [data-baseweb="tab-list"] {{
         gap: 15px;
@@ -370,7 +377,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
 
-# --- التبويب الأول: تحويل الجداول لـ Excel (يدعم الآن PDF و CSV) ---
+# --- التبويب الأول: تحويل الجداول لـ Excel (يدعم PDF و CSV) ---
 with tab1:
     st.markdown(f"""
     <div class="custom-card">
@@ -380,7 +387,7 @@ with tab1:
     </div>
     """, unsafe_allow_html=True)
     
-    # تم تغيير الامتدادات المسموح بها لتشمل csv
+    # دعم صيغ الـ PDF والـ CSV معاً
     uploaded_files = st.file_uploader(lang["uploader_pdf"], type=["pdf", "csv"], key="table_uploader_main", accept_multiple_files=True)
     
     if uploaded_files:
@@ -393,12 +400,12 @@ with tab1:
                         with st.spinner(lang["status_loading"]):
                             dfs = []
                             
-                            # إذا كان الملف المرفوع CSV
+                            # معالجة ملف الـ CSV
                             if file.name.lower().endswith('.csv'):
                                 df_csv = pd.read_csv(file)
                                 dfs.append(df_csv)
                             
-                            # إذا كان الملف المرفوع PDF
+                            # معالجة ملف الـ PDF
                             else:
                                 dfs = tabula.read_pdf(file, pages='all', multiple_tables=True, lattice=True)
                             
@@ -412,7 +419,6 @@ with tab1:
                                         current_row += len(df) + 2
                                     
                                 st.success(lang["success_convert"])
-                                # استخراج اسم الملف بدون صيغته القديمة لإضافة ستايل xlsx
                                 clean_name = file.name.rsplit('.', 1)[0]
                                 st.download_button(
                                     label=lang["download_excel"],
