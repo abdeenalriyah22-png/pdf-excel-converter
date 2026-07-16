@@ -154,16 +154,63 @@ def apply_neon_style(direction, align):
         display: none;
     }}
 
+   /* === مساحة مريحة علوية وسفلية للموقع === */
     [data-testid="stAppViewBlockContainer"] {{
-        padding: 1rem 5rem 8rem 5rem;
+        padding-top: 1.5rem !important;
+        padding-bottom: 8rem !important;
+        padding-left: 5rem !important;
+        padding-right: 5rem !important;
     }}
 
-    /* === تخصيص جذري للقائمة المنسدلة والخيارات المنبثقة لـ Streamlit === */
+    /* === منع تداخل شريط اللغات وإضافة هامش سفلي دفعاً للعنوان ومساحة أمان لـ Z-Index === */
+    [data-testid="stSelectbox"] {{
+        margin-bottom: 35px !important;
+        z-index: 9999 !important;
+    }}
+
     [data-testid="stSelectbox"] label p {{
         font-size: 18px !important;
         font-weight: bold !important;
         color: #58a6ff !important;
-        text-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
+        text-shadow: 0 0 12px rgba(88, 166, 255, 0.6);
+    }}
+    
+    /* حقل الاختيار الأساسي */
+    [data-testid="stSelectbox"] div[data-baseweb="select"] {{
+        background: linear-gradient(135deg, rgba(31, 111, 235, 0.25) 0%, rgba(13, 68, 165, 0.4) 100%) !important;
+        background-color: #161b22 !important;
+        border: 2px solid #58a6ff !important;
+        border-radius: 12px !important;
+        box-shadow: 0 0 15px rgba(88, 166, 255, 0.45);
+        transition: all 0.3s ease-in-out;
+    }}
+    
+    [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
+        color: #ffffff !important;
+        font-weight: bold !important;
+    }}
+    
+    [data-testid="stSelectbox"] div[data-baseweb="select"]:hover {{
+        border-color: #58a6ff !important;
+        background: linear-gradient(135deg, rgba(31, 111, 235, 0.4) 0%, rgba(13, 68, 165, 0.6) 100%) !important;
+        box-shadow: 0 0 25px rgba(88, 166, 255, 0.7);
+    }}
+
+    /* === حل مشكلة الشفافية للقائمة المنسدلة (Popover) تماماً بجعلها خلفية معتمة بنسبة 100% === */
+    div[data-baseweb="popover"] {{
+        background-color: #161b22 !important;
+        background: #161b22 !important; /* لون مصمت غير شفاف */
+        border: 2px solid #58a6ff !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95) !important;
+        z-index: 999999 !important; /* رفعها للأمام فوق كل شيء */
+    }}
+    
+    div[data-baseweb="popover"] ul[role="listbox"],
+    [data-testid="stSelectboxVirtualDropdown"] {{
+        background-color: #161b22 !important;
+        background: #161b22 !important;
+        border-radius: 12px !important;
     }}
     
     [data-testid="stSelectbox"] div[data-baseweb="select"] {{
