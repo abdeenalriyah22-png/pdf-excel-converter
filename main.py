@@ -102,7 +102,7 @@ translations = {
         "tab1_title": "📊 پی ڈی ایف اور سی ایس وی کو ایکسل میں تبدیل کریں",
         "tab2_title": "🔍 سمارٹ ٹیکسٹ نکالنا (OCR)",
         "card1_title": "ڈیٹا ٹیبل ایکسٹریکٹر",
-        "card1_desc": "پی ڈی ایف کے اندر موجود کسی بھی پوشیدہ ٹیبل یا سی ایس وی فائلوں کو خودکار طور پر فارمیٹ شدہ ایکسل فائل میں تبدیل کرنے کے لیے اپنی فائلیں اپ لوڈ کریں",
+        "card1_desc": "پی ڈی ایف کے اندر موجود کسی भी پوشیدہ ٹیبل یا سی ایس وی فائلوں کو خودکار طور پر فارمیٹ شدہ ایکسل فائل میں تبدیل کرنے کے لیے اپنی فائلیں اپ لوڈ کریں",
         "card2_title": "ٹیکسٹ ریڈر اور اسكينر",
         "card2_desc": "اسکین شدہ दस्तावेजات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
         "uploader_pdf": "اپنی پی ڈی ایف یا سی ایس وی ٹیبل فائلیں یہاں ڈریگ اور ڈراپ کریں",
@@ -115,7 +115,7 @@ translations = {
         "success_convert": "🚀 اعلیٰ ترین درستگی کے ساتھ تبدیلی کامیابی سے مکمل ہو گئی!",
         "warning_no_tables": "⚠️ اس فائل میں کوئی واضح عددی ٹیبل نہیں ملا۔",
         "warning_no_text": "معذرت، اس دستاویز میں کوئی پڑھنے کے قابل حروف یا متن نہیں ملا۔",
-        "download_excel": "📥 can ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
+        "download_excel": "📥 ایکسل فائل ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
         "download_txt": "📥 متن کو TXT فائل کے طور بر ڈاؤن لوڈ کریں",
         "ocr_result_header": "#### ✅ نکالا گیا متن:",
         "opt1": "📋 پہلا آپشن:",
@@ -128,7 +128,7 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. ستايل النيون المتطور وتخصيص جذري للمظهر والألوان (CSS الأصلي المستقر) ---
+# --- 5. ستايل النيون المتطور وتخصيص جذري للمظهر والألوان ---
 def apply_neon_style(direction, align):
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -152,15 +152,20 @@ def apply_neon_style(direction, align):
         display: none;
     }}
 
-    /* === رفع المحتوى ليلتصق بأعلى المتصفح تماماً وتصفير الـ Padding العلوي === */
+    /* === مساحة مريحة علوية وسفلية للموقع === */
     [data-testid="stAppViewBlockContainer"] {{
-        padding-top: 0rem !important;
+        padding-top: 1.5rem !important;
         padding-bottom: 8rem !important;
         padding-left: 5rem !important;
         padding-right: 5rem !important;
     }}
 
-    /* === تخصيص جذري وتوهج باللون الأزرق النيوني المضيء لصندوق اللغات === */
+    /* === منع تداخل شريط اللغات وإضافة هامش سفلي دفعاً للعنوان ومساحة أمان لـ Z-Index === */
+    [data-testid="stSelectbox"] {{
+        margin-bottom: 35px !important;
+        z-index: 9999 !important;
+    }}
+
     [data-testid="stSelectbox"] label p {{
         font-size: 18px !important;
         font-weight: bold !important;
@@ -168,8 +173,10 @@ def apply_neon_style(direction, align):
         text-shadow: 0 0 12px rgba(88, 166, 255, 0.6);
     }}
     
+    /* حقل الاختيار الأساسي */
     [data-testid="stSelectbox"] div[data-baseweb="select"] {{
         background: linear-gradient(135deg, rgba(31, 111, 235, 0.25) 0%, rgba(13, 68, 165, 0.4) 100%) !important;
+        background-color: #161b22 !important;
         border: 2px solid #58a6ff !important;
         border-radius: 12px !important;
         box-shadow: 0 0 15px rgba(88, 166, 255, 0.45);
@@ -187,35 +194,66 @@ def apply_neon_style(direction, align):
         box-shadow: 0 0 25px rgba(88, 166, 255, 0.7);
     }}
 
+    /* === حل مشكلة الشفافية للقائمة المنسدلة (Popover) تماماً بجعلها خلفية معتمة بنسبة 100% === */
     div[data-baseweb="popover"] {{
         background-color: #161b22 !important;
-        border: 1px solid #58a6ff !important;
-        box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
+        background: #161b22 !important; /* لون مصمت غير شفاف */
+        border: 2px solid #58a6ff !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95) !important;
+        z-index: 999999 !important; /* رفعها للأمام فوق كل شيء */
     }}
     
-    div[data-baseweb="popover"] li {{
+    div[data-baseweb="popover"] ul[role="listbox"],
+    [data-testid="stSelectboxVirtualDropdown"] {{
+        background-color: #161b22 !important;
+        background: #161b22 !important;
+        border-radius: 12px !important;
+    }}
+    
+    /* العناصر غير المحددة داخل القائمة */
+    div[data-baseweb="popover"] li,
+    div[data-baseweb="popover"] li[role="option"],
+    [data-testid="stSelectboxVirtualDropdown"] div[role="option"] {{
         color: #ffffff !important;
         font-weight: 600 !important;
-        background-color: transparent !important;
+        background-color: #161b22 !important;
+        background: #161b22 !important;
+        padding: 10px 15px !important;
+        transition: background-color 0.2s ease !important;
     }}
 
-    li[role="option"], li[role="option"] span, div[role="listbox"] div, div[role="listbox"] span {{
-        color: #ffffff !important;
-        font-weight: 600 !important;
-    }}
-    
-    div[data-baseweb="popover"] li:hover, li[role="option"]:hover {{
+    /* العنصر المحدد أو الذي يتم تحويم الماوس فوقه */
+    div[data-baseweb="popover"] li:hover,
+    div[data-baseweb="popover"] li[aria-selected="true"],
+    [data-testid="stSelectboxVirtualDropdown"] div[role="option"]:hover,
+    [data-testid="stSelectboxVirtualDropdown"] div[role="option"][aria-selected="true"] {{
         background-color: #1f6feb !important;
+        background: #1f6feb !important;
         color: #ffffff !important;
     }}
 
-    /* === حل مشكلة تكرار كلمة Upload بداخل أزرار الرفع بدون لمس التصميم الأساسي === */
-    [data-testid="stFileUploader"] button span span {{
-        display: none !important;  
+    /* === حل مشكلة تكرار كلمة Upload بداخل زر الرفع وإلغاء التداخل === */
+    [data-testid="stFileUploader"] button {{
+        background: linear-gradient(135deg, #1f6feb 0%, #0d44a5 100%) !important;
+        border: none !important;
+        border-radius: 8px !important;
+        color: transparent !important; /* إخفاء النص الافتراضي الأصلي لتجنب التكرار */
+        position: relative !important;
+        padding: 10px 25px !important;
+        min-height: 40px !important;
+        cursor: pointer !important;
     }}
-    [data-testid="stFileUploader"] button span::after {{
-        content: "Upload" !important; 
-        color: white !important;
+    
+    [data-testid="stFileUploader"] button::after {{
+        content: "Upload" !important; /* إضافة نص واحد فقط بشكل ثابت ونظيف */
+        color: #ffffff !important;
+        position: absolute !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        font-weight: bold !important;
+        font-size: 14px !important;
     }}
 
     /* ================================================================= */
