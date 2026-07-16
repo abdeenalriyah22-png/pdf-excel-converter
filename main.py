@@ -102,7 +102,7 @@ translations = {
         "tab1_title": "📊 پی ڈی ایف اور سی ایس وی کو ایکسل میں تبدیل کریں",
         "tab2_title": "🔍 سمارٹ ٹیکسٹ نکالنا (OCR)",
         "card1_title": "ڈیٹا ٹیبل ایکسٹریکٹر",
-        "card1_desc": "پی ڈی ایف کے اندر موجود کسی भी پوشیدہ ٹیبل یا سی ایس وی فائلوں کو خودکار طور پر فارمیٹ شدہ ایکسل فائل میں تبدیل کرنے کے لیے اپنی فائلیں اپ لوڈ کریں",
+        "card1_desc": "پی ڈی ایف کے اندر موجود کسی بھی پوشیدہ ٹیبل یا سی ایس وی فائلوں کو خودکار طور پر فارمیٹ شدہ ایکسل فائل میں تبدیل کرنے کے لیے اپنی فائلیں اپ لوڈ کریں",
         "card2_title": "ٹیکسٹ ریڈر اور اسكينر",
         "card2_desc": "اسکین شدہ दस्तावेजات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
         "uploader_pdf": "اپنی پی ڈی ایف یا سی ایس وی ٹیبل فائلیں یہاں ڈریگ اور ڈراپ کریں",
@@ -115,7 +115,7 @@ translations = {
         "success_convert": "🚀 اعلیٰ ترین درستگی کے ساتھ تبدیلی کامیابی سے مکمل ہو گئی!",
         "warning_no_tables": "⚠️ اس فائل میں کوئی واضح عددی ٹیبل نہیں ملا۔",
         "warning_no_text": "معذرت، اس دستاویز میں کوئی پڑھنے کے قابل حروف یا متن نہیں ملا۔",
-        "download_excel": "📥 ایکسل فائل ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
+        "download_excel": "📥 ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
         "download_txt": "📥 متن کو TXT فائل کے طور بر ڈاؤن لوڈ کریں",
         "ocr_result_header": "#### ✅ نکالا گیا متن:",
         "opt1": "📋 پہلا آپشن:",
@@ -136,15 +136,18 @@ def apply_neon_style(direction, align):
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap');
     
-    html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea {{
+    /* تطبيق الخط والاتجاهات بشكل آمن على مساحة العمل الرئيسية دون تخريب هيكلة القوائم */
+    .stApp {{
         font-family: 'Cairo', sans-serif !important;
         direction: {direction} !important;
         text-align: {align} !important;
-    }}
-
-    .stApp {{
         background: radial-gradient(circle at center, #111723 0%, #07090e 100%) !important;
         color: #e6edf3;
+    }}
+    
+    /* استهداف النصوص بشكل منفصل للحفاظ على مرونة العناصر الهيكلية */
+    h1, h2, h3, h4, h5, h6, p, label, textarea, input, button, .stTabs, span {{
+        font-family: 'Cairo', sans-serif !important;
     }}
 
     header, [data-testid="stHeader"] {{
@@ -152,112 +155,86 @@ def apply_neon_style(direction, align):
         display: none;
     }}
 
-    /* === مساحة مريحة علوية وسفلية للموقع === */
+    /* رفع المحتوى ليلتصق بأعلى المتصفح تماماً وتصفير الـ Padding العلوي */
     [data-testid="stAppViewBlockContainer"] {{
-        padding-top: 1.5rem !important;
+        padding-top: 0rem !important;
         padding-bottom: 8rem !important;
         padding-left: 5rem !important;
         padding-right: 5rem !important;
     }}
 
-    /* === منع تداخل شريط اللغات وإضافة هامش سفلي دفعاً للعنوان ومساحة أمان لـ Z-Index === */
+    /* === تنسيق شريط اللغات العلوي بالأزرق النيوني المضيء (خلفية مغلقة 100% لمنع التداخل) === */
     [data-testid="stSelectbox"] {{
-        margin-bottom: 35px !important;
-        z-index: 9999 !important;
+        margin-top: 10px !important;
+        margin-bottom: 25px !important;
     }}
 
     [data-testid="stSelectbox"] label p {{
-        font-size: 18px !important;
+        font-size: 16px !important;
         font-weight: bold !important;
         color: #58a6ff !important;
-        text-shadow: 0 0 12px rgba(88, 166, 255, 0.6);
+        text-shadow: 0 0 10px rgba(88, 166, 255, 0.6);
+        margin-bottom: 8px !important;
     }}
     
-    /* حقل الاختيار الأساسي */
     [data-testid="stSelectbox"] div[data-baseweb="select"] {{
-        background: linear-gradient(135deg, rgba(31, 111, 235, 0.25) 0%, rgba(13, 68, 165, 0.4) 100%) !important;
-        background-color: #161b22 !important;
+        background: linear-gradient(135deg, #1f6feb 0%, #0d44a5 100%) !important;
         border: 2px solid #58a6ff !important;
         border-radius: 12px !important;
-        box-shadow: 0 0 15px rgba(88, 166, 255, 0.45);
+        box-shadow: 0 0 15px rgba(88, 166, 255, 0.5) !important;
         transition: all 0.3s ease-in-out;
     }}
     
+    [data-testid="stSelectbox"] div[data-baseweb="select"]:hover {{
+        border-color: #ffffff !important;
+        box-shadow: 0 0 25px rgba(88, 166, 255, 0.8) !important;
+        transform: translateY(-1px);
+    }}
+
+    /* خط أبيض واضح جداً داخل صندوق الاختيار */
     [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
         color: #ffffff !important;
         font-weight: bold !important;
     }}
-    
-    [data-testid="stSelectbox"] div[data-baseweb="select"]:hover {{
-        border-color: #58a6ff !important;
-        background: linear-gradient(135deg, rgba(31, 111, 235, 0.4) 0%, rgba(13, 68, 165, 0.6) 100%) !important;
-        box-shadow: 0 0 25px rgba(88, 166, 255, 0.7);
-    }}
 
-    /* === حل مشكلة الشفافية للقائمة المنسدلة (Popover) تماماً بجعلها خلفية معتمة بنسبة 100% === */
+    /* جعل القائمة المنسدلة تظهر كـ Popover داكن صلب غير شفاف ذو حدود زرقاء متوهجة */
     div[data-baseweb="popover"] {{
-        background-color: #161b22 !important;
-        background: #161b22 !important; /* لون مصمت غير شفاف */
+        background-color: #0f1319 !important; /* لون خلفية داكن صلب يمنع الشفافية */
         border: 2px solid #58a6ff !important;
         border-radius: 12px !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95) !important;
-        z-index: 999999 !important; /* رفعها للأمام فوق كل شيء */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(88, 166, 255, 0.4) !important;
+        z-index: 999999 !important;
     }}
     
-    div[data-baseweb="popover"] ul[role="listbox"],
-    [data-testid="stSelectboxVirtualDropdown"] {{
-        background-color: #161b22 !important;
-        background: #161b22 !important;
-        border-radius: 12px !important;
+    div[data-baseweb="popover"] ul {{
+        background-color: #0f1319 !important;
+        padding: 5px 0 !important;
     }}
     
-    /* العناصر غير المحددة داخل القائمة */
-    div[data-baseweb="popover"] li,
-    div[data-baseweb="popover"] li[role="option"],
-    [data-testid="stSelectboxVirtualDropdown"] div[role="option"] {{
+    div[data-baseweb="popover"] li {{
+        background-color: #0f1319 !important;
         color: #ffffff !important;
-        font-weight: 600 !important;
-        background-color: #161b22 !important;
-        background: #161b22 !important;
-        padding: 10px 15px !important;
-        transition: background-color 0.2s ease !important;
-    }}
-
-    /* العنصر المحدد أو الذي يتم تحويم الماوس فوقه */
-    div[data-baseweb="popover"] li:hover,
-    div[data-baseweb="popover"] li[aria-selected="true"],
-    [data-testid="stSelectboxVirtualDropdown"] div[role="option"]:hover,
-    [data-testid="stSelectboxVirtualDropdown"] div[role="option"][aria-selected="true"] {{
-        background-color: #1f6feb !important;
-        background: #1f6feb !important;
-        color: #ffffff !important;
-    }}
-
-    /* === حل مشكلة تكرار كلمة Upload بداخل زر الرفع وإلغاء التداخل === */
-    [data-testid="stFileUploader"] button {{
-        background: linear-gradient(135deg, #1f6feb 0%, #0d44a5 100%) !important;
-        border: none !important;
-        border-radius: 8px !important;
-        color: transparent !important; /* إخفاء النص الافتراضي الأصلي لتجنب التكرار */
-        position: relative !important;
-        padding: 10px 25px !important;
-        min-height: 40px !important;
-        cursor: pointer !important;
-    }}
-    
-    [data-testid="stFileUploader"] button::after {{
-        content: "Upload" !important; /* إضافة نص واحد فقط بشكل ثابت ونظيف */
-        color: #ffffff !important;
-        position: absolute !important;
-        left: 50% !important;
-        top: 50% !important;
-        transform: translate(-50%, -50%) !important;
         font-weight: bold !important;
-        font-size: 14px !important;
+        padding: 10px 20px !important;
+        transition: all 0.2s ease;
+    }}
+    
+    /* عند تمرير الماوس فوق لغات القائمة */
+    div[data-baseweb="popover"] li:hover {{
+        background-color: #1f6feb !important; /* تحديد أزرق نيوني */
+        color: #ffffff !important;
     }}
 
-    /* ================================================================= */
+    /* === حل مشكلة تكرار كلمة Upload بداخل أزرار الرفع === */
+    [data-testid="stFileUploader"] button span span {{
+        display: none !important;  
+    }}
+    [data-testid="stFileUploader"] button span::after {{
+        content: "Upload" !important; 
+        color: white !important;
+    }}
 
+    /* === تنسيق التبويبات Tabs === */
     .stTabs [data-baseweb="tab-list"] {{
         gap: 15px;
         background-color: rgba(22, 27, 34, 0.5);
@@ -284,6 +261,7 @@ def apply_neon_style(direction, align):
         transform: scale(1.02);
     }}
 
+    /* === تنسيق أداة رفع الملفات === */
     [data-testid="stFileUploader"] {{
         background-color: rgba(22, 27, 34, 0.7) !important;
         border: 2px dashed #21262d !important;
