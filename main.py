@@ -24,17 +24,26 @@ components.html("""
      crossorigin="anonymous"></script>
 """, height=0, width=0)
 
+# --- 3. اختيار اللغة والمظهر في أعلى الموقع ---
+col_lang, col_theme = st.columns([2, 1])
 
-# --- 3. اختيار اللغة في أعلى الموقع ---
-selected_lang = st.selectbox(
-    "🌐 Choose Language / اختر اللغة / زبان کا انتخاب کریں",
-    ["العربية", "English", "اردو"],
-    index=0,
-    key="language_selector"
-)
+with col_lang:
+    selected_lang = st.selectbox(
+        "🌐 Choose Language / اختر اللغة / زبان کا انتخاب کریں",
+        ["العربية", "English", "اردو"],
+        index=0,
+        key="language_selector"
+    )
 
+with col_theme:
+    selected_theme = st.selectbox(
+        "🎨 Theme / المظهر / مظهر",
+        ["الوضع الداكن (Dark)", "الوضع الفاتح (Light)"],
+        index=0,
+        key="theme_selector"
+    )
 
-# --- 4. قاموس الترجمة للغات الثلاث (تم تحديثه ليدعم الـ CSV) ---
+# --- 4. قاموس الترجمة للغات الثلاث ---
 translations = {
     "العربية": {
         "direction": "rtl",
@@ -129,9 +138,43 @@ translations = {
 }
 
 lang = translations[selected_lang]
+is_light = "Light" in selected_theme or "الفاتح" in selected_theme
 
-# --- 5. ستايل النيون المتطور وتخصيص جذري للمظهر والألوان (CSS الأصلي المستقر) ---
-def apply_neon_style(direction, align):
+# --- 5. ستايل النيون والتصميم المتجاوب (دعم الوضع الداكن والفاتح) ---
+def apply_theme_style(direction, align, is_light_mode):
+    if is_light_mode:
+        bg_style = "background: #f8f9fa !important; color: #1c2128;"
+        card_bg = "background: #ffffff; border: 1px solid #e1e4e8;"
+        card_title_color = "#1f2328"
+        card_desc_color = "#57606a"
+        title_gradient = "background: linear-gradient(to right, #0969da, #1f6feb); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
+        select_bg = "background-color: #ffffff !important; border: 2px solid #0969da !important;"
+        select_text = "color: #0969da !important;"
+        popover_bg = "background-color: #ffffff !important;"
+        popover_text = "color: #1f2328 !important;"
+        uploader_bg = "background-color: #ffffff !important; border: 2px dashed #0969da !important;"
+        uploader_text = "color: #1f2328 !important;"
+        tab_bg = "background-color: #f1f3f5; border: 1px solid #d0d7de;"
+        tab_unselected = "color: #57606a;"
+        textarea_bg = "background-color: #ffffff !important; color: #1f2328 !important; border: 1px solid #d0d7de !important;"
+        footer_bg = "background-color: #ffffff; color: #57606a; border-top: 1px solid #d0d7de;"
+    else:
+        bg_style = "background: radial-gradient(circle at center, #111723 0%, #07090e 100%) !important; color: #e6edf3;"
+        card_bg = "background: linear-gradient(145deg, #161b22 0%, #0f1319 100%); border: 1px solid #30363d;"
+        card_title_color = "#ffffff"
+        card_desc_color = "#8b949e"
+        title_gradient = "background: linear-gradient(to right, #ffffff, #58a6ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
+        select_bg = "background: linear-gradient(135deg, rgba(31, 111, 235, 0.25) 0%, rgba(13, 68, 165, 0.4) 100%) !important; background-color: #161b22 !important; border: 2px solid #58a6ff !important;"
+        select_text = "color: #58a6ff !important;"
+        popover_bg = "background-color: #161b22 !important;"
+        popover_text = "color: #ffffff !important;"
+        uploader_bg = "background-color: rgba(22, 27, 34, 0.7) !important; border: 2px dashed #21262d !important;"
+        uploader_text = "color: #ffffff !important;"
+        tab_bg = "background-color: rgba(22, 27, 34, 0.5); border: 1px solid #21262d;"
+        tab_unselected = "color: #8b949e;"
+        textarea_bg = "background-color: #0d1117 !important; color: #e6edf3 !important; border: 1px solid #30363d !important;"
+        footer_bg = "background-color: rgba(22, 27, 34, 0.9); color: #8b949e; border-top: 1px solid #30363d;"
+
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -145,8 +188,7 @@ def apply_neon_style(direction, align):
     }}
 
     .stApp {{
-        background: radial-gradient(circle at center, #111723 0%, #07090e 100%) !important;
-        color: #e6edf3;
+        {bg_style}
     }}
 
     header, [data-testid="stHeader"] {{
@@ -154,7 +196,7 @@ def apply_neon_style(direction, align):
         display: none;
     }}
 
-   /* === مساحة مريحة علوية وسفلية للموقع === */
+    /* === مساحة مريحة علوية وسفلية للموقع === */
     [data-testid="stAppViewBlockContainer"] {{
         padding-top: 1.5rem !important;
         padding-bottom: 8rem !important;
@@ -162,85 +204,46 @@ def apply_neon_style(direction, align):
         padding-right: 5rem !important;
     }}
 
-    /* === منع تداخل شريط اللغات وإضافة هامش سفلي دفعاً للعنوان ومساحة أمان لـ Z-Index === */
+    /* === منع تداخل شريط اللغات والمظهر === */
     [data-testid="stSelectbox"] {{
-        margin-bottom: 35px !important;
+        margin-bottom: 20px !important;
         z-index: 9999 !important;
     }}
 
     [data-testid="stSelectbox"] label p {{
-        font-size: 18px !important;
+        font-size: 16px !important;
         font-weight: bold !important;
-        color: #58a6ff !important;
-        text-shadow: 0 0 12px rgba(88, 166, 255, 0.6);
+        {select_text}
     }}
     
     /* حقل الاختيار الأساسي */
     [data-testid="stSelectbox"] div[data-baseweb="select"] {{
-        background: linear-gradient(135deg, rgba(31, 111, 235, 0.25) 0%, rgba(13, 68, 165, 0.4) 100%) !important;
-        background-color: #161b22 !important;
-        border: 2px solid #58a6ff !important;
+        {select_bg}
         border-radius: 12px !important;
-        box-shadow: 0 0 15px rgba(88, 166, 255, 0.45);
         transition: all 0.3s ease-in-out;
     }}
     
     [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
-        color: #ffffff !important;
         font-weight: bold !important;
     }}
-    
-    [data-testid="stSelectbox"] div[data-baseweb="select"]:hover {{
-        border-color: #58a6ff !important;
-        background: linear-gradient(135deg, rgba(31, 111, 235, 0.4) 0%, rgba(13, 68, 165, 0.6) 100%) !important;
-        box-shadow: 0 0 25px rgba(88, 166, 255, 0.7);
-    }}
 
-    /* === حل مشكلة الشفافية للقائمة المنسدلة (Popover) تماماً بجعلها خلفية معتمة بنسبة 100% === */
+    /* === خلفية القائمة المنسدلة (Popover) === */
     div[data-baseweb="popover"] {{
-        background-color: #161b22 !important;
-        background: #161b22 !important; /* لون مصمت غير شفاف */
-        border: 2px solid #58a6ff !important;
+        {popover_bg}
+        border: 2px solid #0969da !important;
         border-radius: 12px !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95) !important;
-        z-index: 999999 !important; /* رفعها للأمام فوق كل شيء */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+        z-index: 999999 !important;
     }}
     
     div[data-baseweb="popover"] ul[role="listbox"],
     [data-testid="stSelectboxVirtualDropdown"] {{
-        background-color: #161b22 !important;
-        background: #161b22 !important;
+        {popover_bg}
         border-radius: 12px !important;
     }}
     
-    [data-testid="stSelectbox"] div[data-baseweb="select"] {{
-        background-color: rgba(22, 27, 34, 0.9) !important;
-        border: 1px solid #30363d !important;
-        border-radius: 12px !important;
-    }}
-    
-    [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
-        color: #ffffff !important;
-        font-weight: bold !important;
-    }}
-    
-    [data-testid="stSelectbox"] div[data-baseweb="select"]:hover {{
-        border-color: #58a6ff !important;
-        box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
-    }}
-
-    div[data-baseweb="popover"] {{
-        background-color: #161b22 !important;
-    }}
-    
-    div[data-baseweb="popover"] li {{
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        background-color: transparent !important;
-    }}
-
-    li[role="option"], li[role="option"] span, div[role="listbox"] div, div[role="listbox"] span {{
-        color: #ffffff !important;
+    div[data-baseweb="popover"] li, li[role="option"] span, div[role="listbox"] div {{
+        {popover_text}
         font-weight: 600 !important;
     }}
     
@@ -249,7 +252,7 @@ def apply_neon_style(direction, align):
         color: #ffffff !important;
     }}
 
-    /* === حل مشكلة تكرار كلمة Upload بداخل أزرار الرفع بدون لمس التصميم الأساسي === */
+    /* === حل مشكلة تكرار كلمة Upload بداخل أزرار الرفع === */
     [data-testid="stFileUploader"] button span span {{
         display: none !important;  
     }}
@@ -260,17 +263,16 @@ def apply_neon_style(direction, align):
 
     .stTabs [data-baseweb="tab-list"] {{
         gap: 15px;
-        background-color: rgba(22, 27, 34, 0.5);
+        {tab_bg}
         padding: 8px;
         border-radius: 12px;
-        border: 1px solid #21262d;
     }}
 
     .stTabs [data-baseweb="tab"] {{
         height: 48px;
         background-color: transparent;
         border-radius: 8px;
-        color: #8b949e;
+        {tab_unselected}
         border: none;
         padding: 0 25px;
         font-weight: bold;
@@ -285,26 +287,18 @@ def apply_neon_style(direction, align):
     }}
 
     [data-testid="stFileUploader"] {{
-        background-color: rgba(22, 27, 34, 0.7) !important;
-        border: 2px dashed #21262d !important;
+        {uploader_bg}
         border-radius: 20px !important;
         padding: 30px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         transition: all 0.4s ease;
-    }}
-    
-    [data-testid="stFileUploader"]:hover {{
-        border-color: #58a6ff !important;
-        background-color: rgba(28, 33, 40, 0.9) !important;
-        box-shadow: 0 0 25px rgba(88, 166, 255, 0.25);
-        transform: translateY(-4px);
     }}
 
     [data-testid="stFileUploader"] section *, 
     [data-testid="stFileUploader"] div, 
     [data-testid="stFileUploader"] span, 
     [data-testid="stFileUploader"] p {{
-        color: #ffffff !important;
+        {uploader_text}
     }}
 
     .icon-container {{
@@ -327,8 +321,7 @@ def apply_neon_style(direction, align):
     }}
 
     .custom-card {{
-        background: linear-gradient(145deg, #161b22 0%, #0f1319 100%);
-        border: 1px solid #30363d;
+        {card_bg}
         border-radius: 16px;
         padding: 25px;
         text-align: center;
@@ -336,12 +329,17 @@ def apply_neon_style(direction, align):
         transition: 0.3s;
     }}
 
+    .custom-card h3 {{
+        color: {card_title_color} !important;
+    }}
+
+    .custom-card p {{
+        color: {card_desc_color} !important;
+    }}
+
     h1 {{
-        color: #ffffff !important;
         font-weight: 900 !important;
-        background: linear-gradient(to right, #ffffff, #58a6ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        {title_gradient}
     }}
 
     .stButton>button {{
@@ -373,9 +371,7 @@ def apply_neon_style(direction, align):
     }}
 
     .stTextArea textarea {{
-        background-color: #0d1117 !important;
-        color: #e6edf3 !important;
-        border: 1px solid #30363d !important;
+        {textarea_bg}
         border-radius: 12px !important;
     }}
 
@@ -393,25 +389,23 @@ def apply_neon_style(direction, align):
         bottom: 0;
         left: 0;
         width: 100%;
-        background-color: rgba(22, 27, 34, 0.9);
+        {footer_bg}
         backdrop-filter: blur(8px);
-        color: #8b949e;
         text-align: center;
         padding: 12px;
-        border-top: 1px solid #30363d;
         font-size: 14px;
         z-index: 999;
     }}
     </style>
     """, unsafe_allow_html=True)
 
-apply_neon_style(lang["direction"], lang["align"])
+apply_theme_style(lang["direction"], lang["align"], is_light)
 
 # --- 6. واجهة البرنامج الرئيسية المترجمة ---
 st.markdown(f"""
 <div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
     <h1>{lang["title"]}</h1>
-    <p style='font-size:16px; color:#8b949e; margin-top:-10px;'>{lang["subtitle"]}</p>
+    <p style='font-size:16px; margin-top:-10px;'>{lang["subtitle"]}</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -419,17 +413,16 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
 
-# --- التبويب الأول: تحويل الجداول لـ Excel (يدعم الآن PDF و CSV) ---
+# --- التبويب الأول: تحويل الجداول لـ Excel (يدعم PDF و CSV) ---
 with tab1:
     st.markdown(f"""
     <div class="custom-card">
         <div class="icon-container excel-icon"><i class="fa-solid fa-file-excel"></i></div>
-        <h3 style='margin:0; color:#ffffff;'>{lang["card1_title"]}</h3>
-        <p style='font-size:14px; color:#8b949e; margin:5px 0;'>{lang["card1_desc"]}</p>
+        <h3 style='margin:0;'>{lang["card1_title"]}</h3>
+        <p style='font-size:14px; margin:5px 0;'>{lang["card1_desc"]}</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # تم تغيير الامتدادات المسموح بها لتشمل csv
     uploaded_files = st.file_uploader(lang["uploader_pdf"], type=["pdf", "csv"], key="table_uploader_main", accept_multiple_files=True)
     
     if uploaded_files:
@@ -442,12 +435,9 @@ with tab1:
                         with st.spinner(lang["status_loading"]):
                             dfs = []
                             
-                            # إذا كان الملف المرفوع CSV
                             if file.name.lower().endswith('.csv'):
                                 df_csv = pd.read_csv(file)
                                 dfs.append(df_csv)
-                            
-                            # إذا كان الملف المرفوع PDF
                             else:
                                 dfs = tabula.read_pdf(file, pages='all', multiple_tables=True, lattice=True)
                             
@@ -461,7 +451,6 @@ with tab1:
                                         current_row += len(df) + 2
                                     
                                 st.success(lang["success_convert"])
-                                # استخراج اسم الملف بدون صيغته القديمة لإضافة ستايل xlsx
                                 clean_name = file.name.rsplit('.', 1)[0]
                                 st.download_button(
                                     label=lang["download_excel"],
@@ -479,8 +468,8 @@ with tab2:
     st.markdown(f"""
     <div class="custom-card">
         <div class="icon-container ocr-icon"><i class="fa-solid fa-eye"></i></div>
-        <h3 style='margin:0; color:#ffffff;'>{lang["card2_title"]}</h3>
-        <p style='font-size:14px; color:#8b949e; margin:5px 0;'>{lang["card2_desc"]}</p>
+        <h3 style='margin:0;'>{lang["card2_title"]}</h3>
+        <p style='font-size:14px; margin:5px 0;'>{lang["card2_desc"]}</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -512,11 +501,11 @@ with tab2:
                     col1, col2 = st.columns(2)
                     
                     with col1:
-                        st.markdown(f"<p style='font-size:14px; color:#8b949e; margin-bottom:5px;'>{lang['opt1']}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='font-size:14px; margin-bottom:5px;'>{lang['opt1']}</p>", unsafe_allow_html=True)
                         st_copy_to_clipboard(text=full_text, before_copy_label=lang["btn_copy"], after_copy_label=lang["copied"])
                         
                     with col2:
-                        st.markdown(f"<p style='font-size:14px; color:#8b949e; margin-bottom:5px;'>{lang['opt2']}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='font-size:14px; margin-bottom:5px;'>{lang['opt2']}</p>", unsafe_allow_html=True)
                         st.download_button(
                             label=lang["download_txt"],
                             data=full_text,
@@ -527,7 +516,7 @@ with tab2:
             except Exception as e:
                 st.error(f"OCR Error: {e}")
 
-# --- 7. مساحة إعلانية مخصصة ومتجاوبة في أسفل المحتوى ---
+# --- 7. مساحة إعلانية مخصصة ومتجاوبة ---
 st.markdown("<br><br>", unsafe_allow_html=True)
 
 ads_code = """
@@ -547,9 +536,9 @@ ads_code = """
 """
 components.html(ads_code, height=110)
 
-# التذييل الاحترافي الثابت في قاع الموقع
+# التذييل الاحترافي الثابت
 st.markdown(f"""
     <div class="footer">
-        المحاسب الذكي Pro | <span style="color:#58a6ff;">{lang["motto"]}</span> | 2026 ©
+        المحاسب الذكي Pro | <span style="color:#0969da;">{lang["motto"]}</span> | 2026 ©
     </div>
 """, unsafe_allow_html=True)
