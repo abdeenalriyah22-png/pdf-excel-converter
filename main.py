@@ -1,4 +1,33 @@
 import streamlit as st
+
+# إضافة خيار في الشريط الجانبي لتغيير المظهر
+theme_choice = st.sidebar.radio("اختر مظهر الموقع:", ["فاتح (Light)", "داكن (Dark)"])
+
+if theme_choice == "فاتح (Light)":
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+else:
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background-color: #0E1117;
+            color: #FFFFFF;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+import streamlit as st
 import streamlit.components.v1 as components
 import tabula
 import pandas as pd
