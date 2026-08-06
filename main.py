@@ -252,14 +252,21 @@ def apply_theme_style(direction, align, is_light_mode):
         color: #ffffff !important;
     }}
 
-    /* === حل مشكلة تكرار كلمة Upload بداخل أزرار الرفع === */
-    [data-testid="stFileUploader"] button span span {{
-        display: none !important;  
-    }}
-    [data-testid="stFileUploader"] button span::after {{
-        content: "Upload" !important; 
-        color: white !important;
-    }}
+    /* === ستايل صندوق رفع الملفات الخاص والتوهج === */
+    [data-testid="stFileUploader"] {
+        {uploader_bg}
+        border-radius: 20px !important;
+        padding: 30px !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    }
+
+    /* تأثير التوهج المباشر عند مرور الماوس (Hover) */
+    [data-testid="stFileUploader"]:hover {
+        border-color: #58a6ff !important;
+        transform: translateY(-4px) scale(1.01) !important;
+        box-shadow: 0 0 30px rgba(88, 166, 255, 0.65), 0 0 10px rgba(31, 111, 235, 0.4) !important;
+    }
 
     .stTabs [data-baseweb="tab-list"] {{
         gap: 15px;
