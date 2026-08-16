@@ -403,80 +403,133 @@ def apply_theme_style(direction, align, is_light_mode):
 
 apply_theme_style(lang["direction"], lang["align"], is_light)
 
-# --- 6. واجهة البرنامج الرئيسية مع أنيميشن المسح الضوئي الذكي (Document Scanner) ---
+# --- 6. واجهة البرنامج الرئيسية مع أنيميشن المدينة الصناعية (Industrial City Animation) ---
 col_anim, col_title = st.columns([1, 1.8]) if lang["direction"] == "rtl" else st.columns([1.8, 1])
 
-scanner_anim_html = """
+industrial_city_anim_html = """
 <style>
-.scanner-container {
+.city-container {
     width: 100%;
     height: 120px;
     position: relative;
     border-radius: 15px;
-    background: rgba(9, 105, 218, 0.05);
+    background: linear-gradient(180deg, rgba(9, 105, 218, 0.08) 0%, rgba(13, 17, 23, 0.03) 100%);
     border: 1px solid rgba(9, 105, 218, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
     overflow: hidden;
-}
-
-.doc-card {
-    width: 60px;
-    height: 75px;
-    background: #ffffff;
-    border: 2px solid #0969da;
-    border-radius: 8px;
-    position: relative;
-    box-shadow: 0 4px 15px rgba(9, 105, 218, 0.15);
     display: flex;
     flex-direction: column;
-    padding: 8px;
-    gap: 6px;
+    justify-content: flex-end;
 }
 
-.doc-line {
-    height: 3px;
-    background: #e1e4e8;
-    border-radius: 2px;
-    width: 100%;
-}
-
-.doc-line.short {
-    width: 60%;
-}
-
-.scan-beam {
+/* خلفية المباني والمصانع */
+.skyline {
     position: absolute;
-    left: 0;
+    bottom: 30px;
     width: 100%;
-    height: 4px;
-    background: linear-gradient(90deg, transparent, #2ea043, transparent);
-    box-shadow: 0 0 10px #2ea043;
-    animation: scan 2s infinite ease-in-out;
+    height: 60px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    opacity: 0.25;
 }
 
-@keyframes scan {
-    0% { top: 5px; opacity: 0.3; }
-    50% { top: 65px; opacity: 1; }
-    100% { top: 5px; opacity: 0.3; }
+.building {
+    background: #0969da;
+    width: 22px;
+}
+.b1 { height: 45px; }
+.b2 { height: 30px; width: 30px; border-top: 3px solid #58a6ff; }
+.b3 { height: 55px; }
+
+/* دخان المصانع */
+.smoke {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: rgba(88, 166, 255, 0.6);
+    border-radius: 50%;
+    animation: puff 2s infinite ease-out;
+}
+.s1 { left: 22%; bottom: 85px; animation-delay: 0s; }
+.s2 { left: 23%; bottom: 85px; animation-delay: 0.7s; }
+
+@keyframes puff {
+    0% { transform: translateY(0) scale(1); opacity: 0.8; }
+    100% { transform: translateY(-25px) scale(2.5); opacity: 0; }
+}
+
+/* الطريق والسيارات والمشاة */
+.road {
+    width: 100%;
+    height: 30px;
+    background: rgba(9, 105, 218, 0.12);
+    border-top: 2px solid rgba(9, 105, 218, 0.3);
+    position: relative;
+}
+
+/* شاحنة نقل البضائع */
+.truck {
+    position: absolute;
+    top: 5px;
+    width: 32px;
+    height: 12px;
+    background: #0969da;
+    border-radius: 3px;
+    box-shadow: 0 0 8px rgba(9, 105, 218, 0.6);
+    animation: drive 6s linear infinite;
+}
+.truck::after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    bottom: 0;
+    width: 8px;
+    height: 8px;
+    background: #58a6ff;
+    border-radius: 2px;
+}
+
+/* حركة المشاة */
+.pedestrian {
+    position: absolute;
+    bottom: 4px;
+    width: 4px;
+    height: 10px;
+    background: #2ea043;
+    border-radius: 2px;
+    box-shadow: 0 0 6px rgba(46, 160, 67, 0.8);
+    animation: walk 10s linear infinite;
+}
+
+@keyframes drive {
+    0% { left: -40px; }
+    100% { left: 105%; }
+}
+
+@keyframes walk {
+    0% { right: -20px; }
+    100% { right: 105%; }
 }
 </style>
 
-<div class="scanner-container">
-    <div class="doc-card">
-        <div class="doc-line"></div>
-        <div class="doc-line short"></div>
-        <div class="doc-line"></div>
-        <div class="doc-line short"></div>
-        <div class="scan-beam"></div>
+<div class="city-container">
+    <div class="smoke s1"></div>
+    <div class="smoke s2"></div>
+    <div class="skyline">
+        <div class="building b1"></div>
+        <div class="building b2"></div>
+        <div class="building b3"></div>
+    </div>
+    <div class="road">
+        <div class="truck"></div>
+        <div class="pedestrian"></div>
     </div>
 </div>
 """
 
 if lang["direction"] == "rtl":
     with col_anim:
-        st.markdown(scanner_anim_html, unsafe_allow_html=True)
+        st.markdown(industrial_city_anim_html, unsafe_allow_html=True)
     with col_title:
         st.markdown(f"""
         <div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
@@ -493,7 +546,7 @@ else:
         </div>
         """, unsafe_allow_html=True)
     with col_anim:
-        st.markdown(scanner_anim_html, unsafe_allow_html=True)
+        st.markdown(industrial_city_anim_html, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
