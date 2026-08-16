@@ -24,7 +24,7 @@ components.html("""
      crossorigin="anonymous"></script>
 """, height=0, width=0)
 
-# --- 3. اختيار اللغة والمظهر في أعلى الموقع (الوضع الفاتح افتراضي) ---
+# --- 3. اختيار اللغة والمظهر في أعلى الموقع ---
 col_lang, col_theme = st.columns([2, 1])
 
 with col_lang:
@@ -38,7 +38,7 @@ with col_lang:
 with col_theme:
     selected_theme = st.selectbox(
         "🎨 Theme / المظهر / مظهر",
-        ["الوضع الفاتح (Light)", "الوضع الداكن (Dark)"],
+        ["ثلاثي الأبعاد الفاتح (3D Light)", "ثلاثي الأبعاد الداكن (3D Dark)"],
         index=0,
         key="theme_selector"
     )
@@ -115,9 +115,9 @@ translations = {
         "card1_title": "ڈیٹا ٹیبل ایکسٹریکٹر",
         "card1_desc": "پی ڈی ایف کے اندر موجود کسی بھی پوشیدہ ٹیبل یا سی ایس وی فائلوں کو خودکار طور پر فارمیٹ شدہ ایکسل فائل میں تبدیل کرنے کے لیے اپنی فائلیں اپ لوڈ کریں",
         "card2_title": "ٹیکسٹ ریڈر اور اسكينر",
-        "card2_desc": "اسکین شدہ दस्तावेजات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
+        "card2_desc": "اسکین شدہ دستاویزات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
         "uploader_pdf": "اپنی پی ڈی ایف یا سی ایس وی ٹیبل فائلیں یہاں ڈریگ اور ڈراپ کریں",
-        "uploader_ocr": "انوائس/دستاویز کی تصویر (JPG, PNG) أو اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
+        "uploader_ocr": "انوائس/دستاویز کی تصویر (JPG, PNG) یا اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
         "btn_convert": "تبدیلی اور شیڈولنگ شروع کریں: ",
         "btn_ocr": "🚀 ٹیکسٹ پڑھنے کے لیے AI لانچ کریں",
         "status_preparing": "فائل کی تیاری: ",
@@ -127,7 +127,7 @@ translations = {
         "warning_no_tables": "⚠️ اس فائل میں کوئی واضح عددی ٹیبل نہیں ملا۔",
         "warning_no_text": "معذرت، اس دستاویز میں کوئی پڑھنے کے قابل حروف یا متن نہیں ملا۔",
         "download_excel": "📥 نکالی گئی ایکسل فائل ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
-        "download_txt": "📥 متن کو TXT فائل کے طور بر ڈاؤن لوڈ کریں",
+        "download_txt": "📥 متن کو TXT فائل کے طور پر ڈاؤن لوڈ کریں",
         "ocr_result_header": "#### ✅ نکالا گیا متن:",
         "opt1": "پہلا آپشن:",
         "opt2": "دوسرا آپشن:",
@@ -140,54 +140,74 @@ translations = {
 lang = translations[selected_lang]
 is_light = "Light" in selected_theme or "الفاتح" in selected_theme
 
-# --- 5. ستايل النيون والتصميم المتجاوب مع خلفية شبكة الجداول المحاسبية (Subtle Accounting Grid) ---
+# --- 5. ستايل الخلفيات الثلاثية الأبعاد (3D Depth Mesh Gradient Theme) ---
 def apply_theme_style(direction, align, is_light_mode):
     if is_light_mode:
-        # خلفية الجداول/الإكسيل المحاسبية - الوضع الفاتح
+        # تصميم ثلاثي الأبعاد فاتح ملهم بطبقات من الظلال والضوء العميق
         bg_style = """
-        background-color: #f8f9fa !important;
-        background-image: linear-gradient(rgba(9, 105, 218, 0.06) 1px, transparent 1px), 
-                          linear-gradient(90deg, rgba(9, 105, 218, 0.06) 1px, transparent 1px);
-        background-size: 28px 28px;
-        color: #1c2128;
+        background: 
+            radial-gradient(circle at 20% 20%, rgba(9, 105, 218, 0.15) 0%, transparent 40%),
+            radial-gradient(circle at 80% 30%, rgba(46, 160, 67, 0.12) 0%, transparent 45%),
+            radial-gradient(circle at 50% 85%, rgba(138, 43, 226, 0.10) 0%, transparent 50%),
+            linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%) !important;
+        background-attachment: fixed !important;
+        color: #1f2328;
         """
-        card_bg = "background: rgba(255, 255, 255, 0.95); border: 1px solid #e1e4e8;"
-        card_title_color = "#1f2328"
-        card_desc_color = "#57606a"
-        title_gradient = "background: linear-gradient(to right, #0969da, #1f6feb); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
-        select_bg = "background-color: #ffffff !important; border: 2px solid #0969da !important;"
+        card_bg = """
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        """
+        card_title_color = "#0f172a"
+        card_desc_color = "#475569"
+        title_gradient = "background: linear-gradient(135deg, #0969da 0%, #1f6feb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
+        select_bg = "background: rgba(255, 255, 255, 0.9) !important; border: 2px solid #0969da !important; box-shadow: 0 10px 20px rgba(9, 105, 218, 0.15);"
         select_text = "color: #0969da !important;"
         popover_bg = "background-color: #ffffff !important;"
-        popover_text = "color: #1f2328 !important;"
-        uploader_bg = "background-color: rgba(255, 255, 255, 0.9) !important; border: 2px dashed #0969da !important;"
-        uploader_text = "color: #1f2328 !important;"
-        tab_bg = "background-color: rgba(241, 243, 245, 0.9); border: 1px solid #d0d7de;"
-        tab_unselected = "color: #57606a;"
-        textarea_bg = "background-color: #ffffff !important; color: #1f2328 !important; border: 1px solid #d0d7de !important;"
-        footer_bg = "background-color: rgba(255, 255, 255, 0.95); color: #57606a; border-top: 1px solid #d0d7de;"
-    else:
-        # خلفية الجداول/الإكسيل المحاسبية - الوضع الداكن
-        bg_style = """
-        background-color: #0d1117 !important;
-        background-image: linear-gradient(rgba(88, 166, 255, 0.07) 1px, transparent 1px), 
-                          linear-gradient(90deg, rgba(88, 166, 255, 0.07) 1px, transparent 1px);
-        background-size: 30px 30px;
-        color: #e6edf3;
+        popover_text = "color: #0f172a !important;"
+        uploader_bg = """
+        background: rgba(255, 255, 255, 0.7) !important;
+        border: 2px dashed #0969da !important;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05), inset 0 2px 4px rgba(255, 255, 255, 0.8) !important;
         """
-        card_bg = "background: linear-gradient(145deg, rgba(22, 27, 34, 0.95) 0%, rgba(15, 19, 25, 0.95) 100%); border: 1px solid #30363d;"
+        uploader_text = "color: #0f172a !important;"
+        tab_bg = "background: rgba(255, 255, 255, 0.6); border: 1px solid rgba(208, 215, 222, 0.8); box-shadow: 0 10px 25px rgba(0,0,0,0.05);"
+        tab_unselected = "color: #64748b;"
+        textarea_bg = "background: rgba(255, 255, 255, 0.9) !important; color: #0f172a !important; border: 1px solid #cbd5e1 !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05) !important;"
+        footer_bg = "background: rgba(255, 255, 255, 0.85); color: #475569; border-top: 1px solid #e2e8f0; box-shadow: 0 -5px 20px rgba(0,0,0,0.03);"
+    else:
+        # تصميم ثلاثي الأبعاد داكن مع تأثير إضاءة نيون مجسم وطلاء معدني (3D Metallic Dark)
+        bg_style = """
+        background: 
+            radial-gradient(circle at 15% 15%, rgba(56, 139, 253, 0.22) 0%, transparent 45%),
+            radial-gradient(circle at 85% 25%, rgba(46, 160, 67, 0.18) 0%, transparent 45%),
+            radial-gradient(circle at 50% 85%, rgba(147, 51, 234, 0.18) 0%, transparent 50%),
+            linear-gradient(135deg, #0b0f17 0%, #111827 100%) !important;
+        background-attachment: fixed !important;
+        color: #f1f5f9;
+        """
+        card_bg = """
+        background: rgba(17, 24, 39, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        """
         card_title_color = "#ffffff"
-        card_desc_color = "#8b949e"
-        title_gradient = "background: linear-gradient(to right, #ffffff, #58a6ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
-        select_bg = "background: linear-gradient(135deg, rgba(31, 111, 235, 0.25) 0%, rgba(13, 68, 165, 0.4) 100%) !important; background-color: #161b22 !important; border: 2px solid #58a6ff !important;"
-        select_text = "color: #58a6ff !important;"
-        popover_bg = "background-color: #161b22 !important;"
-        popover_text = "color: #ffffff !important;"
-        uploader_bg = "background-color: rgba(22, 27, 34, 0.85) !important; border: 2px dashed #30363d !important;"
-        uploader_text = "color: #ffffff !important;"
-        tab_bg = "background-color: rgba(22, 27, 34, 0.7); border: 1px solid #21262d;"
-        tab_unselected = "color: #8b949e;"
-        textarea_bg = "background-color: #0d1117 !important; color: #e6edf3 !important; border: 1px solid #30363d !important;"
-        footer_bg = "background-color: rgba(22, 27, 34, 0.95); color: #8b949e; border-top: 1px solid #30363d;"
+        card_desc_color = "#94a3b8"
+        title_gradient = "background: linear-gradient(135deg, #ffffff 0%, #60a5fa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
+        select_bg = "background: rgba(17, 24, 39, 0.9) !important; border: 2px solid #3b82f6 !important; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);"
+        select_text = "color: #60a5fa !important;"
+        popover_bg = "background-color: #111827 !important;"
+        popover_text = "color: #f1f5f9 !important;"
+        uploader_bg = """
+        background: rgba(17, 24, 39, 0.7) !important;
+        border: 2px dashed #3b82f6 !important;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.05) !important;
+        """
+        uploader_text = "color: #f1f5f9 !important;"
+        tab_bg = "background: rgba(17, 24, 39, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.4);"
+        tab_unselected = "color: #94a3b8;"
+        textarea_bg = "background: rgba(11, 15, 23, 0.9) !important; color: #f1f5f9 !important; border: 1px solid #1e293b !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5) !important;"
+        footer_bg = "background: rgba(17, 24, 39, 0.85); color: #94a3b8; border-top: 1px solid #1e293b; box-shadow: 0 -5px 25px rgba(0,0,0,0.3);"
 
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -230,7 +250,7 @@ def apply_theme_style(direction, align, is_light_mode):
     
     [data-testid="stSelectbox"] div[data-baseweb="select"] {{
         {select_bg}
-        border-radius: 12px !important;
+        border-radius: 14px !important;
         transition: all 0.3s ease-in-out;
     }}
     
@@ -240,16 +260,16 @@ def apply_theme_style(direction, align, is_light_mode):
 
     div[data-baseweb="popover"] {{
         {popover_bg}
-        border: 2px solid #0969da !important;
-        border-radius: 12px !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+        border: 2px solid #3b82f6 !important;
+        border-radius: 14px !important;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4) !important;
         z-index: 999999 !important;
     }}
     
     div[data-baseweb="popover"] ul[role="listbox"],
     [data-testid="stSelectboxVirtualDropdown"] {{
         {popover_bg}
-        border-radius: 12px !important;
+        border-radius: 14px !important;
     }}
     
     div[data-baseweb="popover"] li, li[role="option"] span, div[role="listbox"] div {{
@@ -258,7 +278,7 @@ def apply_theme_style(direction, align, is_light_mode):
     }}
     
     div[data-baseweb="popover"] li:hover, li[role="option"]:hover {{
-        background-color: #1f6feb !important;
+        background-color: #2563eb !important;
         color: #ffffff !important;
     }}
 
@@ -273,43 +293,42 @@ def apply_theme_style(direction, align, is_light_mode):
     .stTabs [data-baseweb="tab-list"] {{
         gap: 15px;
         {tab_bg}
-        padding: 8px;
-        border-radius: 12px;
-        backdrop-filter: blur(5px);
+        padding: 10px;
+        border-radius: 16px;
+        backdrop-filter: blur(12px);
     }}
 
     .stTabs [data-baseweb="tab"] {{
-        height: 48px;
+        height: 50px;
         background-color: transparent;
-        border-radius: 8px;
+        border-radius: 10px;
         {tab_unselected}
         border: none;
         padding: 0 25px;
         font-weight: bold;
-        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }}
 
     .stTabs [aria-selected="true"] {{
-        background: linear-gradient(135deg, #1f6feb 0%, #0d44a5 100%) !important;
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
         color: white !important;
-        box-shadow: 0 0 15px rgba(31, 111, 235, 0.6);
-        transform: scale(1.02);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+        transform: translateY(-2px);
     }}
 
-    /* === صندوق رفع الملفات وتأثير التوهج عند التمرير === */
+    /* === صندوق رفع الملفات بصندوق ثلاثي الأبعاد مجسم === */
     [data-testid="stFileUploader"] {{
         {uploader_bg}
-        border-radius: 20px !important;
-        padding: 30px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        backdrop-filter: blur(5px);
+        border-radius: 22px !important;
+        padding: 35px !important;
+        backdrop-filter: blur(12px);
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
     }}
 
     [data-testid="stFileUploader"]:hover {{
-        border-color: #0969da !important;
-        transform: translateY(-4px) scale(1.01) !important;
-        box-shadow: 0 0 25px rgba(9, 105, 218, 0.45), 0 0 10px rgba(31, 111, 235, 0.2) !important;
+        border-color: #2563eb !important;
+        transform: translateY(-6px) scale(1.01) !important;
+        box-shadow: 0 25px 50px rgba(37, 99, 235, 0.3) !important;
     }}
 
     [data-testid="stFileUploader"] section *, 
@@ -320,32 +339,34 @@ def apply_theme_style(direction, align, is_light_mode):
     }}
 
     .icon-container {{
-        font-size: 55px;
+        font-size: 58px;
         margin-bottom: 15px;
         transition: all 0.4s ease;
         display: inline-block;
     }}
     
-    .excel-icon {{ color: #2ea043; text-shadow: 0 0 20px rgba(46, 160, 67, 0.4); }}
-    .ocr-icon {{ color: #0969da; text-shadow: 0 0 20px rgba(9, 105, 218, 0.4); }}
+    .excel-icon {{ color: #10b981; filter: drop-shadow(0 10px 15px rgba(16, 185, 129, 0.3)); }}
+    .ocr-icon {{ color: #3b82f6; filter: drop-shadow(0 10px 15px rgba(59, 130, 246, 0.3)); }}
     
     .custom-card:hover .excel-icon {{
-        transform: scale(1.15) translateY(-5px);
-        filter: drop-shadow(0 0 15px #2ea043);
+        transform: perspective(500px) translateZ(30px) rotateY(-10deg);
     }}
     .custom-card:hover .ocr-icon {{
-        transform: scale(1.15) rotate(10deg);
-        filter: drop-shadow(0 0 15px #0969da);
+        transform: perspective(500px) translateZ(30px) rotateY(10deg);
     }}
 
     .custom-card {{
         {card_bg}
-        border-radius: 16px;
-        padding: 25px;
+        border-radius: 20px;
+        padding: 30px;
         text-align: center;
-        margin-bottom: 20px;
-        backdrop-filter: blur(5px);
-        transition: 0.3s;
+        margin-bottom: 25px;
+        backdrop-filter: blur(12px);
+        transition: all 0.4s ease;
+    }}
+
+    .custom-card:hover {{
+        transform: translateY(-5px);
     }}
 
     .custom-card h3 {{
@@ -362,45 +383,46 @@ def apply_theme_style(direction, align, is_light_mode):
     }}
 
     .stButton>button {{
-        background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important;
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
         color: white !important;
         border: none !important;
-        border-radius: 12px !important;
-        padding: 0.7rem 2rem !important;
+        border-radius: 14px !important;
+        padding: 0.8rem 2rem !important;
         font-weight: bold !important;
         font-size: 16px !important;
         width: 100%;
-        box-shadow: 0 4px 12px rgba(46, 160, 67, 0.2);
+        box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }}
     
     .stButton>button:hover {{
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(46, 160, 67, 0.5);
+        transform: translateY(-4px);
+        box-shadow: 0 15px 30px rgba(16, 185, 129, 0.5);
     }}
 
     [data-testid="stDownloadButton"] button {{
-        background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%) !important;
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%) !important;
         color: white !important;
         border: none !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 12px rgba(31, 111, 235, 0.2);
+        border-radius: 14px !important;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
         transition: all 0.3s ease;
         width: 100%;
     }}
 
     .stTextArea textarea {{
         {textarea_bg}
-        border-radius: 12px !important;
+        border-radius: 14px !important;
     }}
 
     .stCopyButton button {{
-        background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%) !important;
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
         color: white !important;
-        border-radius: 12px !important;
+        border-radius: 14px !important;
         border: none !important;
         font-weight: bold !important;
         width: 100%;
+        box-shadow: 0 10px 20px rgba(124, 58, 237, 0.3);
     }}
 
     .footer {{
@@ -409,9 +431,9 @@ def apply_theme_style(direction, align, is_light_mode):
         left: 0;
         width: 100%;
         {footer_bg}
-        backdrop-filter: blur(8px);
+        backdrop-filter: blur(12px);
         text-align: center;
-        padding: 12px;
+        padding: 14px;
         font-size: 14px;
         z-index: 999;
     }}
@@ -429,14 +451,15 @@ industrial_city_anim_html = """
     width: 100%;
     height: 120px;
     position: relative;
-    border-radius: 15px;
-    background: linear-gradient(180deg, rgba(9, 105, 218, 0.1) 0%, rgba(13, 17, 23, 0.05) 100%);
-    border: 1px solid rgba(9, 105, 218, 0.25);
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(37, 99, 235, 0.12) 0%, rgba(17, 24, 39, 0.05) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.25);
     overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
 .skyline {
@@ -447,22 +470,22 @@ industrial_city_anim_html = """
     display: flex;
     align-items: flex-end;
     justify-content: space-around;
-    opacity: 0.3;
+    opacity: 0.35;
 }
 
 .building {
-    background: #0969da;
+    background: #2563eb;
     width: 22px;
 }
 .b1 { height: 45px; }
-.b2 { height: 30px; width: 30px; border-top: 3px solid #58a6ff; }
+.b2 { height: 30px; width: 30px; border-top: 3px solid #60a5fa; }
 .b3 { height: 55px; }
 
 .smoke {
     position: absolute;
     width: 6px;
     height: 6px;
-    background: rgba(88, 166, 255, 0.6);
+    background: rgba(96, 165, 250, 0.6);
     border-radius: 50%;
     animation: puff 2s infinite ease-out;
 }
@@ -477,8 +500,8 @@ industrial_city_anim_html = """
 .road {
     width: 100%;
     height: 30px;
-    background: rgba(9, 105, 218, 0.15);
-    border-top: 2px solid rgba(9, 105, 218, 0.35);
+    background: rgba(37, 99, 235, 0.15);
+    border-top: 2px solid rgba(59, 130, 246, 0.35);
     position: relative;
 }
 
@@ -487,9 +510,9 @@ industrial_city_anim_html = """
     top: 5px;
     width: 32px;
     height: 12px;
-    background: #0969da;
+    background: #2563eb;
     border-radius: 3px;
-    box-shadow: 0 0 8px rgba(9, 105, 218, 0.6);
+    box-shadow: 0 0 10px rgba(37, 99, 235, 0.8);
     animation: drive 6s linear infinite;
 }
 .truck::after {
@@ -499,7 +522,7 @@ industrial_city_anim_html = """
     bottom: 0;
     width: 8px;
     height: 8px;
-    background: #58a6ff;
+    background: #60a5fa;
     border-radius: 2px;
 }
 
@@ -508,9 +531,9 @@ industrial_city_anim_html = """
     bottom: 4px;
     width: 4px;
     height: 10px;
-    background: #2ea043;
+    background: #10b981;
     border-radius: 2px;
-    box-shadow: 0 0 6px rgba(46, 160, 67, 0.8);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
     animation: walk 10s linear infinite;
 }
 
@@ -690,6 +713,6 @@ components.html(ads_code, height=110)
 
 st.markdown(f"""
     <div class="footer">
-        المحاسب الذكي Pro | <span style="color:#0969da;">الفصل في الذمة.. الوصل في الأمانة</span> | 2026 ©
+        المحاسب الذكي Pro | <span style="color:#2563eb;">الفصل في الذمة.. الوصل في الأمانة</span> | 2026 ©
     </div>
 """, unsafe_allow_html=True)
