@@ -120,7 +120,7 @@ translations = {
         "uploader_ocr": "انوائس/دستاویز کی تصویر (JPG, PNG) أو اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
         "btn_convert": "تبدیلی اور شیڈولنگ شروع کریں: ",
         "btn_ocr": "🚀 ٹیکسٹ پڑھنے کے لیے AI لانچ کریں",
-        "status_preparing": "📁 فائل کی تیاری: ",
+        "status_preparing": "فائل کی تیاری: ",
         "status_loading": "ڈیٹا کو پروسیس اور سٹرکچر کیا جا رہا ہے...",
         "status_ocr_loading": "دستاویز کو اسکین اور حروف کی تشریح کی جا رہی ہے...",
         "success_convert": "🚀 اعلیٰ ترین درستگی کے ساتھ تبدیلی کامیابی سے مکمل ہو گئی!",
@@ -140,11 +140,17 @@ translations = {
 lang = translations[selected_lang]
 is_light = "Light" in selected_theme or "الفاتح" in selected_theme
 
-# --- 5. ستايل النيون والتصميم المتجاوب والتوهج ---
+# --- 5. ستايل النيون والتصميم المتجاوب مع خلفية شبكة النقاط ---
 def apply_theme_style(direction, align, is_light_mode):
     if is_light_mode:
-        bg_style = "background: #f8f9fa !important; color: #1c2128;"
-        card_bg = "background: #ffffff; border: 1px solid #e1e4e8;"
+        # خلفية شبكة النقاط - الوضع الفاتح
+        bg_style = """
+        background-color: #f8f9fa !important;
+        background-image: radial-gradient(#0969da 0.8px, transparent 0.8px);
+        background-size: 18px 18px;
+        color: #1c2128;
+        """
+        card_bg = "background: rgba(255, 255, 255, 0.95); border: 1px solid #e1e4e8;"
         card_title_color = "#1f2328"
         card_desc_color = "#57606a"
         title_gradient = "background: linear-gradient(to right, #0969da, #1f6feb); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
@@ -152,15 +158,21 @@ def apply_theme_style(direction, align, is_light_mode):
         select_text = "color: #0969da !important;"
         popover_bg = "background-color: #ffffff !important;"
         popover_text = "color: #1f2328 !important;"
-        uploader_bg = "background-color: #ffffff !important; border: 2px dashed #0969da !important;"
+        uploader_bg = "background-color: rgba(255, 255, 255, 0.9) !important; border: 2px dashed #0969da !important;"
         uploader_text = "color: #1f2328 !important;"
-        tab_bg = "background-color: #f1f3f5; border: 1px solid #d0d7de;"
+        tab_bg = "background-color: rgba(241, 243, 245, 0.9); border: 1px solid #d0d7de;"
         tab_unselected = "color: #57606a;"
         textarea_bg = "background-color: #ffffff !important; color: #1f2328 !important; border: 1px solid #d0d7de !important;"
-        footer_bg = "background-color: #ffffff; color: #57606a; border-top: 1px solid #d0d7de;"
+        footer_bg = "background-color: rgba(255, 255, 255, 0.95); color: #57606a; border-top: 1px solid #d0d7de;"
     else:
-        bg_style = "background: radial-gradient(circle at center, #111723 0%, #07090e 100%) !important; color: #e6edf3;"
-        card_bg = "background: linear-gradient(145deg, #161b22 0%, #0f1319 100%); border: 1px solid #30363d;"
+        # خلفية شبكة النقاط - الوضع الداكن
+        bg_style = """
+        background-color: #0d1117 !important;
+        background-image: radial-gradient(rgba(88, 166, 255, 0.18) 1px, transparent 1px);
+        background-size: 20px 20px;
+        color: #e6edf3;
+        """
+        card_bg = "background: linear-gradient(145deg, rgba(22, 27, 34, 0.95) 0%, rgba(15, 19, 25, 0.95) 100%); border: 1px solid #30363d;"
         card_title_color = "#ffffff"
         card_desc_color = "#8b949e"
         title_gradient = "background: linear-gradient(to right, #ffffff, #58a6ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
@@ -168,12 +180,12 @@ def apply_theme_style(direction, align, is_light_mode):
         select_text = "color: #58a6ff !important;"
         popover_bg = "background-color: #161b22 !important;"
         popover_text = "color: #ffffff !important;"
-        uploader_bg = "background-color: rgba(22, 27, 34, 0.7) !important; border: 2px dashed #21262d !important;"
+        uploader_bg = "background-color: rgba(22, 27, 34, 0.85) !important; border: 2px dashed #30363d !important;"
         uploader_text = "color: #ffffff !important;"
-        tab_bg = "background-color: rgba(22, 27, 34, 0.5); border: 1px solid #21262d;"
+        tab_bg = "background-color: rgba(22, 27, 34, 0.7); border: 1px solid #21262d;"
         tab_unselected = "color: #8b949e;"
         textarea_bg = "background-color: #0d1117 !important; color: #e6edf3 !important; border: 1px solid #30363d !important;"
-        footer_bg = "background-color: rgba(22, 27, 34, 0.9); color: #8b949e; border-top: 1px solid #30363d;"
+        footer_bg = "background-color: rgba(22, 27, 34, 0.95); color: #8b949e; border-top: 1px solid #30363d;"
 
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -261,6 +273,7 @@ def apply_theme_style(direction, align, is_light_mode):
         {tab_bg}
         padding: 8px;
         border-radius: 12px;
+        backdrop-filter: blur(5px);
     }}
 
     .stTabs [data-baseweb="tab"] {{
@@ -287,6 +300,7 @@ def apply_theme_style(direction, align, is_light_mode):
         border-radius: 20px !important;
         padding: 30px !important;
         box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        backdrop-filter: blur(5px);
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
     }}
 
@@ -328,6 +342,7 @@ def apply_theme_style(direction, align, is_light_mode):
         padding: 25px;
         text-align: center;
         margin-bottom: 20px;
+        backdrop-filter: blur(5px);
         transition: 0.3s;
     }}
 
@@ -403,7 +418,7 @@ def apply_theme_style(direction, align, is_light_mode):
 
 apply_theme_style(lang["direction"], lang["align"], is_light)
 
-# --- 6. واجهة البرنامج الرئيسية مع أنيميشن المدينة الصناعية (Industrial City Animation) ---
+# --- 6. واجهة البرنامج الرئيسية مع أنيميشن المدينة الصناعية ---
 col_anim, col_title = st.columns([1, 1.8]) if lang["direction"] == "rtl" else st.columns([1.8, 1])
 
 industrial_city_anim_html = """
@@ -413,15 +428,15 @@ industrial_city_anim_html = """
     height: 120px;
     position: relative;
     border-radius: 15px;
-    background: linear-gradient(180deg, rgba(9, 105, 218, 0.08) 0%, rgba(13, 17, 23, 0.03) 100%);
-    border: 1px solid rgba(9, 105, 218, 0.2);
+    background: linear-gradient(180deg, rgba(9, 105, 218, 0.1) 0%, rgba(13, 17, 23, 0.05) 100%);
+    border: 1px solid rgba(9, 105, 218, 0.25);
     overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
+    backdrop-filter: blur(4px);
 }
 
-/* خلفية المباني والمصانع */
 .skyline {
     position: absolute;
     bottom: 30px;
@@ -430,7 +445,7 @@ industrial_city_anim_html = """
     display: flex;
     align-items: flex-end;
     justify-content: space-around;
-    opacity: 0.25;
+    opacity: 0.3;
 }
 
 .building {
@@ -441,7 +456,6 @@ industrial_city_anim_html = """
 .b2 { height: 30px; width: 30px; border-top: 3px solid #58a6ff; }
 .b3 { height: 55px; }
 
-/* دخان المصانع */
 .smoke {
     position: absolute;
     width: 6px;
@@ -458,16 +472,14 @@ industrial_city_anim_html = """
     100% { transform: translateY(-25px) scale(2.5); opacity: 0; }
 }
 
-/* الطريق والسيارات والمشاة */
 .road {
     width: 100%;
     height: 30px;
-    background: rgba(9, 105, 218, 0.12);
-    border-top: 2px solid rgba(9, 105, 218, 0.3);
+    background: rgba(9, 105, 218, 0.15);
+    border-top: 2px solid rgba(9, 105, 218, 0.35);
     position: relative;
 }
 
-/* شاحنة نقل البضائع */
 .truck {
     position: absolute;
     top: 5px;
@@ -489,7 +501,6 @@ industrial_city_anim_html = """
     border-radius: 2px;
 }
 
-/* حركة المشاة */
 .pedestrian {
     position: absolute;
     bottom: 4px;
@@ -677,6 +688,6 @@ components.html(ads_code, height=110)
 
 st.markdown(f"""
     <div class="footer">
-        المحاسب الذكي Pro | <span style="color:#0969da;">{lang["motto"]}</span> | 2026 ©
+        المحاسب الذكي Pro | <span style="color:#0969da;">الفصل في الذمة.. الوصل في الأمانة</span> | 2026 ©
     </div>
 """, unsafe_allow_html=True)
