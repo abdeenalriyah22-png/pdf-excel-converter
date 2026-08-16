@@ -403,96 +403,80 @@ def apply_theme_style(direction, align, is_light_mode):
 
 apply_theme_style(lang["direction"], lang["align"], is_light)
 
-# --- 6. واجهة البرنامج الرئيسية مع أنيميشن مستقر المظهر (طيور وبحر) ---
+# --- 6. واجهة البرنامج الرئيسية مع أنيميشن المسح الضوئي الذكي (Document Scanner) ---
 col_anim, col_title = st.columns([1, 1.8]) if lang["direction"] == "rtl" else st.columns([1.8, 1])
 
-sea_birds_html = """
+scanner_anim_html = """
 <style>
-.ocean-container {
+.scanner-container {
     width: 100%;
     height: 120px;
     position: relative;
-    overflow: hidden;
     border-radius: 15px;
-    background: linear-gradient(180deg, rgba(9, 105, 218, 0.08) 0%, rgba(31, 111, 235, 0.18) 100%);
+    background: rgba(9, 105, 218, 0.05);
     border: 1px solid rgba(9, 105, 218, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 
-.wave {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 200%;
-    height: 40px;
-    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0 C150,90 350,-40 500,40 C650,120 900,20 1200,60 L1200,120 L0,120 Z" fill="%230969da" opacity="0.3"></path></svg>');
-    background-size: 50% 40px;
-    animation: wave-anim 8s linear infinite;
+.doc-card {
+    width: 60px;
+    height: 75px;
+    background: #ffffff;
+    border: 2px solid #0969da;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(9, 105, 218, 0.15);
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    gap: 6px;
 }
 
-@keyframes wave-anim {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-}
-
-.bird {
-    position: absolute;
-    background-size: contain;
-    background-repeat: no-repeat;
-    opacity: 0.85;
-}
-
-.bird1 {
-    top: 20px;
-    left: -10%;
-    width: 35px;
-    height: 25px;
-    animation: fly1 10s linear infinite;
-}
-
-.bird2 {
-    top: 45px;
-    left: -20%;
-    width: 25px;
-    height: 18px;
-    animation: fly2 14s linear infinite 3s;
-}
-
-@keyframes fly1 {
-    0% { left: -10%; top: 25px; }
-    50% { top: 10px; }
-    100% { left: 110%; top: 30px; }
-}
-
-@keyframes fly2 {
-    0% { left: -15%; top: 45px; }
-    50% { top: 25px; }
-    100% { left: 110%; top: 50px; }
-}
-
-.bird-svg {
+.doc-line {
+    height: 3px;
+    background: #e1e4e8;
+    border-radius: 2px;
     width: 100%;
-    height: 100%;
+}
+
+.doc-line.short {
+    width: 60%;
+}
+
+.scan-beam {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, #2ea043, transparent);
+    box-shadow: 0 0 10px #2ea043;
+    animation: scan 2s infinite ease-in-out;
+}
+
+@keyframes scan {
+    0% { top: 5px; opacity: 0.3; }
+    50% { top: 65px; opacity: 1; }
+    100% { top: 5px; opacity: 0.3; }
 }
 </style>
 
-<div class="ocean-container">
-    <div class="bird bird1">
-        <svg class="bird-svg" viewBox="0 0 50 30">
-            <path d="M0,15 Q12.5,0 25,15 Q37.5,0 50,15 Q37.5,10 25,20 Q12.5,10 0,15 Z" fill="#0969da"/>
-        </svg>
+<div class="scanner-container">
+    <div class="doc-card">
+        <div class="doc-line"></div>
+        <div class="doc-line short"></div>
+        <div class="doc-line"></div>
+        <div class="doc-line short"></div>
+        <div class="scan-beam"></div>
     </div>
-    <div class="bird bird2">
-        <svg class="bird-svg" viewBox="0 0 50 30">
-            <path d="M0,15 Q12.5,0 25,15 Q37.5,0 50,15 Q37.5,10 25,20 Q12.5,10 0,15 Z" fill="#1f6feb"/>
-        </svg>
-    </div>
-    <div class="wave"></div>
 </div>
 """
 
 if lang["direction"] == "rtl":
     with col_anim:
-        st.markdown(sea_birds_html, unsafe_allow_html=True)
+        st.markdown(scanner_anim_html, unsafe_allow_html=True)
     with col_title:
         st.markdown(f"""
         <div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
@@ -509,7 +493,7 @@ else:
         </div>
         """, unsafe_allow_html=True)
     with col_anim:
-        st.markdown(sea_birds_html, unsafe_allow_html=True)
+        st.markdown(scanner_anim_html, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
