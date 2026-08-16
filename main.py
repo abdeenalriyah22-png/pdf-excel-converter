@@ -8,6 +8,8 @@ from PIL import Image
 import pytesseract
 import fitz  # PyMuPDF
 from st_copy_to_clipboard import st_copy_to_clipboard
+from streamlit_lottie import st_lottie
+import requests
 
 # --- 1. إعدادات الصفحة الأساسية ---
 st.set_page_config(
@@ -16,6 +18,20 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# دالة تحميل ملفات Lottie للأنيميشن المتحرك
+@st.cache_data
+def load_lottie_url(url: str):
+    try:
+        r = requests.get(url, timeout=5)
+        if r.status_code != 200:
+            return None
+        return r.json()
+    except Exception:
+        return None
+
+# رابط أنيميشن لطيف ومهدئ للطيور والطبيعة
+lottie_birds = load_lottie_url("https://assets2.lottiefiles.com/packages/lf20_1L8T9A.json")
 
 # --- 2. دمج كود جوجل أدسنس والتحقق في الخلفية ---
 components.html("""
@@ -117,7 +133,7 @@ translations = {
         "card2_title": "ٹیکسٹ ریڈر اور اسكينر",
         "card2_desc": "اسکین شدہ दस्तावेजات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
         "uploader_pdf": "اپنی پی ڈی ایف یا سی ایس وی ٹیبل فائلیں یہاں ڈریگ اور ڈراپ کریں",
-        "uploader_ocr": "انوائس/دستاویز की تصویر (JPG, PNG) أو اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
+        "uploader_ocr": "انوائس/دستاویز کی تصویر (JPG, PNG) أو اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
         "btn_convert": "تبدیلی اور شیڈولنگ شروع کریں: ",
         "btn_ocr": "🚀 ٹیکسٹ پڑھنے کے لیے AI لانچ کریں",
         "status_preparing": "📁 فائل کی تیاری: ",
@@ -129,8 +145,8 @@ translations = {
         "download_excel": "📥 نکالی گئی ایکسل فائل ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
         "download_txt": "📥 متن کو TXT فائل کے طور بر ڈاؤن لوڈ کریں",
         "ocr_result_header": "#### ✅ نکالا گیا متن:",
-        "opt1": "📋 پہلا آپشن:",
-        "opt2": "📥 دوسرا آپشن:",
+        "opt1": "پہلا آپشن:",
+        "opt2": "دوسرا آپشن:",
         "btn_copy": "📋 پورا متن کاپی کریں",
         "copied": "✅ کامیابی سے کاپی ہو گیا!",
         "motto": "الفصل في الذمة.. الوصل في الأمانة"
@@ -140,7 +156,7 @@ translations = {
 lang = translations[selected_lang]
 is_light = "Light" in selected_theme or "الفاتح" in selected_theme
 
-# --- 5. ستايل النيون والتصميم المتجاوب (دعم الوضع الداكن والفاتح) ---
+# --- 5. ستايل النيون والتصميم المتجاوب ودعم التوهج عند التمرير ---
 def apply_theme_style(direction, align, is_light_mode):
     if is_light_mode:
         bg_style = "background: #f8f9fa !important; color: #1c2128;"
@@ -196,7 +212,6 @@ def apply_theme_style(direction, align, is_light_mode):
         display: none;
     }}
 
-    /* === مساحة مريحة علوية وسفلية للموقع === */
     [data-testid="stAppViewBlockContainer"] {{
         padding-top: 1.5rem !important;
         padding-bottom: 8rem !important;
@@ -204,7 +219,6 @@ def apply_theme_style(direction, align, is_light_mode):
         padding-right: 5rem !important;
     }}
 
-    /* === منع تداخل شريط اللغات والمظهر === */
     [data-testid="stSelectbox"] {{
         margin-bottom: 20px !important;
         z-index: 9999 !important;
@@ -216,7 +230,6 @@ def apply_theme_style(direction, align, is_light_mode):
         {select_text}
     }}
     
-    /* حقل الاختيار الأساسي */
     [data-testid="stSelectbox"] div[data-baseweb="select"] {{
         {select_bg}
         border-radius: 12px !important;
@@ -227,7 +240,6 @@ def apply_theme_style(direction, align, is_light_mode):
         font-weight: bold !important;
     }}
 
-    /* === خلفية القائمة المنسدلة (Popover) === */
     div[data-baseweb="popover"] {{
         {popover_bg}
         border: 2px solid #0969da !important;
@@ -250,6 +262,14 @@ def apply_theme_style(direction, align, is_light_mode):
     div[data-baseweb="popover"] li:hover, li[role="option"]:hover {{
         background-color: #1f6feb !important;
         color: #ffffff !important;
+    }}
+
+    [data-testid="stFileUploader"] button span span {{
+        display: none !important;  
+    }}
+    [data-testid="stFileUploader"] button span::after {{
+        content: "Upload" !important; 
+        color: white !important;
     }}
 
     .stTabs [data-baseweb="tab-list"] {{
@@ -277,12 +297,19 @@ def apply_theme_style(direction, align, is_light_mode):
         transform: scale(1.02);
     }}
 
+    /* === صندوق رفع الملفات وتأثير التوهج عند التمرير === */
     [data-testid="stFileUploader"] {{
         {uploader_bg}
         border-radius: 20px !important;
         padding: 30px !important;
         box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        transition: all 0.4s ease;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    }}
+
+    [data-testid="stFileUploader"]:hover {{
+        border-color: #58a6ff !important;
+        transform: translateY(-4px) scale(1.01) !important;
+        box-shadow: 0 0 30px rgba(88, 166, 255, 0.65), 0 0 10px rgba(31, 111, 235, 0.4) !important;
     }}
 
     [data-testid="stFileUploader"] section *, 
@@ -392,19 +419,37 @@ def apply_theme_style(direction, align, is_light_mode):
 
 apply_theme_style(lang["direction"], lang["align"], is_light)
 
-# --- 6. واجهة البرنامج الرئيسية المترجمة ---
-st.markdown(f"""
-<div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
-    <h1>{lang["title"]}</h1>
-    <p style='font-size:16px; margin-top:-10px;'>{lang["subtitle"]}</p>
-</div>
-""", unsafe_allow_html=True)
+# --- 6. واجهة البرنامج الرئيسية مع الأنيميشن المتحرك بجانب العنوان ---
+col_anim, col_title = st.columns([1, 1.8]) if lang["direction"] == "rtl" else st.columns([1.8, 1])
+
+if lang["direction"] == "rtl":
+    with col_anim:
+        if lottie_birds:
+            st_lottie(lottie_birds, height=130, key="birds_anim_rtl")
+    with col_title:
+        st.markdown(f"""
+        <div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
+            <h1>{lang["title"]}</h1>
+            <p style='font-size:16px; margin-top:-10px;'>{lang["subtitle"]}</p>
+        </div>
+        """, unsafe_allow_html=True)
+else:
+    with col_title:
+        st.markdown(f"""
+        <div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
+            <h1>{lang["title"]}</h1>
+            <p style='font-size:16px; margin-top:-10px;'>{lang["subtitle"]}</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_anim:
+        if lottie_birds:
+            st_lottie(lottie_birds, height=130, key="birds_anim_ltr")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
 
-# --- التبويب الأول: تحويل الجداول لـ Excel (يدعم PDF و CSV) ---
+# --- التبويب الأول: تحويل الجداول لـ Excel ---
 with tab1:
     st.markdown(f"""
     <div class="custom-card">
@@ -507,7 +552,7 @@ with tab2:
             except Exception as e:
                 st.error(f"OCR Error: {e}")
 
-# --- 7. مساحة إعلانية مخصصة ومتجاوبة ---
+# --- 7. المساحة الإعلانية المخصصة والتذييل ---
 st.markdown("<br><br>", unsafe_allow_html=True)
 
 ads_code = """
@@ -527,7 +572,6 @@ ads_code = """
 """
 components.html(ads_code, height=110)
 
-# التذييل الاحترافي الثابت
 st.markdown(f"""
     <div class="footer">
         المحاسب الذكي Pro | <span style="color:#0969da;">{lang["motto"]}</span> | 2026 ©
