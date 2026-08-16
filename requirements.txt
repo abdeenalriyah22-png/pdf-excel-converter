@@ -6,3 +6,4 @@ pytesseract
 pymupdf
 st-copy-to-clipboard
 xlsxwriter
+streamlit-lottie
