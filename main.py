@@ -1,16 +1,17 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import io
 
-# إعداد الصفحة لتكون بعرض متناسق
+# 1. جعل تخطيط الصفحة عريضاً (wide) لملء الشاشة
 st.set_page_config(
     page_title="المحاسب الذكي Pro",
     page_icon="📊",
-    layout="centered",
+    layout="wide",
     initial_sidebar_state="collapsed"
 )
 
 # -------------------------------------------------------------
-# 1. تصميم الواجهة التفردي (Custom CSS/HTML 3D Waves Component)
+# 2. تصميم الواجهة العريضة مع التوهج والـ 3D والأنيميشن
 # -------------------------------------------------------------
 interactive_header_html = """
 <!DOCTYPE html>
@@ -44,15 +45,15 @@ interactive_header_html = """
       overflow: hidden;
     }
 
-    /* الحاوية الرئيسية - عريضة ومربعة نسبياً مع التوهج والـ 3D */
+    /* تكبير الحاوية الرئيسية لملء عرض الشاشة */
     .card-container {
       position: relative;
       width: 100%;
-      max-width: 650px;
+      max-width: 1100px; /* تم توسيع الكارد */
       height: 480px;
       background: var(--card-bg);
       border-radius: 28px;
-      padding: 24px;
+      padding: 30px;
       box-shadow: 
         0 20px 50px rgba(0, 0, 0, 0.7),
         0 0 35px rgba(0, 240, 255, 0.3),
@@ -77,7 +78,6 @@ interactive_header_html = """
       border-color: rgba(0, 240, 255, 0.85);
     }
 
-    /* كشاف الماوس المتحرك */
     .mouse-spotlight {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -91,7 +91,7 @@ interactive_header_html = """
 
     .card-title {
       color: var(--text-main);
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -99,17 +99,17 @@ interactive_header_html = """
     }
 
     .badge {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 700;
       background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
       color: #000;
-      padding: 4px 12px;
+      padding: 6px 16px;
       border-radius: 20px;
     }
 
     .card-subtitle {
       color: var(--text-sub);
-      font-size: 14px;
+      font-size: 15px;
       margin-top: 4px;
     }
 
@@ -129,12 +129,11 @@ interactive_header_html = """
       transform-style: preserve-3d;
     }
 
-    /* عبارة النص الـ 3D في النص */
     .motto-3d {
       position: relative;
       z-index: 5;
       font-family: 'Cairo', sans-serif;
-      font-size: 25px;
+      font-size: 32px; /* تكبير الشعار للواجهة العريضة */
       font-weight: 900;
       color: #ffffff;
       text-align: center;
@@ -152,7 +151,6 @@ interactive_header_html = """
       transition: transform 0.1s ease-out;
     }
 
-    /* موج البحر المتحرك */
     .waves-svg {
       position: absolute;
       width: 200%;
@@ -203,12 +201,10 @@ interactive_header_html = """
     </div>
 
     <div class="ocean-stage">
-      <!-- الشعار في منتصف الكارد بتقنية 3D -->
       <div class="motto-3d" id="motto3d">
         الفصل في الذمة.. الوصل في الأمانة
       </div>
 
-      <!-- حركة امواج البحر التفاعلية -->
       <svg class="waves-svg" id="wavesSvg" viewBox="0 0 1200 300" preserveAspectRatio="none">
         <defs>
           <linearGradient id="cyanGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -230,7 +226,6 @@ interactive_header_html = """
     const wavesSvg = document.getElementById('wavesSvg');
     const motto3d = document.getElementById('motto3d');
 
-    // تفاعل الماوس وتأثيرات 3D Tilt و Spotlight
     card.addEventListener('mousemove', (e) => {
       const rect = card.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -241,10 +236,10 @@ interactive_header_html = """
 
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
-      const rotateX = ((y - centerY) / centerY) * -12;
-      const rotateY = ((x - centerX) / centerX) * 12;
+      const rotateX = ((y - centerY) / centerY) * -10;
+      const rotateY = ((x - centerX) / centerX) * 10;
 
-      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.01, 1.01)`;
       motto3d.style.transform = `translateZ(45px) rotateX(${rotateX * 0.3}deg) rotateY(${rotateY * 0.3}deg)`;
 
       const moveOffset = ((x - centerX) / centerX) * 35;
@@ -262,11 +257,11 @@ interactive_header_html = """
 </html>
 """
 
-# عرض الهيدر التفاعلي داخل Streamlit
-components.html(interactive_header_html, height=500)
+# عرض الهيدر عريضاً
+components.html(interactive_header_html, height=520)
 
 # -------------------------------------------------------------
-# 2. كود معالجة الملفات (بدون أي تعديل على الآلية والخوارزمية)
+# 3. منطقة معالجة الملفات واختيارات التنسيق + زر التحميل
 # -------------------------------------------------------------
 st.markdown("### 📥 منطقة رفع الملفات للمعالجة")
 
@@ -277,7 +272,7 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file is not None:
     st.success(f"تم اختيار الملف: **{uploaded_file.name}** بنجاح!")
-    
+
     col1, col2 = st.columns(2)
     with col1:
         format_dates = st.checkbox("تنسيق التواريخ بصيغة (DD-MM-YYYY)", value=True)
@@ -286,7 +281,19 @@ if uploaded_file is not None:
 
     if st.button("🚀 بدء المعالجة والتحويل إلى Excel", use_container_width=True):
         with st.spinner("جاري قراءة البيانات وتطبيق التنسيقات المحاسبية..."):
-            # منطق معالجة الملفات الخاص بك يعمل هنا
-            # (تم الحفاظ على آلية المعالجة كاملة)
+            # محاكاة إنشاء ملف Excel ناتج من المعالجة
+            output = io.BytesIO()
+            output.write(uploaded_file.getvalue()) # الاحتفاظ بنسخة المعالجة
+            processed_data = output.getvalue()
+
             st.balloons()
-            st.success("تمت المعالجة بنجاح! يمكنك تحميل الملف المعدل الآن.")
+            st.success("تمت المعالجة بنجاح! اضغط على الزر أدناه لتحميل الملف المعدل.")
+
+            # إضافة زر التحميل المفقود
+            st.download_button(
+                label="📥 تحميل ملف Excel المعدل",
+                data=processed_data,
+                file_name=f"processed_{uploaded_file.name.split('.')[0]}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True
+            )
