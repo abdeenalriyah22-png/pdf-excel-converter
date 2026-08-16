@@ -8,8 +8,6 @@ from PIL import Image
 import pytesseract
 import fitz  # PyMuPDF
 from st_copy_to_clipboard import st_copy_to_clipboard
-from streamlit_lottie import st_lottie
-import requests
 
 # --- 1. إعدادات الصفحة الأساسية ---
 st.set_page_config(
@@ -19,20 +17,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# دالة تحميل ملفات Lottie للأنيميشن المتحرك
-@st.cache_data
-def load_lottie_url(url: str):
-    try:
-        r = requests.get(url, timeout=5)
-        if r.status_code != 200:
-            return None
-        return r.json()
-    except Exception:
-        return None
-
-# رابط أنيميشن لطيف ومهدئ للطيور والطبيعة
-lottie_birds = load_lottie_url("https://assets2.lottiefiles.com/packages/lf20_1L8T9A.json")
-
 # --- 2. دمج كود جوجل أدسنس والتحقق في الخلفية ---
 components.html("""
 <meta name="google-adsense-account" content="ca-pub-1091631464795781">
@@ -40,7 +24,7 @@ components.html("""
      crossorigin="anonymous"></script>
 """, height=0, width=0)
 
-# --- 3. اختيار اللغة والمظهر في أعلى الموقع ---
+# --- 3. اختيار اللغة والمظهر في أعلى الموقع (الوضع الفاتح افتراضي) ---
 col_lang, col_theme = st.columns([2, 1])
 
 with col_lang:
@@ -54,7 +38,7 @@ with col_lang:
 with col_theme:
     selected_theme = st.selectbox(
         "🎨 Theme / المظهر / مظهر",
-        ["الوضع الداكن (Dark)", "الوضع الفاتح (Light)"],
+        ["الوضع الفاتح (Light)", "الوضع الداكن (Dark)"],
         index=0,
         key="theme_selector"
     )
@@ -64,7 +48,7 @@ translations = {
     "العربية": {
         "direction": "rtl",
         "align": "right",
-        "title": "📊 المحاسب الذكي <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
+        "title": "📊 المحاسب الذكي <span style='font-size:22px; color:#0969da; font-weight:normal;'>Pro</span>",
         "subtitle": "النظام السحابي المطور لمعالجة الجداول والبيانات ذكياً",
         "tab1_title": "📊 تحويل PDF و CSV إلى جداول Excel",
         "tab2_title": "🔍 استخراج النصوص الذكي (OCR)",
@@ -94,7 +78,7 @@ translations = {
     "English": {
         "direction": "ltr",
         "align": "left",
-        "title": "📊 Smart Accountant <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
+        "title": "📊 Smart Accountant <span style='font-size:22px; color:#0969da; font-weight:normal;'>Pro</span>",
         "subtitle": "Advanced cloud system for smart data and table processing",
         "tab1_title": "📊 Convert PDF & CSV to Excel",
         "tab2_title": "🔍 Smart Text Extraction (OCR)",
@@ -124,7 +108,7 @@ translations = {
     "اردو": {
         "direction": "rtl",
         "align": "right",
-        "title": "📊 سمارٹ اکاؤنٹنٹ <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
+        "title": "📊 سمارٹ اکاؤنٹنٹ <span style='font-size:22px; color:#0969da; font-weight:normal;'>Pro</span>",
         "subtitle": "سمارٹ ڈیٹا اور ٹیبل پروسیسنگ کے لیے جدید کلاؤڈ سسٹم",
         "tab1_title": "📊 پی ڈی ایف اور سی ایس وی کو ایکسل میں تبدیل کریں",
         "tab2_title": "🔍 سمارٹ ٹیکسٹ نکالنا (OCR)",
@@ -156,7 +140,7 @@ translations = {
 lang = translations[selected_lang]
 is_light = "Light" in selected_theme or "الفاتح" in selected_theme
 
-# --- 5. ستايل النيون والتصميم المتجاوب ودعم التوهج عند التمرير ---
+# --- 5. ستايل النيون والتصميم المتجاوب والتوهج ---
 def apply_theme_style(direction, align, is_light_mode):
     if is_light_mode:
         bg_style = "background: #f8f9fa !important; color: #1c2128;"
@@ -302,14 +286,14 @@ def apply_theme_style(direction, align, is_light_mode):
         {uploader_bg}
         border-radius: 20px !important;
         padding: 30px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
     }}
 
     [data-testid="stFileUploader"]:hover {{
-        border-color: #58a6ff !important;
+        border-color: #0969da !important;
         transform: translateY(-4px) scale(1.01) !important;
-        box-shadow: 0 0 30px rgba(88, 166, 255, 0.65), 0 0 10px rgba(31, 111, 235, 0.4) !important;
+        box-shadow: 0 0 25px rgba(9, 105, 218, 0.45), 0 0 10px rgba(31, 111, 235, 0.2) !important;
     }}
 
     [data-testid="stFileUploader"] section *, 
@@ -327,7 +311,7 @@ def apply_theme_style(direction, align, is_light_mode):
     }}
     
     .excel-icon {{ color: #2ea043; text-shadow: 0 0 20px rgba(46, 160, 67, 0.4); }}
-    .ocr-icon {{ color: #58a6ff; text-shadow: 0 0 20px rgba(88, 166, 255, 0.4); }}
+    .ocr-icon {{ color: #0969da; text-shadow: 0 0 20px rgba(9, 105, 218, 0.4); }}
     
     .custom-card:hover .excel-icon {{
         transform: scale(1.15) translateY(-5px);
@@ -335,7 +319,7 @@ def apply_theme_style(direction, align, is_light_mode):
     }}
     .custom-card:hover .ocr-icon {{
         transform: scale(1.15) rotate(10deg);
-        filter: drop-shadow(0 0 15px #58a6ff);
+        filter: drop-shadow(0 0 15px #0969da);
     }}
 
     .custom-card {{
@@ -419,13 +403,96 @@ def apply_theme_style(direction, align, is_light_mode):
 
 apply_theme_style(lang["direction"], lang["align"], is_light)
 
-# --- 6. واجهة البرنامج الرئيسية مع الأنيميشن المتحرك بجانب العنوان ---
+# --- 6. واجهة البرنامج الرئيسية مع أنيميشن مستقر المظهر (طيور وبحر) ---
 col_anim, col_title = st.columns([1, 1.8]) if lang["direction"] == "rtl" else st.columns([1.8, 1])
+
+sea_birds_html = """
+<style>
+.ocean-container {
+    width: 100%;
+    height: 120px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 15px;
+    background: linear-gradient(180deg, rgba(9, 105, 218, 0.08) 0%, rgba(31, 111, 235, 0.18) 100%);
+    border: 1px solid rgba(9, 105, 218, 0.2);
+}
+
+.wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 200%;
+    height: 40px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0 C150,90 350,-40 500,40 C650,120 900,20 1200,60 L1200,120 L0,120 Z" fill="%230969da" opacity="0.3"></path></svg>');
+    background-size: 50% 40px;
+    animation: wave-anim 8s linear infinite;
+}
+
+@keyframes wave-anim {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.bird {
+    position: absolute;
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.85;
+}
+
+.bird1 {
+    top: 20px;
+    left: -10%;
+    width: 35px;
+    height: 25px;
+    animation: fly1 10s linear infinite;
+}
+
+.bird2 {
+    top: 45px;
+    left: -20%;
+    width: 25px;
+    height: 18px;
+    animation: fly2 14s linear infinite 3s;
+}
+
+@keyframes fly1 {
+    0% { left: -10%; top: 25px; }
+    50% { top: 10px; }
+    100% { left: 110%; top: 30px; }
+}
+
+@keyframes fly2 {
+    0% { left: -15%; top: 45px; }
+    50% { top: 25px; }
+    100% { left: 110%; top: 50px; }
+}
+
+.bird-svg {
+    width: 100%;
+    height: 100%;
+}
+</style>
+
+<div class="ocean-container">
+    <div class="bird bird1">
+        <svg class="bird-svg" viewBox="0 0 50 30">
+            <path d="M0,15 Q12.5,0 25,15 Q37.5,0 50,15 Q37.5,10 25,20 Q12.5,10 0,15 Z" fill="#0969da"/>
+        </svg>
+    </div>
+    <div class="bird bird2">
+        <svg class="bird-svg" viewBox="0 0 50 30">
+            <path d="M0,15 Q12.5,0 25,15 Q37.5,0 50,15 Q37.5,10 25,20 Q12.5,10 0,15 Z" fill="#1f6feb"/>
+        </svg>
+    </div>
+    <div class="wave"></div>
+</div>
+"""
 
 if lang["direction"] == "rtl":
     with col_anim:
-        if lottie_birds:
-            st_lottie(lottie_birds, height=130, key="birds_anim_rtl")
+        st.markdown(sea_birds_html, unsafe_allow_html=True)
     with col_title:
         st.markdown(f"""
         <div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
@@ -442,8 +509,7 @@ else:
         </div>
         """, unsafe_allow_html=True)
     with col_anim:
-        if lottie_birds:
-            st_lottie(lottie_birds, height=130, key="birds_anim_ltr")
+        st.markdown(sea_birds_html, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
