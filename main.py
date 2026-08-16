@@ -140,18 +140,18 @@ translations = {
 lang = translations[selected_lang]
 is_light = "Light" in selected_theme or "الفاتح" in selected_theme
 
-# --- 5. ستايل الشبكة الذكية والدوائر المتصلة (Option 2: Tech & Accounting Mesh) ---
+# --- 5. ستايل التدرج الضوئي (Radial Glow Gradient Theme) ---
 def apply_theme_style(direction, align, is_light_mode):
     if is_light_mode:
-        # خلفية الشبكة والنقاط الذكية - الوضع الفاتح
+        # التدرج الضوئي الفاتح (Radial Gradient Light)
         bg_style = """
-        background-color: #f6f8fa !important;
-        background-image: radial-gradient(rgba(9, 105, 218, 0.22) 1.2px, transparent 1.2px), 
-                          linear-gradient(rgba(9, 105, 218, 0.05) 1px, transparent 1px);
-        background-size: 24px 24px, 48px 48px;
-        color: #1f2328;
+        background: radial-gradient(circle at 10% 20%, rgba(9, 105, 218, 0.12) 0%, transparent 40%),
+                    radial-gradient(circle at 90% 80%, rgba(46, 160, 67, 0.12) 0%, transparent 40%),
+                    #f8f9fa !important;
+        background-attachment: fixed !important;
+        color: #1c2128;
         """
-        card_bg = "background: rgba(255, 255, 255, 0.92); border: 1px solid #d0d7de;"
+        card_bg = "background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(208, 215, 222, 0.8);"
         card_title_color = "#1f2328"
         card_desc_color = "#57606a"
         title_gradient = "background: linear-gradient(to right, #0969da, #1f6feb); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
@@ -159,22 +159,22 @@ def apply_theme_style(direction, align, is_light_mode):
         select_text = "color: #0969da !important;"
         popover_bg = "background-color: #ffffff !important;"
         popover_text = "color: #1f2328 !important;"
-        uploader_bg = "background-color: rgba(255, 255, 255, 0.9) !important; border: 2px dashed #0969da !important;"
+        uploader_bg = "background-color: rgba(255, 255, 255, 0.8) !important; border: 2px dashed #0969da !important;"
         uploader_text = "color: #1f2328 !important;"
-        tab_bg = "background-color: rgba(234, 238, 242, 0.9); border: 1px solid #d0d7de;"
+        tab_bg = "background-color: rgba(241, 243, 245, 0.8); border: 1px solid #d0d7de;"
         tab_unselected = "color: #57606a;"
         textarea_bg = "background-color: #ffffff !important; color: #1f2328 !important; border: 1px solid #d0d7de !important;"
-        footer_bg = "background-color: rgba(255, 255, 255, 0.95); color: #57606a; border-top: 1px solid #d0d7de;"
+        footer_bg = "background-color: rgba(255, 255, 255, 0.9); color: #57606a; border-top: 1px solid #d0d7de;"
     else:
-        # خلفية الشبكة والنقاط الذكية - الوضع الداكن
+        # التدرج الضوئي الداكن (Radial Glow Gradient Dark)
         bg_style = """
-        background-color: #0d1117 !important;
-        background-image: radial-gradient(rgba(88, 166, 255, 0.25) 1.2px, transparent 1.2px), 
-                          linear-gradient(rgba(88, 166, 255, 0.05) 1px, transparent 1px);
-        background-size: 26px 26px, 52px 52px;
+        background: radial-gradient(circle at 15% 15%, rgba(31, 111, 235, 0.18) 0%, transparent 45%),
+                    radial-gradient(circle at 85% 85%, rgba(46, 160, 67, 0.12) 0%, transparent 45%),
+                    #0d1117 !important;
+        background-attachment: fixed !important;
         color: #e6edf3;
         """
-        card_bg = "background: linear-gradient(145deg, rgba(22, 27, 34, 0.9) 0%, rgba(13, 17, 23, 0.9) 100%); border: 1px solid #30363d;"
+        card_bg = "background: rgba(22, 27, 34, 0.8); border: 1px solid rgba(48, 54, 61, 0.8);"
         card_title_color = "#ffffff"
         card_desc_color = "#8b949e"
         title_gradient = "background: linear-gradient(to right, #ffffff, #58a6ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
@@ -182,12 +182,12 @@ def apply_theme_style(direction, align, is_light_mode):
         select_text = "color: #58a6ff !important;"
         popover_bg = "background-color: #161b22 !important;"
         popover_text = "color: #ffffff !important;"
-        uploader_bg = "background-color: rgba(22, 27, 34, 0.85) !important; border: 2px dashed #30363d !important;"
+        uploader_bg = "background-color: rgba(22, 27, 34, 0.75) !important; border: 2px dashed #30363d !important;"
         uploader_text = "color: #ffffff !important;"
         tab_bg = "background-color: rgba(22, 27, 34, 0.7); border: 1px solid #21262d;"
         tab_unselected = "color: #8b949e;"
         textarea_bg = "background-color: #0d1117 !important; color: #e6edf3 !important; border: 1px solid #30363d !important;"
-        footer_bg = "background-color: rgba(22, 27, 34, 0.95); color: #8b949e; border-top: 1px solid #30363d;"
+        footer_bg = "background-color: rgba(22, 27, 34, 0.9); color: #8b949e; border-top: 1px solid #30363d;"
 
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -275,7 +275,7 @@ def apply_theme_style(direction, align, is_light_mode):
         {tab_bg}
         padding: 8px;
         border-radius: 12px;
-        backdrop-filter: blur(5px);
+        backdrop-filter: blur(8px);
     }}
 
     .stTabs [data-baseweb="tab"] {{
@@ -296,20 +296,20 @@ def apply_theme_style(direction, align, is_light_mode):
         transform: scale(1.02);
     }}
 
-    /* === صندوق رفع الملفات وتأثير التوهج عند التمرير === */
+    /* === صندوق رفع الملفات مع هالة توهج متدرجة عند التمرير === */
     [data-testid="stFileUploader"] {{
         {uploader_bg}
         border-radius: 20px !important;
         padding: 30px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        backdrop-filter: blur(5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        backdrop-filter: blur(8px);
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
     }}
 
     [data-testid="stFileUploader"]:hover {{
         border-color: #0969da !important;
         transform: translateY(-4px) scale(1.01) !important;
-        box-shadow: 0 0 25px rgba(9, 105, 218, 0.45), 0 0 10px rgba(31, 111, 235, 0.2) !important;
+        box-shadow: 0 0 30px rgba(9, 105, 218, 0.4), 0 0 12px rgba(31, 111, 235, 0.25) !important;
     }}
 
     [data-testid="stFileUploader"] section *, 
@@ -344,7 +344,7 @@ def apply_theme_style(direction, align, is_light_mode):
         padding: 25px;
         text-align: center;
         margin-bottom: 20px;
-        backdrop-filter: blur(5px);
+        backdrop-filter: blur(8px);
         transition: 0.3s;
     }}
 
