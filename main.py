@@ -24,7 +24,7 @@ components.html("""
      crossorigin="anonymous"></script>
 """, height=0, width=0)
 
-# --- 3. اختيار اللغة والمظهر في أعلى الموقع (الوضع الفاتح افتراضي) ---
+# --- 3. اختيار اللغة والمظهر في أعلى الموقع ---
 col_lang, col_theme = st.columns([2, 1])
 
 with col_lang:
@@ -140,18 +140,18 @@ translations = {
 lang = translations[selected_lang]
 is_light = "Light" in selected_theme or "الفاتح" in selected_theme
 
-# --- 5. ستايل النيون والتصميم المتجاوب مع خلفية شبكة الجداول المحاسبية (Subtle Accounting Grid) ---
+# --- 5. ستايل الشبكة الذكية والدوائر المتصلة (Option 2: Tech & Accounting Mesh) ---
 def apply_theme_style(direction, align, is_light_mode):
     if is_light_mode:
-        # خلفية الجداول/الإكسيل المحاسبية - الوضع الفاتح
+        # خلفية الشبكة والنقاط الذكية - الوضع الفاتح
         bg_style = """
-        background-color: #f8f9fa !important;
-        background-image: linear-gradient(rgba(9, 105, 218, 0.06) 1px, transparent 1px), 
-                          linear-gradient(90deg, rgba(9, 105, 218, 0.06) 1px, transparent 1px);
-        background-size: 28px 28px;
-        color: #1c2128;
+        background-color: #f6f8fa !important;
+        background-image: radial-gradient(rgba(9, 105, 218, 0.22) 1.2px, transparent 1.2px), 
+                          linear-gradient(rgba(9, 105, 218, 0.05) 1px, transparent 1px);
+        background-size: 24px 24px, 48px 48px;
+        color: #1f2328;
         """
-        card_bg = "background: rgba(255, 255, 255, 0.95); border: 1px solid #e1e4e8;"
+        card_bg = "background: rgba(255, 255, 255, 0.92); border: 1px solid #d0d7de;"
         card_title_color = "#1f2328"
         card_desc_color = "#57606a"
         title_gradient = "background: linear-gradient(to right, #0969da, #1f6feb); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
@@ -161,20 +161,20 @@ def apply_theme_style(direction, align, is_light_mode):
         popover_text = "color: #1f2328 !important;"
         uploader_bg = "background-color: rgba(255, 255, 255, 0.9) !important; border: 2px dashed #0969da !important;"
         uploader_text = "color: #1f2328 !important;"
-        tab_bg = "background-color: rgba(241, 243, 245, 0.9); border: 1px solid #d0d7de;"
+        tab_bg = "background-color: rgba(234, 238, 242, 0.9); border: 1px solid #d0d7de;"
         tab_unselected = "color: #57606a;"
         textarea_bg = "background-color: #ffffff !important; color: #1f2328 !important; border: 1px solid #d0d7de !important;"
         footer_bg = "background-color: rgba(255, 255, 255, 0.95); color: #57606a; border-top: 1px solid #d0d7de;"
     else:
-        # خلفية الجداول/الإكسيل المحاسبية - الوضع الداكن
+        # خلفية الشبكة والنقاط الذكية - الوضع الداكن
         bg_style = """
         background-color: #0d1117 !important;
-        background-image: linear-gradient(rgba(88, 166, 255, 0.07) 1px, transparent 1px), 
-                          linear-gradient(90deg, rgba(88, 166, 255, 0.07) 1px, transparent 1px);
-        background-size: 30px 30px;
+        background-image: radial-gradient(rgba(88, 166, 255, 0.25) 1.2px, transparent 1.2px), 
+                          linear-gradient(rgba(88, 166, 255, 0.05) 1px, transparent 1px);
+        background-size: 26px 26px, 52px 52px;
         color: #e6edf3;
         """
-        card_bg = "background: linear-gradient(145deg, rgba(22, 27, 34, 0.95) 0%, rgba(15, 19, 25, 0.95) 100%); border: 1px solid #30363d;"
+        card_bg = "background: linear-gradient(145deg, rgba(22, 27, 34, 0.9) 0%, rgba(13, 17, 23, 0.9) 100%); border: 1px solid #30363d;"
         card_title_color = "#ffffff"
         card_desc_color = "#8b949e"
         title_gradient = "background: linear-gradient(to right, #ffffff, #58a6ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
