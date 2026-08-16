@@ -140,14 +140,15 @@ translations = {
 lang = translations[selected_lang]
 is_light = "Light" in selected_theme or "الفاتح" in selected_theme
 
-# --- 5. ستايل النيون والتصميم المتجاوب مع خلفية شبكة النقاط ---
+# --- 5. ستايل النيون والتصميم المتجاوب مع خلفية شبكة الجداول المحاسبية (Subtle Accounting Grid) ---
 def apply_theme_style(direction, align, is_light_mode):
     if is_light_mode:
-        # خلفية شبكة النقاط - الوضع الفاتح
+        # خلفية الجداول/الإكسيل المحاسبية - الوضع الفاتح
         bg_style = """
         background-color: #f8f9fa !important;
-        background-image: radial-gradient(#0969da 0.8px, transparent 0.8px);
-        background-size: 18px 18px;
+        background-image: linear-gradient(rgba(9, 105, 218, 0.06) 1px, transparent 1px), 
+                          linear-gradient(90deg, rgba(9, 105, 218, 0.06) 1px, transparent 1px);
+        background-size: 28px 28px;
         color: #1c2128;
         """
         card_bg = "background: rgba(255, 255, 255, 0.95); border: 1px solid #e1e4e8;"
@@ -165,11 +166,12 @@ def apply_theme_style(direction, align, is_light_mode):
         textarea_bg = "background-color: #ffffff !important; color: #1f2328 !important; border: 1px solid #d0d7de !important;"
         footer_bg = "background-color: rgba(255, 255, 255, 0.95); color: #57606a; border-top: 1px solid #d0d7de;"
     else:
-        # خلفية شبكة النقاط - الوضع الداكن
+        # خلفية الجداول/الإكسيل المحاسبية - الوضع الداكن
         bg_style = """
         background-color: #0d1117 !important;
-        background-image: radial-gradient(rgba(88, 166, 255, 0.18) 1px, transparent 1px);
-        background-size: 20px 20px;
+        background-image: linear-gradient(rgba(88, 166, 255, 0.07) 1px, transparent 1px), 
+                          linear-gradient(90deg, rgba(88, 166, 255, 0.07) 1px, transparent 1px);
+        background-size: 30px 30px;
         color: #e6edf3;
         """
         card_bg = "background: linear-gradient(145deg, rgba(22, 27, 34, 0.95) 0%, rgba(15, 19, 25, 0.95) 100%); border: 1px solid #30363d;"
