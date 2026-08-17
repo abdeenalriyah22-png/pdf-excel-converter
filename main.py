@@ -6,26 +6,32 @@ import pandas as pd
 import io
 
 # ---------------------------------------------------------
-# 1. دالة تصحيح النص العربي المقلوب داخلياً في PDF
+# 1. دالة معالجة واستعدالة النصوص والمصطلحات المحاسبية
 # ---------------------------------------------------------
-def fix_pdf_arabic(text):
-    """
-    تعديل النصوص العربية التي تم استخراجها بشكل معكوس ومفكك من PDF
-    """
+def fix_pdf_text_cell(text):
     if not isinstance(text, str) or not text.strip():
         return text
-    
-    # فحص ما إذا كان النص يحتوي على حروف عربية
+
+    # إصلاح الأخطاء الخاصة بالعملة
+    text = text.replace('.س.ر', 'ر.س.').replace('س.ر.', 'ر.س.')
+
+    # فحص وجود حروف عربية
     has_arabic = any('\u0600' <= char <= '\u06FF' for char in text)
     if not has_arabic:
         return text
 
-    # إذا كان النص مجمعاً بشكل معكوس من اليسار لليمين، نقوم بعكس النص أولاً
-    reversed_text = text[::-1]
+    # تقسيم الكلمات وإعادة ترتيب الكلمات المعكوسة
+    words = text.split()
     
-    # ثم نعيد تشكيل الحروف لترتبط ببعضها بشكل صحيح
-    reshaped = arabic_reshaper.reshape(reversed_text)
-    return reshaped
+    # إذا كانت الجملة عربية ومكونة من عدة كلمات مقلوبة الترتيب
+    reversed_words = words[::-1]
+    reconstructed_text = " ".join(reversed_words)
+
+    # تطبيق إعادة التشكيل والاتجاه RTL
+    reshaped = arabic_reshaper.reshape(reconstructed_text)
+    corrected = get_display(reshaped)
+    
+    return corrected
 
 # ---------------------------------------------------------
 # 2. إعدادات الصفحة
@@ -315,17 +321,19 @@ with tab1:
                                         if not table:
                                             continue
                                         
-                                        # معالجة كل خلية في الجدول بعكس السلسلة وتعديل الحروف
-                                        cleaned_table = []
-                                        for row in table:
-                                            cleaned_row = [fix_pdf_arabic(cell) for cell in row]
-                                            cleaned_table.append(cleaned_row)
-
-                                        if len(cleaned_table) > 1:
-                                            df = pd.DataFrame(cleaned_table[1:], columns=cleaned_table[0])
-                                        else:
-                                            df = pd.DataFrame(cleaned_table)
+                                        df = pd.DataFrame(table)
                                         
+                                        # 1. ضبط ترتيب العمود (م) إلى اليمين
+                                        df = df.iloc[:, ::-1]
+                                        
+                                        # 2. تحديد عناوين البيانات
+                                        df.columns = df.iloc[0]
+                                        df = df[1:].reset_index(drop=True)
+                                        
+                                        # 3. معالجة النصوص المحاسبية العربية والعناوين
+                                        df = df.applymap(fix_pdf_text_cell)
+                                        df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+
                                         tables_count += 1
                                         sheet_name = f"P{page_num+1}_T{tbl_idx+1}"[:31]
                                         df.to_excel(writer, sheet_name=sheet_name, index=False)
