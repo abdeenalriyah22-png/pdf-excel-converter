@@ -1,18 +1,32 @@
 import sys
 import subprocess
 
-# تثبيت المكتبات تلقائياً في حال عدم وجودها
-try:
-    import pdfplumber
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pdfplumber", "openpyxl"])
-    import pdfplumber
+# تثبيت المكتبات المطلوبة تلقائياً
+required_packages = ["pdfplumber", "openpyxl", "arabic_reshaper", "python-bidi"]
+for package in required_packages:
+    try:
+        __import__(package)
+    except ImportError:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
+import pdfplumber
+import arabic_reshaper
+from bidi.algorithm import get_display
 import streamlit as st
 import pandas as pd
 import io
 
-# 1. إعدادات الصفحة
+# 1. دالة إصلاح وتعديل النص العربي المقلوب
+def fix_arabic_text(text):
+    if isinstance(text, str) and text.strip():
+        # إعادة تشكيل الحروف المقطعة وربطها
+        reshaped_text = arabic_reshaper.reshape(text)
+        # ضبط اتجاه النص من اليمين إلى اليسار
+        bidi_text = get_display(reshaped_text)
+        return bidi_text
+    return text
+
+# 2. إعدادات الصفحة
 st.set_page_config(
     page_title="المحاسب الذكي Pro",
     page_icon="📊",
@@ -20,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. القاموس متعدد اللغات
+# 3. القاموس متعدد اللغات
 TRANSLATIONS = {
     "ar": {
         "title": "المحاسب الذكي Pro",
@@ -31,13 +45,13 @@ TRANSLATIONS = {
         "extractor_title": "مستخرج جداول البيانات",
         "extractor_desc": "ارفع ملفاتك لتحويل أي جدول صامت داخل الـ PDF أو ملفات CSV إلى ملف إكسيل منسق تلقائياً",
         "upload_label": "قم بسحب وإفلات ملفات الـ PDF أو CSV الخاصة بالجداول هنا",
-        "ocr_title": "مستخرج النصوص والمستندات (OCR)",
+        "ocr_title": "مستخرج النصوص والمسندات (OCR)",
         "ocr_desc": "ارفع صورة المستند أو الفاتورة لاستخراج النصوص والبيانات منها مباشرة",
         "ocr_upload_label": "قم بسحب وإفلات صور المستندات (PNG, JPG, JPEG) هنا",
         "convert_btn": "⚡ بدء تحويل الملفات واستخراج الجداول",
         "download_btn": "📥 تحميل ملف Excel المنسق",
-        "processing": "جاري معالجة الملفات واستخراج الجداول...",
-        "success": "تمت معالجة الملفات بنجاح!",
+        "processing": "جاري معالجة الملفات وإصلاح النصوص العربية...",
+        "success": "تمت معالجة الملفات وإصلاح النصوص بنجاح!",
         "no_tables": "لم يتم العثور على جداول داخل الملفات المرفوعة.",
         "select_file_warn": "يرجى رفع ملف واحد على الأقل أولاً."
     },
@@ -55,8 +69,8 @@ TRANSLATIONS = {
         "ocr_upload_label": "Drag and drop document images (PNG, JPG, JPEG) here",
         "convert_btn": "⚡ Start Converting Files & Extract Tables",
         "download_btn": "📥 Download Formatted Excel File",
-        "processing": "Processing files and extracting tables...",
-        "success": "Files processed successfully!",
+        "processing": "Processing files and fixing Arabic text...",
+        "success": "Files processed and text fixed successfully!",
         "no_tables": "No tables were found in the uploaded files.",
         "select_file_warn": "Please upload at least one file first."
     },
@@ -81,7 +95,7 @@ TRANSLATIONS = {
     }
 }
 
-# 3. شريط الخيارات العلوي
+# 4. شريط الخيارات العلوي
 top_col1, top_col2 = st.columns([1, 1])
 
 with top_col1:
@@ -104,7 +118,7 @@ is_dark = "Dark" in theme_choice
 direction = "rtl" if lang_code in ["ar", "ur"] else "ltr"
 text_align = "right" if direction == "rtl" else "left"
 
-# 4. تنسيقات CSS
+# 5. تنسيقات CSS
 bg_color = "#0b0f19" if is_dark else "#f1f5f9"
 text_primary = "#f8fafc" if is_dark else "#0f172a"
 text_secondary = "#94a3b8" if is_dark else "#475569"
@@ -169,10 +183,6 @@ st.markdown(f"""
     margin: 0;
 }}
 
-.main-title span {{
-    color: {accent_color};
-}}
-
 .main-subtitle {{
     font-size: 1.05rem;
     color: {text_secondary};
@@ -209,7 +219,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# 5. الهيدر الرئيسية
+# 6. الهيدر الرئيسي
 header_col1, header_col2, header_col3 = st.columns([1.2, 2.6, 1.2])
 
 with header_col1:
@@ -247,7 +257,7 @@ with header_col3:
     </div>
     """, unsafe_allow_html=True)
 
-# 6. التبويبات والمعالجة
+# 7. التبويبات والمعالجة
 tab1, tab2 = st.tabs([t['tab_convert'], t['tab_ocr']])
 
 with tab1:
@@ -268,7 +278,6 @@ with tab1:
         key="table_uploader"
     )
 
-    # زر التحويل والمعالجة
     if st.button(t['convert_btn'], type="primary", use_container_width=True):
         if not uploaded_files:
             st.warning(t['select_file_warn'])
@@ -281,6 +290,10 @@ with tab1:
                     for idx, file in enumerate(uploaded_files):
                         if file.name.endswith('.csv'):
                             df = pd.read_csv(file)
+                            # إصلاح النصوص العربية في CSV
+                            df = df.applymap(fix_arabic_text)
+                            df.columns = [fix_arabic_text(col) for col in df.columns]
+                            
                             sheet_name = f"CSV_{idx+1}"[:31]
                             df.to_excel(writer, sheet_name=sheet_name, index=False)
                             tables_count += 1
@@ -290,12 +303,19 @@ with tab1:
                                 for page_num, page in enumerate(pdf.pages):
                                     extracted_tables = page.extract_tables()
                                     for tbl_idx, table in enumerate(extracted_tables):
-                                        if table and len(table) > 1:
-                                            df = pd.DataFrame(table[1:], columns=table[0])
-                                        elif table:
-                                            df = pd.DataFrame(table)
-                                        else:
+                                        if not table:
                                             continue
+                                        
+                                        # تطبيق إصلاح النص العربي على كل خلية في الجدول
+                                        cleaned_table = []
+                                        for row in table:
+                                            cleaned_row = [fix_arabic_text(cell) for cell in row]
+                                            cleaned_table.append(cleaned_row)
+
+                                        if len(cleaned_table) > 1:
+                                            df = pd.DataFrame(cleaned_table[1:], columns=cleaned_table[0])
+                                        else:
+                                            df = pd.DataFrame(cleaned_table)
                                         
                                         tables_count += 1
                                         sheet_name = f"P{page_num+1}_T{tbl_idx+1}"[:31]
@@ -331,7 +351,7 @@ with tab2:
         key="ocr_uploader"
     )
 
-# 7. التوقيع السفلي
+# 8. التوقيع السفلي
 st.markdown(f"""
 <div class="footer-motto-wrapper">
     <div class="footer-motto-box">{t['motto']}</div>
