@@ -9,3 +9,5 @@ xlsxwriter
 streamlit-lottie
 pdfplumber
 openpyxl
+arabic_reshaper
+python-bidi
