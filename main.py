@@ -34,11 +34,12 @@ TRANSLATIONS = {
         "ocr_title": "مستخرج النصوص والمستندات (OCR)",
         "ocr_desc": "ارفع صورة المستند أو الفاتورة لاستخراج النصوص والبيانات منها مباشرة",
         "ocr_upload_label": "قم بسحب وإفلات صور المستندات (PNG, JPG, JPEG) هنا",
-        "theme_label": "المظهر / Theme 🎨",
-        "lang_label": "اختر اللغة / Choose Language 🌐",
+        "convert_btn": "⚡ بدء تحويل الملفات واستخراج الجداول",
         "download_btn": "📥 تحميل ملف Excel المنسق",
         "processing": "جاري معالجة الملفات واستخراج الجداول...",
-        "success": "تمت معالجة الملفات بنجاح!"
+        "success": "تمت معالجة الملفات بنجاح!",
+        "no_tables": "لم يتم العثور على جداول داخل الملفات المرفوعة.",
+        "select_file_warn": "يرجى رفع ملف واحد على الأقل أولاً."
     },
     "en": {
         "title": "Smart Accountant Pro",
@@ -52,11 +53,12 @@ TRANSLATIONS = {
         "ocr_title": "Document Text Extractor (OCR)",
         "ocr_desc": "Upload image documents or invoices to extract text and data directly",
         "ocr_upload_label": "Drag and drop document images (PNG, JPG, JPEG) here",
-        "theme_label": "Theme / المظهر 🎨",
-        "lang_label": "Choose Language / اختر اللغة 🌐",
+        "convert_btn": "⚡ Start Converting Files & Extract Tables",
         "download_btn": "📥 Download Formatted Excel File",
         "processing": "Processing files and extracting tables...",
-        "success": "Files processed successfully!"
+        "success": "Files processed successfully!",
+        "no_tables": "No tables were found in the uploaded files.",
+        "select_file_warn": "Please upload at least one file first."
     },
     "ur": {
         "title": "سمارٹ اکاؤنٹنٹ Pro",
@@ -70,15 +72,16 @@ TRANSLATIONS = {
         "ocr_title": "ڈاکیومنٹ ٹیکسٹ ایکسٹریکٹر (OCR)",
         "ocr_desc": "متن اور ڈیٹا کو براہ راست نکالنے کے لیے دستاویز کی تصاویر اپ لوڈ کریں",
         "ocr_upload_label": "تصاویر (PNG, JPG, JPEG) یہاں ڈریگ اور ڈراپ کریں",
-        "theme_label": "Theme / المظهر 🎨",
-        "lang_label": "زبان کا انتخاب کریں / Choose Language 🌐",
+        "convert_btn": "⚡ فائلوں کو تبدیل کرنا شروع کریں",
         "download_btn": "📥 ڈاؤن لوڈ کریں فارمیٹ شدہ ایکسل فائل",
         "processing": "فائلوں پر کارروائی ہو رہی ہے...",
-        "success": "فائلیں کامیابی کے ساتھ پروسیس ہو گئیں!"
+        "success": "فائلیں کامیابی کے ساتھ پروسیس ہو گئیں!",
+        "no_tables": "اپ لوڈ کردہ فائلوں میں کوئی ٹیبل نہیں ملا۔",
+        "select_file_warn": "برائے مہربانی پہلے کم از کم ایک فائل اپ لوڈ کریں۔"
     }
 }
 
-# 3. شريط الخيارات العلوي (المظهر الفاتح افتراضي + اللغة)
+# 3. شريط الخيارات العلوي
 top_col1, top_col2 = st.columns([1, 1])
 
 with top_col1:
@@ -95,14 +98,13 @@ with top_col2:
         index=0
     )
 
-# تحديد رمز اللغة والمظهر والاتجاه
 lang_code = "ar" if lang_choice == "العربية" else ("en" if lang_choice == "English" else "ur")
 t = TRANSLATIONS[lang_code]
 is_dark = "Dark" in theme_choice
 direction = "rtl" if lang_code in ["ar", "ur"] else "ltr"
 text_align = "right" if direction == "rtl" else "left"
 
-# 4. تنسيقات CSS لدعم الاتجاه والتصميم الداكن/الفاتح
+# 4. تنسيقات CSS
 bg_color = "#0b0f19" if is_dark else "#f1f5f9"
 text_primary = "#f8fafc" if is_dark else "#0f172a"
 text_secondary = "#94a3b8" if is_dark else "#475569"
@@ -112,7 +114,6 @@ accent_color = "#3b82f6"
 
 st.markdown(f"""
 <style>
-/* ضبط الاتجاه العام للتطبيق بناءً على اللغة */
 .stApp {{
     background-color: {bg_color};
     color: {text_primary};
@@ -121,13 +122,11 @@ st.markdown(f"""
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }}
 
-/* محاذاة نصوص ومكونات Streamlit */
-.stMarkdown, .stSelectbox, .stFileUploader, .stTabs {{
+.stMarkdown, .stSelectbox, .stFileUploader, .stTabs, .stButton {{
     direction: {direction};
     text-align: {text_align};
 }}
 
-/* حاوية الدوائر ثلاثية الأبعاد 3D */
 .spheres-container {{
     display: flex;
     justify-content: center;
@@ -158,7 +157,6 @@ st.markdown(f"""
     100% {{ transform: translateY(15px) scale(0.92) rotateX(25deg); }}
 }}
 
-/* الترويسة الرئيسية */
 .main-header {{
     text-align: center;
     padding: 10px 0 20px 0;
@@ -181,7 +179,6 @@ st.markdown(f"""
     margin-top: 6px;
 }}
 
-/* بطاقات العرض */
 .card-box {{
     background-color: {card_bg};
     border: 1px solid {card_border};
@@ -191,7 +188,6 @@ st.markdown(f"""
     box-shadow: 0 10px 25px rgba(0,0,0,0.06);
 }}
 
-/* العبارة / التوقيع في الأسفل بالمنتصف */
 .footer-motto-wrapper {{
     text-align: center;
     margin-top: 40px;
@@ -213,7 +209,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# 5. الهيدر الرئيسي وتنسيق الكور ثلاثية الأبعاد
+# 5. الهيدر الرئيسية
 header_col1, header_col2, header_col3 = st.columns([1.2, 2.6, 1.2])
 
 with header_col1:
@@ -251,7 +247,7 @@ with header_col3:
     </div>
     """, unsafe_allow_html=True)
 
-# 6. التبويبات (تحويل الملفات / استخراج النصوص OCR)
+# 6. التبويبات والمعالجة
 tab1, tab2 = st.tabs([t['tab_convert'], t['tab_ocr']])
 
 with tab1:
@@ -272,6 +268,51 @@ with tab1:
         key="table_uploader"
     )
 
+    # زر التحويل والمعالجة
+    if st.button(t['convert_btn'], type="primary", use_container_width=True):
+        if not uploaded_files:
+            st.warning(t['select_file_warn'])
+        else:
+            with st.spinner(t['processing']):
+                output_buffer = io.BytesIO()
+                tables_count = 0
+                
+                with pd.ExcelWriter(output_buffer, engine='openpyxl') as writer:
+                    for idx, file in enumerate(uploaded_files):
+                        if file.name.endswith('.csv'):
+                            df = pd.read_csv(file)
+                            sheet_name = f"CSV_{idx+1}"[:31]
+                            df.to_excel(writer, sheet_name=sheet_name, index=False)
+                            tables_count += 1
+                        
+                        elif file.name.endswith('.pdf'):
+                            with pdfplumber.open(file) as pdf:
+                                for page_num, page in enumerate(pdf.pages):
+                                    extracted_tables = page.extract_tables()
+                                    for tbl_idx, table in enumerate(extracted_tables):
+                                        if table and len(table) > 1:
+                                            df = pd.DataFrame(table[1:], columns=table[0])
+                                        elif table:
+                                            df = pd.DataFrame(table)
+                                        else:
+                                            continue
+                                        
+                                        tables_count += 1
+                                        sheet_name = f"P{page_num+1}_T{tbl_idx+1}"[:31]
+                                        df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+                if tables_count > 0:
+                    st.success(t['success'])
+                    st.download_button(
+                        label=t['download_btn'],
+                        data=output_buffer.getvalue(),
+                        file_name="converted_tables.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True
+                    )
+                else:
+                    st.warning(t['no_tables'])
+
 with tab2:
     st.markdown(f"""
     <div class="card-box">
@@ -290,7 +331,7 @@ with tab2:
         key="ocr_uploader"
     )
 
-# 7. أسفل الصفحة: التوقيع / العبارة متوسّطة
+# 7. التوقيع السفلي
 st.markdown(f"""
 <div class="footer-motto-wrapper">
     <div class="footer-motto-box">{t['motto']}</div>
