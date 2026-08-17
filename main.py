@@ -22,8 +22,6 @@ def fix_pdf_text_cell(text):
 
     # تقسيم الكلمات وإعادة ترتيب الكلمات المعكوسة
     words = text.split()
-    
-    # إعادة ترتيب الكلمات المعكوسة للجمل العربية
     reversed_words = words[::-1]
     reconstructed_text = " ".join(reversed_words)
 
@@ -34,7 +32,58 @@ def fix_pdf_text_cell(text):
     return corrected
 
 # ---------------------------------------------------------
-# 2. إعدادات الصفحة
+# 2. دالة استخراج الجداول المتقدمة (بدعم الجداول بدون خطوط)
+# ---------------------------------------------------------
+def extract_tables_from_pdf(pdf_file):
+    extracted_dfs = []
+    
+    # إعدادات متقدمة للتعرف على الجداول النصية بدون خطوط شبكية
+    table_settings = {
+        "vertical_strategy": "text",
+        "horizontal_strategy": "text",
+        "snap_tolerance": 3,
+        "join_tolerance": 3,
+        "edge_min_length": 3
+    }
+    
+    with pdfplumber.open(pdf_file) as pdf:
+        for page_num, page in enumerate(pdf.pages):
+            # محاولة الاستخراج الأول بالإعدادات الافتراضية
+            tables = page.extract_tables()
+            
+            # إذا لم يجد جداول بخطوط، نستخدم الاستخراج المعزز للنصوص
+            if not tables or len(tables) == 0:
+                tables = page.extract_tables(table_settings=table_settings)
+            
+            for tbl_idx, table in enumerate(tables):
+                if not table or len(table) < 2:
+                    continue
+                
+                df = pd.DataFrame(table)
+                
+                # تنظيف الصفوف والأعمدة الفارغة بالكامل
+                df = df.dropna(how='all').dropna(how='all', axis=1)
+                if df.empty or df.shape[0] < 2:
+                    continue
+
+                # 1. ضبط ترتيب الأعمدة إلى اليمين
+                df = df.iloc[:, ::-1]
+                
+                # 2. تعيين الصف الأول كعناوين
+                df.columns = df.iloc[0]
+                df = df[1:].reset_index(drop=True)
+                
+                # 3. معالجة النصوص المحاسبية العربية والعناوين
+                df = df.applymap(fix_pdf_text_cell)
+                df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+
+                sheet_name = f"P{page_num+1}_T{tbl_idx+1}"[:31]
+                extracted_dfs.append((sheet_name, df))
+                
+    return extracted_dfs
+
+# ---------------------------------------------------------
+# 3. إعدادات الصفحة
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="المحاسب الذكي Pro",
@@ -44,7 +93,7 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 3. القاموس متعدد اللغات
+# 4. القاموس متعدد اللغات
 # ---------------------------------------------------------
 TRANSLATIONS = {
     "ar": {
@@ -107,7 +156,7 @@ TRANSLATIONS = {
 }
 
 # ---------------------------------------------------------
-# 4. شريط الخيارات العلوي
+# 5. شريط الخيارات العلوي
 # ---------------------------------------------------------
 top_col1, top_col2 = st.columns([1, 1])
 
@@ -132,7 +181,7 @@ direction = "rtl" if lang_code in ["ar", "ur"] else "ltr"
 text_align = "right" if direction == "rtl" else "left"
 
 # ---------------------------------------------------------
-# 5. تنسيقات CSS لدعم الاتجاه والتصميم
+# 6. تنسيقات CSS لدعم الاتجاه والتصميم
 # ---------------------------------------------------------
 bg_color = "#0b0f19" if is_dark else "#f1f5f9"
 text_primary = "#f8fafc" if is_dark else "#0f172a"
@@ -235,7 +284,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 6. الهيدر الرئيسي
+# 7. الهيدر الرئيسي
 # ---------------------------------------------------------
 header_col1, header_col2, header_col3 = st.columns([1.2, 2.6, 1.2])
 
@@ -275,7 +324,7 @@ with header_col3:
     """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 7. التبويبات والمعالجة الآمنة
+# 8. التبويبات والمعالجة
 # ---------------------------------------------------------
 tab1, tab2 = st.tabs([t['tab_convert'], t['tab_ocr']])
 
@@ -305,7 +354,6 @@ with tab1:
                 output_buffer = io.BytesIO()
                 tables_count = 0
                 
-                # استخدام openpyxl مباشرة لإنشاء الحافظة بشكل آمن
                 writer = pd.ExcelWriter(output_buffer, engine='openpyxl')
                 
                 for idx, file in enumerate(uploaded_files):
@@ -323,35 +371,16 @@ with tab1:
                     
                     elif file.name.endswith('.pdf'):
                         try:
-                            with pdfplumber.open(file) as pdf:
-                                for page_num, page in enumerate(pdf.pages):
-                                    extracted_tables = page.extract_tables()
-                                    for tbl_idx, table in enumerate(extracted_tables):
-                                        if not table or len(table) < 2:
-                                            continue
-                                        
-                                        df = pd.DataFrame(table)
-                                        
-                                        # 1. ضبط ترتيب الأعمدة إلى اليمين
-                                        df = df.iloc[:, ::-1]
-                                        
-                                        # 2. تحديد عناوين البيانات
-                                        df.columns = df.iloc[0]
-                                        df = df[1:].reset_index(drop=True)
-                                        
-                                        # 3. معالجة النصوص المحاسبية العربية والعناوين
-                                        df = df.applymap(fix_pdf_text_cell)
-                                        df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
-
-                                        tables_count += 1
-                                        sheet_name = f"P{page_num+1}_T{tbl_idx+1}"[:31]
-                                        df.to_excel(writer, sheet_name=sheet_name, index=False)
+                            extracted_tables = extract_tables_from_pdf(file)
+                            for sheet_name, df in extracted_tables:
+                                df.to_excel(writer, sheet_name=sheet_name, index=False)
+                                tables_count += 1
                         except Exception:
                             pass
 
-                # إنشاء ورقة افتراضية لمنع خطأ IndexError في حال كانت الجداول فارغة
+                # حالة احتياطية لمنع أخطاء التصدير
                 if tables_count == 0:
-                    df_empty = pd.DataFrame({"ملاحظة": ["لم يتم العثور على جداول في الملفات المرفوعة"]})
+                    df_empty = pd.DataFrame({"ملاحظة": ["لم يتم العثور على جداول صالحة"]})
                     df_empty.to_excel(writer, sheet_name="Sheet1", index=False)
 
                 writer.close()
@@ -387,7 +416,7 @@ with tab2:
     )
 
 # ---------------------------------------------------------
-# 8. التوقيع السفلي
+# 9. التوقيع السفلي
 # ---------------------------------------------------------
 st.markdown(f"""
 <div class="footer-motto-wrapper">
