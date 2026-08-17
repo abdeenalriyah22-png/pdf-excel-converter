@@ -23,7 +23,7 @@ def fix_pdf_text_cell(text):
     # تقسيم الكلمات وإعادة ترتيب الكلمات المعكوسة
     words = text.split()
     
-    # إذا كانت الجملة عربية ومكونة من عدة كلمات مقلوبة الترتيب
+    # إعادة ترتيب الكلمات المعكوسة للجمل العربية
     reversed_words = words[::-1]
     reconstructed_text = " ".join(reversed_words)
 
@@ -275,7 +275,7 @@ with header_col3:
     """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 7. التبويبات والمعالجة
+# 7. التبويبات والمعالجة الآمنة
 # ---------------------------------------------------------
 tab1, tab2 = st.tabs([t['tab_convert'], t['tab_ocr']])
 
@@ -305,25 +305,34 @@ with tab1:
                 output_buffer = io.BytesIO()
                 tables_count = 0
                 
-                with pd.ExcelWriter(output_buffer, engine='openpyxl') as writer:
-                    for idx, file in enumerate(uploaded_files):
-                        if file.name.endswith('.csv'):
+                # استخدام openpyxl مباشرة لإنشاء الحافظة بشكل آمن
+                writer = pd.ExcelWriter(output_buffer, engine='openpyxl')
+                
+                for idx, file in enumerate(uploaded_files):
+                    if file.name.endswith('.csv'):
+                        try:
                             df = pd.read_csv(file)
+                            df = df.applymap(fix_pdf_text_cell)
+                            df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+                            
                             sheet_name = f"CSV_{idx+1}"[:31]
                             df.to_excel(writer, sheet_name=sheet_name, index=False)
                             tables_count += 1
-                        
-                        elif file.name.endswith('.pdf'):
+                        except Exception:
+                            pass
+                    
+                    elif file.name.endswith('.pdf'):
+                        try:
                             with pdfplumber.open(file) as pdf:
                                 for page_num, page in enumerate(pdf.pages):
                                     extracted_tables = page.extract_tables()
                                     for tbl_idx, table in enumerate(extracted_tables):
-                                        if not table:
+                                        if not table or len(table) < 2:
                                             continue
                                         
                                         df = pd.DataFrame(table)
                                         
-                                        # 1. ضبط ترتيب العمود (م) إلى اليمين
+                                        # 1. ضبط ترتيب الأعمدة إلى اليمين
                                         df = df.iloc[:, ::-1]
                                         
                                         # 2. تحديد عناوين البيانات
@@ -337,6 +346,15 @@ with tab1:
                                         tables_count += 1
                                         sheet_name = f"P{page_num+1}_T{tbl_idx+1}"[:31]
                                         df.to_excel(writer, sheet_name=sheet_name, index=False)
+                        except Exception:
+                            pass
+
+                # إنشاء ورقة افتراضية لمنع خطأ IndexError في حال كانت الجداول فارغة
+                if tables_count == 0:
+                    df_empty = pd.DataFrame({"ملاحظة": ["لم يتم العثور على جداول في الملفات المرفوعة"]})
+                    df_empty.to_excel(writer, sheet_name="Sheet1", index=False)
+
+                writer.close()
 
                 if tables_count > 0:
                     st.success(t['success'])
