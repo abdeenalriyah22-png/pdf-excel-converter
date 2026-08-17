@@ -6,20 +6,26 @@ import pandas as pd
 import io
 
 # ---------------------------------------------------------
-# 1. دالة تصحيح النص العربي
+# 1. دالة تصحيح النص العربي المقلوب داخلياً في PDF
 # ---------------------------------------------------------
-def fix_arabic_text(text):
+def fix_pdf_arabic(text):
     """
-    تعديل الحروف العربية المقطعة وإعادة ترتيب الاتجاه بشكل صحيح
+    تعديل النصوص العربية التي تم استخراجها بشكل معكوس ومفكك من PDF
     """
-    if isinstance(text, str) and text.strip():
-        try:
-            reshaped_text = arabic_reshaper.reshape(text)
-            bidi_text = get_display(reshaped_text)
-            return bidi_text
-        except Exception:
-            return text
-    return text
+    if not isinstance(text, str) or not text.strip():
+        return text
+    
+    # فحص ما إذا كان النص يحتوي على حروف عربية
+    has_arabic = any('\u0600' <= char <= '\u06FF' for char in text)
+    if not has_arabic:
+        return text
+
+    # إذا كان النص مجمعاً بشكل معكوس من اليسار لليمين، نقوم بعكس النص أولاً
+    reversed_text = text[::-1]
+    
+    # ثم نعيد تشكيل الحروف لترتبط ببعضها بشكل صحيح
+    reshaped = arabic_reshaper.reshape(reversed_text)
+    return reshaped
 
 # ---------------------------------------------------------
 # 2. إعدادات الصفحة
@@ -95,7 +101,7 @@ TRANSLATIONS = {
 }
 
 # ---------------------------------------------------------
-# 4. شريط الخيارات العلوي (المظهر الفاتح افتراضيًا)
+# 4. شريط الخيارات العلوي
 # ---------------------------------------------------------
 top_col1, top_col2 = st.columns([1, 1])
 
@@ -297,10 +303,6 @@ with tab1:
                     for idx, file in enumerate(uploaded_files):
                         if file.name.endswith('.csv'):
                             df = pd.read_csv(file)
-                            # تصحيح النصوص في ملف CSV
-                            df = df.applymap(fix_arabic_text)
-                            df.columns = [fix_arabic_text(col) for col in df.columns]
-                            
                             sheet_name = f"CSV_{idx+1}"[:31]
                             df.to_excel(writer, sheet_name=sheet_name, index=False)
                             tables_count += 1
@@ -313,10 +315,10 @@ with tab1:
                                         if not table:
                                             continue
                                         
-                                        # تجهيز الصفوف وتعديل النص
+                                        # معالجة كل خلية في الجدول بعكس السلسلة وتعديل الحروف
                                         cleaned_table = []
                                         for row in table:
-                                            cleaned_row = [fix_arabic_text(cell) for cell in row]
+                                            cleaned_row = [fix_pdf_arabic(cell) for cell in row]
                                             cleaned_table.append(cleaned_row)
 
                                         if len(cleaned_table) > 1:
