@@ -7,7 +7,7 @@ import io
 import re
 
 # ---------------------------------------------------------
-# 1. نظام تصحيح وإصلاح النصوص العربية القادم من الـ PDF
+# 1. نظام تصحيح وإصلاح النصوص العربية بدقة ودون قلب الحروف
 # ---------------------------------------------------------
 def smart_arabic_ai_fix(text):
     if not isinstance(text, str) or not text.strip():
@@ -16,21 +16,16 @@ def smart_arabic_ai_fix(text):
     text = text.replace('.س.ر', 'ر.س.').replace('س.ر.', 'ر.س.')
     text = re.sub(r'\s+', ' ', text).strip()
 
-    if any('\u0600' <= char <= '\u06FF' for char in text):
-        words = text.split()
-        corrected_words = []
-        for word in words:
-            if any('\u0600' <= char <= '\u06FF' for char in word):
-                fixed_word = word[::-1]
-                corrected_words.append(fixed_word)
-            else:
-                corrected_words.append(word)
-        return " ".join(corrected_words[::-1])
-
-    return text
+    # استخدام مكتبتي arabic_reshaper و bidi لضبط النصوص العربية المقلوبة في الـ PDF
+    try:
+        reshaped_text = arabic_reshaper.reshape(text)
+        bidi_text = get_display(reshaped_text)
+        return bidi_text
+    except Exception:
+        return text
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول وعكس ترتيب الأعمدة لتتطابق مع اليمين لليسار
+# 2. دالة استخراج الجداول وحفظ الترتيب الطبيعي للأعمدة
 # ---------------------------------------------------------
 def extract_and_combine_tables(uploaded_files):
     all_dfs = []
@@ -86,10 +81,7 @@ def extract_and_combine_tables(uploaded_files):
                         if df.empty or df.shape[0] < 2:
                             continue
 
-                        # تصحيح الاتجاه وعكس الأعمدة لتتوافق مع اللغة العربية (من اليمين لليسار)
-                        df = df.iloc[:, ::-1]
-
-                        # تثبيت الصف الأول كعناوين صحيحة بعد إعادة الترتيب
+                        # الحفاظ على الترتيب الأصلي للأعمدة بدون قلب عشوائي
                         raw_headers = [str(col).replace('\n', ' ') if col is not None else "" for col in df.iloc[0]]
                         fixed_headers = [smart_arabic_ai_fix(h) for h in raw_headers]
                         
