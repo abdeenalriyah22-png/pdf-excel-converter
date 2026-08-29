@@ -13,10 +13,8 @@ def fix_pdf_text_cell(text):
     if not isinstance(text, str) or not text.strip():
         return text
 
-    # إصلاح الأخطاء الشائعة للعملة
     text = text.replace('.س.ر', 'ر.س.').replace('س.ر.', 'ر.س.')
 
-    # تقسيم النص إلى أجزاء (كلمات عربية، إنجليزية، أرقام ورموز)
     tokens = re.findall(r'[\u0600-\u06FF\ufb50-\ufdff\ufe70-\ufeff]+|[A-Za-z0-9\$\.,%\-\/]+|[^\w\s]|\s+', text)
     
     processed_tokens = []
@@ -25,7 +23,6 @@ def fix_pdf_text_cell(text):
     def flush_arabic_buffer():
         if arabic_buffer:
             joined_arabic = "".join(arabic_buffer)
-            # إعادة ترتيب الكلمات العربية لتظهر بشكل طبيعي وصحيح بصرياً
             words = joined_arabic.split()
             if len(words) > 1:
                 joined_arabic = " ".join(words[::-1])
@@ -48,7 +45,7 @@ def fix_pdf_text_cell(text):
     return "".join(processed_tokens)
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول ودمجها بمرونة لتجنب تعارض الأعمدة
+# 2. دالة استخراج الجداول ودمجها بآمن طريقة ممكنة لـ Pandas
 # ---------------------------------------------------------
 def extract_and_combine_tables(uploaded_files):
     all_dfs = []
@@ -68,6 +65,7 @@ def extract_and_combine_tables(uploaded_files):
                 except Exception:
                     df = df.applymap(fix_pdf_text_cell)
                 df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+                df = df.reset_index(drop=True)
                 all_dfs.append(df)
             except Exception as e:
                 st.error(f"خطأ في معالجة ملف CSV: {e}")
@@ -113,25 +111,29 @@ def extract_and_combine_tables(uploaded_files):
                             df = df.applymap(fix_pdf_text_cell)
                             df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
 
+                        df = df.reset_index(drop=True)
                         all_dfs.append(df)
 
     if not all_dfs:
         return None
 
-    # دمج الجداول مع توحيد الأعمدة بناءً على المواقع لتجنب أي أخطاء مطابقة
-    try:
-        master_df = pd.concat(all_dfs, ignore_index=True, join='outer')
-    except Exception:
-        # حل بديل في حال اختلاف عدد الأعمدة تماماً: توحيدها بأقصى عدد أعمدة
-        max_cols = max(df.shape[1] for df in all_dfs)
-        standardized_dfs = []
-        for df in all_dfs:
-            if df.shape[1] < max_cols:
-                for i in range(df.shape[1], max_cols):
-                    df[f"Col_{i}"] = ""
-            standardized_dfs.append(df)
-        master_df = pd.concat(standardized_dfs, ignore_index=True)
+    # توحيد عدد الأعمدة لجميع الجداول المستخرجة لتجنب تضارب الفهارس
+    max_cols = max(df.shape[1] for df in all_dfs)
+    standardized_dfs = []
+    
+    for df in all_dfs:
+        # تحويل أسماء الأعمدة إلى نصوص عادية لمنع أي تداخل
+        df.columns = [f"Col_{i}" for i in range(df.shape[1])]
+        if df.shape[1] < max_cols:
+            for i in range(df.shape[1], max_cols):
+                df[f"Col_{i}"] = ""
+        # إعادة ترتيب الأعمدة بالتساوي
+        df = df[[f"Col_{i}" for i in range(max_cols)]]
+        df = df.reset_index(drop=True)
+        standardized_dfs.append(df)
 
+    # الدمج النهائي الآمن مع تجاهل الفهارس القديمة تماماً
+    master_df = pd.concat(standardized_dfs, ignore_index=True)
     return master_df
 
 # ---------------------------------------------------------
@@ -424,7 +426,6 @@ with tab1:
                     import openpyxl
                     wb = openpyxl.load_workbook(output_buffer)
                     ws = wb["Master_Data"]
-                    # ضبط اتجاه الشيت ليطابق القراءة السليمة
                     ws.views.sheetView[0].rightToLeft = False
                     
                     final_buffer = io.BytesIO()
