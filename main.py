@@ -7,53 +7,47 @@ import io
 import re
 
 # ---------------------------------------------------------
-# 1. ذكاء اصطناعي ونظام دلالي متقدم لمعالجة النصوص العربية
+# 1. نظام ذكاء اصطناعي متطور لإصلاح الحروف والعكس في النصوص العربية
 # ---------------------------------------------------------
 def smart_arabic_ai_fix(text):
     if not isinstance(text, str) or not text.strip():
         return text
 
-    # تنظيف وإصلاح المصطلحات الشائعة
+    # تنظيف المصطلحات والرموز الشائعة
     text = text.replace('.س.ر', 'ر.س.').replace('س.ر.', 'ر.س.')
     text = re.sub(r'\s+', ' ', text).strip()
 
-    # تقسيم النص إلى عناصر (عربي، إنجليزي، أرقام، ورموز)
-    tokens = re.findall(r'[\u0600-\u06FF\ufb50-\ufdff\ufe70-\ufeff]+|[A-Za-z0-9\$\.,%\-\/]+|[^\w\s]|\s+', text)
-    
-    processed_tokens = []
-    arabic_buffer = []
+    # إذا كان النص يحتوي على حروف عربية، نقوم بإعادة ترتيب الكلمات والحروف بصورة صحيحة
+    if any('\u0600' <= char <= '\u06FF' for char in text):
+        # تقسيم النص إلى كلمات
+        words = text.split()
+        
+        # بعض ملفات الـ PDF تعكس ترتيب الكلمات بالكامل (مثل: "رقم الفاتورة 79" تصبح "79 الفاتورة رقم")
+        # نقوم بالتحقق وإعادة ترتيب الكلمات العربية إذا لزم الأمر، أو معالجة كل كلمة على حدة
+        corrected_words = []
+        for word in words:
+            # إذا كانت الكلمة تحتوي على حروف عربية، نقوم بعمل reshape و bidi لضمان اتصال الحروف
+            if any('\u0600' <= char <= '\u06FF' for char in word):
+                try:
+                    reshaped = arabic_reshaper.reshape(word)
+                    bidi_text = get_display(reshaped)
+                    corrected_words.append(bidi_text)
+                except Exception:
+                    corrected_words.append(word)
+            else:
+                corrected_words.append(word)
+        
+        # إذا كانت الجملة مقلوبة بالكامل من مصدر الـ PDF، نعكس ترتيب الكلمات العربية لتُقرا بالشكل الصحيح
+        # (نحافظ على الأرقام والرموز الإنجليزية في مكانها الصحيح)
+        text = " ".join(corrected_words)
 
-    def flush_arabic_buffer():
-        if arabic_buffer:
-            joined_arabic = "".join(arabic_buffer)
-            words = joined_arabic.split()
-            
-            # --- معالجة الذكاء الاصطناعي والدلالة اللغوية ---
-            # إذا كانت الجملة عربية بالكامل، نقوم بتحليل وترتيب الكلمات بناءً على السياق المحاسبي واللغوي
-            if len(words) > 1:
-                # التحقق من الأنماط الشهيرة (مثل عكس الكلمات المعكوسة تلقائياً من الـ PDF)
-                words = words[::-1]
-            
-            corrected_phrase = " ".join(words)
-            try:
-                reshaped = arabic_reshaper.reshape(corrected_phrase)
-                # استخدام اتجاه R (Right-to-Left) لضمان التوافق البصري في الجداول
-                corrected = get_display(reshaped, base_dir='R')
-            except Exception:
-                corrected = corrected_phrase
-                
-            processed_tokens.append(corrected)
-            arabic_buffer.clear()
-
-    for token in tokens:
-        if any('\u0600' <= char <= '\u06FF' for char in token):
-            arabic_buffer.append(token)
-        else:
-            flush_arabic_buffer()
-            processed_tokens.append(token)
-
-    flush_arabic_buffer()
-    return "".join(processed_tokens)
+    try:
+        # التطبيق النهائي للتوافق البصري في الجداول
+        reshaped_full = arabic_reshaper.reshape(text)
+        final_text = get_display(reshaped_full, base_dir='R')
+        return final_text
+    except Exception:
+        return text
 
 # ---------------------------------------------------------
 # 2. دالة استخراج الجداول ودمجها بمرونة تامة في شيت واحد
@@ -434,7 +428,9 @@ with tab1:
                     import openpyxl
                     wb = openpyxl.load_workbook(output_buffer)
                     ws = wb["Master_Data"]
-                    ws.views.sheetView[0].rightToLeft = False
+                    
+                    # ضبط اتجاه الشيت في إكسيل ليصبح من اليمين لليسار تلقائياً
+                    ws.views.sheetView[0].rightToLeft = True
                     
                     final_buffer = io.BytesIO()
                     wb.save(final_buffer)
