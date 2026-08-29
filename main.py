@@ -35,18 +35,27 @@ def fix_pdf_text_cell(text):
     return corrected
 
 # ---------------------------------------------------------
-# 2. دالة تحويل الأعمدة الرقمية لمنع ظهور علامة التعجب
+# 2. دالة تحويل الأعمدة الرقمية لمنع ظهور علامة التعجب نهائياً
 # ---------------------------------------------------------
 def clean_numeric_columns(df):
     for col in df.columns:
-        # محاولة تحويل الأعمدة التي تحتوي على أقيم رقمية بحتة أو بعد إزالة الرموز إلى أرقام حقيقية
-        try:
-            # إزالة المسافات الزائدة
-            converted = pd.to_numeric(df[col].astype(str).str.strip(), errors='ignore')
-            if pd.api.types.is_numeric_dtype(converted):
-                df[col] = converted
-        except Exception:
-            pass
+        # تحويل السلسلة النصية وإزالة المسافات ورموز العملات أو الفواصل لضمان التحويل السليم
+        s = df[col].astype(str).str.strip()
+        
+        # تنظيف الرموز الشائعة لتسهيل التحويل الرقمي
+        cleaned = s.str.replace('US$', '', regex=False)\
+                   .str.replace('ر.س', '', regex=False)\
+                   .str.replace(',', '', regex=False)\
+                   .str.strip()
+        
+        numeric_col = pd.to_numeric(cleaned, errors='coerce')
+        
+        # إذا كان العمود يحتوي على نسبة جيدة من الأرقام، نحوله بالكامل ليتم تخزينه فرقم حقيقي
+        if numeric_col.notna().sum() > 0:
+            # التحقق إذا كانت الأغلبية أرقاماً
+            valid_ratio = numeric_col.notna().sum() / len(df)
+            if valid_ratio >= 0.3: # إذا كان 30% أو أكثر من الخلية رقماً
+                df[col] = numeric_col
     return df
 
 # ---------------------------------------------------------
@@ -102,7 +111,7 @@ def extract_tables_from_pdf(pdf_file):
                     df = df.applymap(fix_pdf_text_cell)
                     df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
 
-                # تنزيل وتحويل الأرقام لتتخلص من علامة التعجب
+                # تنظيف وتحويل الأرقام لتتخلص من علامة التعجب وتصبح أرقاماً حقيقية
                 df = clean_numeric_columns(df)
 
                 sheet_name = f"P{page_num+1}_T{tbl_idx+1}"[:31]
