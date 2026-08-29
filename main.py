@@ -35,12 +35,26 @@ def fix_pdf_text_cell(text):
     return corrected
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول المتقدمة (محدثة لدعم كافة أنواع الجداول)
+# 2. دالة تحويل الأعمدة الرقمية لمنع ظهور علامة التعجب
+# ---------------------------------------------------------
+def clean_numeric_columns(df):
+    for col in df.columns:
+        # محاولة تحويل الأعمدة التي تحتوي على أقيم رقمية بحتة أو بعد إزالة الرموز إلى أرقام حقيقية
+        try:
+            # إزالة المسافات الزائدة
+            converted = pd.to_numeric(df[col].astype(str).str.strip(), errors='ignore')
+            if pd.api.types.is_numeric_dtype(converted):
+                df[col] = converted
+        except Exception:
+            pass
+    return df
+
+# ---------------------------------------------------------
+# 3. دالة استخراج الجداول المتقدمة
 # ---------------------------------------------------------
 def extract_tables_from_pdf(pdf_file):
     extracted_dfs = []
     
-    # قائمة استراتيجيات بحث متدرجة لالتقاط الجداول الصامتة أو بدون خطوط
     strategies = [
         {"vertical_strategy": "lines", "horizontal_strategy": "lines"},
         {"vertical_strategy": "text", "horizontal_strategy": "text", "snap_tolerance": 5, "join_tolerance": 5},
@@ -50,8 +64,6 @@ def extract_tables_from_pdf(pdf_file):
     with pdfplumber.open(pdf_file) as pdf:
         for page_num, page in enumerate(pdf.pages):
             tables = []
-            
-            # تجربة الاستراتيجيات تباعاً حتى يتم العثور على جدول
             for settings in strategies:
                 try:
                     tables = page.extract_tables(table_settings=settings)
@@ -60,7 +72,6 @@ def extract_tables_from_pdf(pdf_file):
                 except Exception:
                     continue
             
-            # إذا فشلت الاستراتيجيات المتقدمة، نستخدم الافتراضية
             if not tables:
                 try:
                     tables = page.extract_tables()
@@ -76,17 +87,14 @@ def extract_tables_from_pdf(pdf_file):
                 
                 df = pd.DataFrame(table)
                 
-                # تنظيف الصفوف والأعمدة الفارغة تماماً
                 df = df.dropna(how='all').dropna(how='all', axis=1)
                 if df.empty or df.shape[0] < 1:
                     continue
 
-                # تعيين الصف الأول كعناوين إذا كان مناسباً
                 if df.shape[0] > 1:
                     df.columns = [str(col) if col is not None else "" for col in df.iloc[0]]
                     df = df[1:].reset_index(drop=True)
 
-                # معالجة النصوص المحاسبية العربية (باستخدام map المتوافقة مع Pandas الحديثة)
                 try:
                     df = df.map(fix_pdf_text_cell)
                     df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
@@ -94,13 +102,16 @@ def extract_tables_from_pdf(pdf_file):
                     df = df.applymap(fix_pdf_text_cell)
                     df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
 
+                # تنزيل وتحويل الأرقام لتتخلص من علامة التعجب
+                df = clean_numeric_columns(df)
+
                 sheet_name = f"P{page_num+1}_T{tbl_idx+1}"[:31]
                 extracted_dfs.append((sheet_name, df))
                 
     return extracted_dfs
 
 # ---------------------------------------------------------
-# 3. إعدادات الصفحة
+# 4. إعدادات الصفحة
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="المحاسب الذكي Pro",
@@ -110,7 +121,7 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 4. القاموس متعدد اللغات
+# 5. القاموس متعدد اللغات
 # ---------------------------------------------------------
 TRANSLATIONS = {
     "ar": {
@@ -127,7 +138,7 @@ TRANSLATIONS = {
         "ocr_upload_label": "قم بسحب وإفلات صور المستندات (PNG, JPG, JPEG) هنا",
         "convert_btn": "⚡ بدء تحويل الملفات واستخراج الجداول",
         "download_btn": "📥 تحميل ملف Excel المنسق",
-        "processing": "جاري معالجة الملفات وإصلاح النصوص العربية...",
+        "processing": "جاري معالجة الملفات وإصلاح النصوص والأرقام...",
         "success": "تمت معالجة الملفات واستخراج الجداول بنجاح!",
         "no_tables": "لم يتم العثور على جداول صالحة. تأكد أن ملف الـ PDF يحتوي على نصوص جدولية وليست صوراً مسحوحة ضوئياً (Scanned).",
         "select_file_warn": "يرجى رفع ملف واحد على الأقل أولاً."
@@ -146,7 +157,7 @@ TRANSLATIONS = {
         "ocr_upload_label": "Drag and drop document images (PNG, JPG, JPEG) here",
         "convert_btn": "⚡ Start Converting Files & Extract Tables",
         "download_btn": "📥 Download Formatted Excel File",
-        "processing": "Processing files and extracting tables...",
+        "processing": "Processing files and extracting numbers...",
         "success": "Files processed successfully!",
         "no_tables": "No valid tables found. Ensure the PDF contains text tables and not scanned images.",
         "select_file_warn": "Please upload at least one file first."
@@ -173,7 +184,7 @@ TRANSLATIONS = {
 }
 
 # ---------------------------------------------------------
-# 5. شريط الخيارات العلوي
+# 6. شريط الخيارات العلوي
 # ---------------------------------------------------------
 top_col1, top_col2 = st.columns([1, 1])
 
@@ -198,7 +209,7 @@ direction = "rtl" if lang_code in ["ar", "ur"] else "ltr"
 text_align = "right" if direction == "rtl" else "left"
 
 # ---------------------------------------------------------
-# 6. تنسيقات CSS لدعم الاتجاه والتصميم
+# 7. تنسيقات CSS
 # ---------------------------------------------------------
 bg_color = "#0b0f19" if is_dark else "#f1f5f9"
 text_primary = "#f8fafc" if is_dark else "#0f172a"
@@ -263,7 +274,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 7. التبويبات والمعالجة
+# 8. التبويبات والمعالجة
 # ---------------------------------------------------------
 tab1, tab2 = st.tabs([t['tab_convert'], t['tab_ocr']])
 
@@ -303,6 +314,7 @@ with tab1:
                                 except Exception:
                                     df = df.applymap(fix_pdf_text_cell)
                                 df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+                                df = clean_numeric_columns(df)
                                 
                                 sheet_name = f"CSV_{idx+1}"[:31]
                                 df.to_excel(writer, sheet_name=sheet_name, index=False)
@@ -350,7 +362,7 @@ with tab2:
     )
 
 # ---------------------------------------------------------
-# 8. التوقيع السفلي
+# 9. التوقيع السفلي
 # ---------------------------------------------------------
 st.markdown(f"""
 <div class="footer-motto-wrapper">
