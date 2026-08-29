@@ -6,7 +6,7 @@ import pandas as pd
 import io
 
 # ---------------------------------------------------------
-# 1. دالة معالجة واستعدالة النصوص والمصطلحات المحاسبية
+# 1. دالة معالجة واستعادة النصوص والمصطلحات المحاسبية
 # ---------------------------------------------------------
 def fix_pdf_text_cell(text):
     if not isinstance(text, str) or not text.strip():
@@ -20,62 +20,82 @@ def fix_pdf_text_cell(text):
     if not has_arabic:
         return text
 
-    # تقسيم الكلمات وإعادة ترتيب الكلمات المعكوسة
+    # تقسيم الكلمات وإعادة ترتيب الكلمات المعكوسة (إذا لزم الأمر حسب طبيعة استخراج pdfplumber)
     words = text.split()
     reversed_words = words[::-1]
     reconstructed_text = " ".join(reversed_words)
 
     # تطبيق إعادة التشكيل والاتجاه RTL
-    reshaped = arabic_reshaper.reshape(reconstructed_text)
-    corrected = get_display(reshaped)
-    
+    try:
+        reshaped = arabic_reshaper.reshape(reconstructed_text)
+        corrected = get_display(reshaped)
+    except Exception:
+        corrected = text
+        
     return corrected
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول المتقدمة (بدعم الجداول بدون خطوط)
+# 2. دالة استخراج الجداول المتقدمة (محدثة لدعم كافة أنواع الجداول)
 # ---------------------------------------------------------
 def extract_tables_from_pdf(pdf_file):
     extracted_dfs = []
     
-    # إعدادات متقدمة للتعرف على الجداول النصية بدون خطوط شبكية
-    table_settings = {
-        "vertical_strategy": "text",
-        "horizontal_strategy": "text",
-        "snap_tolerance": 3,
-        "join_tolerance": 3,
-        "edge_min_length": 3
-    }
+    # قائمة استراتيجيات بحث متدرجة لالتقاط الجداول الصامتة أو بدون خطوط
+    strategies = [
+        {"vertical_strategy": "lines", "horizontal_strategy": "lines"},
+        {"vertical_strategy": "text", "horizontal_strategy": "text", "snap_tolerance": 5, "join_tolerance": 5},
+        {"vertical_strategy": "explicit", "horizontal_strategy": "text"}
+    ]
     
     with pdfplumber.open(pdf_file) as pdf:
         for page_num, page in enumerate(pdf.pages):
-            # محاولة الاستخراج الأول بالإعدادات الافتراضية
-            tables = page.extract_tables()
+            tables = []
             
-            # إذا لم يجد جداول بخطوط، نستخدم الاستخراج المعزز للنصوص
-            if not tables or len(tables) == 0:
-                tables = page.extract_tables(table_settings=table_settings)
+            # تجربة الاستراتيجيات تباعاً حتى يتم العثور على جدول
+            for settings in strategies:
+                try:
+                    tables = page.extract_tables(table_settings=settings)
+                    if tables and len(tables) > 0:
+                        break
+                except Exception:
+                    continue
             
+            # إذا فشلت الاستراتيجيات المتقدمة، نستخدم الافتراضية
+            if not tables:
+                try:
+                    tables = page.extract_tables()
+                except Exception:
+                    tables = []
+            
+            if not tables:
+                continue
+                
             for tbl_idx, table in enumerate(tables):
-                if not table or len(table) < 2:
+                if not table or len(table) < 1:
                     continue
                 
                 df = pd.DataFrame(table)
                 
-                # تنظيف الصفوف والأعمدة الفارغة بالكامل
+                # تنظيف الصفوف والأعمدة الفارغة تماماً
                 df = df.dropna(how='all').dropna(how='all', axis=1)
-                if df.empty or df.shape[0] < 2:
+                if df.empty or df.shape[0] < 1:
                     continue
 
-                # 1. ضبط ترتيب الأعمدة إلى اليمين
-                df = df.iloc[:, ::-1]
-                
-                # 2. تعيين الصف الأول كعناوين
-                df.columns = df.iloc[0]
-                df = df[1:].reset_index(drop=True)
-                
-                # 3. معالجة النصوص المحاسبية العربية والعناوين
-                df = df.applymap(fix_pdf_text_cell)
-                df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+                # تعيين الصف الأول كعناوين إذا كان مناسباً
+                if df.shape[0] > 1:
+                    df.columns = [str(col) if col is not None else "" for col.iloc[0] if hasattr(df, 'iloc')] rescue None
+                    # الطريقة الآمنة لتعيين الهيدر:
+                    df.columns = [str(c) for c in df.iloc[0]]
+                    df = df[1:].reset_index(drop=True)
+
+                # معالجة النصوص المحاسبية العربية (باستخدام map المتوافقة مع Pandas الحديثة)
+                try:
+                    df = df.map(fix_pdf_text_cell)
+                    df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+                except Exception:
+                    # توافقية مع الإصدارات القديمة إن وجدت
+                    df = df.applymap(fix_pdf_text_cell)
+                    df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
 
                 sheet_name = f"P{page_num+1}_T{tbl_idx+1}"[:31]
                 extracted_dfs.append((sheet_name, df))
@@ -112,7 +132,7 @@ TRANSLATIONS = {
         "download_btn": "📥 تحميل ملف Excel المنسق",
         "processing": "جاري معالجة الملفات وإصلاح النصوص العربية...",
         "success": "تمت معالجة الملفات واستخراج الجداول بنجاح!",
-        "no_tables": "لم يتم العثور على جداول صالحة داخل الملفات المرفوعة.",
+        "no_tables": "لم يتم العثور على جداول صالحة. تأكد أن ملف الـ PDF يحتوي على نصوص جدولية وليست صوراً مسحوحة ضوئياً (Scanned).",
         "select_file_warn": "يرجى رفع ملف واحد على الأقل أولاً."
     },
     "en": {
@@ -131,7 +151,7 @@ TRANSLATIONS = {
         "download_btn": "📥 Download Formatted Excel File",
         "processing": "Processing files and extracting tables...",
         "success": "Files processed successfully!",
-        "no_tables": "No valid tables were found in the uploaded files.",
+        "no_tables": "No valid tables found. Ensure the PDF contains text tables and not scanned images.",
         "select_file_warn": "Please upload at least one file first."
     },
     "ur": {
@@ -150,7 +170,7 @@ TRANSLATIONS = {
         "download_btn": "📥 ڈاؤن لوڈ کریں فارمیٹ شدہ ایکسل فائل",
         "processing": "فائلوں پر کارروائی ہو رہی ہے...",
         "success": "فائلیں کامیابی کے ساتھ پروسیس ہو گئیں!",
-        "no_tables": "اپ لوڈ کردہ فائلوں میں کوئی ٹیبل نہیں ملا۔",
+        "no_tables": "کوئی جدول نہیں ملا۔ یقینی بنائیں کہ PDF میں اسکین شدہ تصاویر کے بجائے متن موجود ہے۔",
         "select_file_warn": "برائے مہربانی پہلے کم از کم ایک فائل اپ لوڈ کریں۔"
     }
 }
@@ -199,60 +219,25 @@ st.markdown(f"""
     text-align: {text_align};
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }}
-
 .stMarkdown, .stSelectbox, .stFileUploader, .stTabs, .stButton {{
     direction: {direction};
     text-align: {text_align};
 }}
-
-.spheres-container {{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 90px;
-    position: relative;
-    perspective: 800px;
-}}
-
-.sphere {{
-    border-radius: 50%;
-    position: absolute;
-    background: radial-gradient(circle at 35% 35%, #60a5fa, #2563eb, #1e3a8a);
-    box-shadow: inset -5px -5px 12px rgba(0, 0, 0, 0.4),
-                inset 5px 5px 12px rgba(255, 255, 255, 0.7),
-                0 10px 20px rgba(0, 0, 0, 0.3);
-    animation: bounce 2.4s infinite ease-in-out alternate;
-}}
-
-.s1 {{ width: 44px; height: 44px; left: 15%; animation-delay: 0s; animation-duration: 2.1s; }}
-.s2 {{ width: 24px; height: 24px; left: 38%; animation-delay: 0.4s; animation-duration: 1.7s; background: radial-gradient(circle at 35% 35%, #f43f5e, #e11d48, #881337); }}
-.s3 {{ width: 50px; height: 50px; left: 60%; animation-delay: 0.8s; animation-duration: 2.5s; background: radial-gradient(circle at 35% 35%, #34d399, #059669, #064e3b); }}
-.s4 {{ width: 20px; height: 20px; left: 82%; animation-delay: 0.2s; animation-duration: 1.4s; background: radial-gradient(circle at 35% 35%, #fbbf24, #d97706, #78350f); }}
-
-@keyframes bounce {{
-    0% {{ transform: translateY(22px) scale(0.88) rotateX(15deg); }}
-    50% {{ transform: translateY(-18px) scale(1.1) rotateX(-20deg); }}
-    100% {{ transform: translateY(15px) scale(0.92) rotateX(25deg); }}
-}}
-
 .main-header {{
     text-align: center;
     padding: 10px 0 20px 0;
 }}
-
 .main-title {{
     font-size: 2.6rem;
     font-weight: 800;
     color: {text_primary};
     margin: 0;
 }}
-
 .main-subtitle {{
     font-size: 1.05rem;
     color: {text_secondary};
     margin-top: 6px;
 }}
-
 .card-box {{
     background-color: {card_bg};
     border: 1px solid {card_border};
@@ -261,13 +246,11 @@ st.markdown(f"""
     margin-top: 10px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.06);
 }}
-
 .footer-motto-wrapper {{
     text-align: center;
     margin-top: 40px;
     margin-bottom: 20px;
 }}
-
 .footer-motto-box {{
     text-align: center;
     font-size: 1.1rem;
@@ -278,53 +261,12 @@ st.markdown(f"""
     border-radius: 25px;
     display: inline-block;
     border: 1px solid {'rgba(59, 130, 246, 0.3)' if is_dark else 'rgba(59, 130, 246, 0.2)'};
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }}
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 7. الهيدر الرئيسي
-# ---------------------------------------------------------
-header_col1, header_col2, header_col3 = st.columns([1.2, 2.6, 1.2])
-
-with header_col1:
-    st.markdown("""
-    <div class="spheres-container">
-        <div class="sphere s1"></div>
-        <div class="sphere s2"></div>
-        <div class="sphere s3"></div>
-        <div class="sphere s4"></div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with header_col2:
-    st.markdown(f"""
-    <div class="main-header">
-        <h1 class="main-title">{t['title']}</h1>
-        <p class="main-subtitle">{t['subtitle']}</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-with header_col3:
-    st.markdown("""
-    <div style="display: flex; justify-content: center; align-items: center; height: 90px;">
-        <svg width="100%" height="75" viewBox="0 0 300 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="300" height="80" rx="12" fill="#3b82f6" fill-opacity="0.15"/>
-            <rect x="20" y="35" width="18" height="30" rx="3" fill="#2563eb"/>
-            <rect x="50" y="20" width="18" height="45" rx="3" fill="#3b82f6"/>
-            <rect x="80" y="45" width="18" height="20" rx="3" fill="#60a5fa"/>
-            <rect x="110" y="15" width="18" height="50" rx="3" fill="#2563eb"/>
-            <rect x="140" y="30" width="18" height="35" rx="3" fill="#3b82f6"/>
-            <rect x="170" y="25" width="18" height="40" rx="3" fill="#60a5fa"/>
-            <rect x="200" y="10" width="18" height="55" rx="3" fill="#2563eb"/>
-            <path d="M 20 40 Q 80 10 140 30 T 260 15" stroke="#10b981" stroke-width="4" fill="none" stroke-linecap="round"/>
-        </svg>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ---------------------------------------------------------
-# 8. التبويبات والمعالجة
+# 7. التبويبات والمعالجة
 # ---------------------------------------------------------
 tab1, tab2 = st.tabs([t['tab_convert'], t['tab_ocr']])
 
@@ -354,36 +296,31 @@ with tab1:
                 output_buffer = io.BytesIO()
                 tables_count = 0
                 
-                writer = pd.ExcelWriter(output_buffer, engine='openpyxl')
-                
-                for idx, file in enumerate(uploaded_files):
-                    if file.name.endswith('.csv'):
-                        try:
-                            df = pd.read_csv(file)
-                            df = df.applymap(fix_pdf_text_cell)
-                            df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
-                            
-                            sheet_name = f"CSV_{idx+1}"[:31]
-                            df.to_excel(writer, sheet_name=sheet_name, index=False)
-                            tables_count += 1
-                        except Exception:
-                            pass
-                    
-                    elif file.name.endswith('.pdf'):
-                        try:
-                            extracted_tables = extract_tables_from_pdf(file)
-                            for sheet_name, df in extracted_tables:
+                with pd.ExcelWriter(output_buffer, engine='openpyxl') as writer:
+                    for idx, file in enumerate(uploaded_files):
+                        if file.name.endswith('.csv'):
+                            try:
+                                df = pd.read_csv(file)
+                                try:
+                                    df = df.map(fix_pdf_text_cell)
+                                except Exception:
+                                    df = df.applymap(fix_pdf_text_cell)
+                                df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+                                
+                                sheet_name = f"CSV_{idx+1}"[:31]
                                 df.to_excel(writer, sheet_name=sheet_name, index=False)
                                 tables_count += 1
-                        except Exception:
-                            pass
-
-                # حالة احتياطية لمنع أخطاء التصدير
-                if tables_count == 0:
-                    df_empty = pd.DataFrame({"ملاحظة": ["لم يتم العثور على جداول صالحة"]})
-                    df_empty.to_excel(writer, sheet_name="Sheet1", index=False)
-
-                writer.close()
+                            except Exception as e:
+                                st.error(f"خطأ في معالجة ملف CSV: {e}")
+                        
+                        elif file.name.endswith('.pdf'):
+                            try:
+                                extracted_tables = extract_tables_from_pdf(file)
+                                for sheet_name, df in extracted_tables:
+                                    df.to_excel(writer, sheet_name=sheet_name, index=False)
+                                    tables_count += 1
+                            except Exception as e:
+                                st.error(f"خطأ في استخراج جدول الـ PDF: {e}")
 
                 if tables_count > 0:
                     st.success(t['success'])
@@ -416,7 +353,7 @@ with tab2:
     )
 
 # ---------------------------------------------------------
-# 9. التوقيع السفلي
+# 8. التوقيع السفلي
 # ---------------------------------------------------------
 st.markdown(f"""
 <div class="footer-motto-wrapper">
