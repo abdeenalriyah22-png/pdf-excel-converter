@@ -30,7 +30,7 @@ def smart_arabic_ai_fix(text):
     return text
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول وتوحيد العناوين بالشكل الصحيح
+# 2. دالة استخراج الجداول وتوحيد الأعمدة والعناوين بأمان تامة
 # ---------------------------------------------------------
 def extract_and_combine_tables(uploaded_files):
     all_dfs = []
@@ -86,12 +86,6 @@ def extract_and_combine_tables(uploaded_files):
                         if df.empty or df.shape[0] < 1:
                             continue
 
-                        # جعل الصف الأول هو أسماء الأعمدة إذا وجد
-                        if df.shape[0] > 1:
-                            raw_columns = [str(col) if col is not None and str(col).strip() != "" else f"عمود_{i}" for i, col in enumerate(df.iloc[0])]
-                            df.columns = [smart_arabic_ai_fix(col) for col in raw_columns]
-                            df = df[1:].reset_index(drop=True)
-
                         try:
                             df = df.map(smart_arabic_ai_fix)
                         except Exception:
@@ -105,16 +99,21 @@ def extract_and_combine_tables(uploaded_files):
     if not all_dfs:
         return None
 
-    # توحيد الأعمدة بناءً على أقصى عدد أعمدة مع الحفاظ على التسميات النصية وليست Col_
+    # توحيد عدد الأعمدة لجميع الجداول المستخرجة بناءً على أقصى عدد أعمدة موجود
     max_cols = max(df.shape[1] for df in all_dfs)
     standardized_dfs = []
     
     for df in all_dfs:
-        current_cols = list(df.columns)
-        if len(current_cols) < max_cols:
-            for i in range(len(current_cols), max_cols):
-                current_cols.append(f"عمود_{i}")
-        df.columns = current_cols[:max_cols]
+        # إعادة تعيين أسماء الأعمدة بأرقام مؤقتة لتجنب أي تعارض في الحجم
+        df.columns = [f"col_{i}" for i in range(df.shape[1])]
+        
+        if df.shape[1] < max_cols:
+            for i in range(df.shape[1], max_cols):
+                df[f"col_{i}"] = ""
+        elif df.shape[1] > max_cols:
+            df = df.iloc[:, :max_cols]
+            
+        df.columns = [f"عمود_{i+1}" for i in range(max_cols)]
         df = df.reset_index(drop=True)
         standardized_dfs.append(df)
 
