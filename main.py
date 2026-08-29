@@ -4,9 +4,10 @@ from bidi.algorithm import get_display
 import streamlit as st
 import pandas as pd
 import io
+import re
 
 # ---------------------------------------------------------
-# 1. دالة معالجة واستعادة النصوص والمصطلحات المحاسبية
+# 1. دالة معالجة النصوص الذكية (تحافظ على الأرقام والإنجليزية وترتب العربية)
 # ---------------------------------------------------------
 def fix_pdf_text_cell(text):
     if not isinstance(text, str) or not text.strip():
@@ -15,22 +16,43 @@ def fix_pdf_text_cell(text):
     # إصلاح الأخطاء الخاصة بالعملة
     text = text.replace('.س.ر', 'ر.س.').replace('س.ر.', 'ر.س.')
 
-    # فحص وجود حروف عربية
-    has_arabic = any('\u0600' <= char <= '\u06FF' for char in text)
-    if not has_arabic:
-        return text
+    # تقسيم النص إلى أجزاء (كلمات عربية، إنجليزية، أرقام، وعلامات ترقيم)
+    # نحافظ على الكلمات الإنجليزية والأرقام كما هي، ونقوم بمعالجة الكلمات العربية فقط
+    def process_match(match):
+        word = match.group(0)
+        # فحص إذا كانت الكلمة تحتوي على حروف عربية
+        if any('\u0600' <= char <= '\u06FF' for char in word):
+            try:
+                reshaped = arabic_reshaper.reshape(word)
+                return get_display(reshaped)
+            except Exception:
+                return word
+        return word
 
-    # ضبط الترتيب والبصمة البصرية للنص العربي في ملفات التصدير الخارجية
-    try:
-        reshaped = arabic_reshaper.reshape(text)
-        corrected = get_display(reshaped)
-    except Exception:
-        corrected = text
-        
-    return corrected
+    # معالجة الكلمات العربية فقط داخل النص دون المساس بالأرقام والإنجليزية
+    # نمط يتعرف على الكلمات العربية
+    processed_text = re.sub(r'[\u0600-\u06FF\ufb50-\ufdff\ufe70-\ufeff]+', process_match, text)
+    
+    # إذا كانت الجملة عربية بالكامل وعكس ترتيبها مطلوب بصرياً
+    has_arabic = any('\u0600' <= char <= '\u06FF' for char in text)
+    has_english_or_nums = any(('a' <= char <= 'z') or ('A' <= char <= 'Z') or ('0' <= char <= '9') for char in text)
+    
+    # إذا كانت الخلية تحتوي على عربي خالص، نعيد ترتيب الكلمات لتبدو صحيحة في الإكسيل
+    if has_arabic and not has_english_or_nums:
+        words = text.split()
+        if len(words) > 1:
+            reversed_words = words[::-1]
+            reconstructed = " ".join(reversed_words)
+            try:
+                reshaped = arabic_reshaper.reshape(reconstructed)
+                return get_display(reshaped)
+            except Exception:
+                return text
+
+    return processed_text
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول المتقدمة (محدثة لدعم كافة أنواع الجداول)
+# 2. دالة استخراج الجداول المتقدمة
 # ---------------------------------------------------------
 def extract_tables_from_pdf(pdf_file):
     extracted_dfs = []
@@ -115,7 +137,7 @@ TRANSLATIONS = {
         "ocr_upload_label": "قم بسحب وإفلات صور المستندات (PNG, JPG, JPEG) هنا",
         "convert_btn": "⚡ بدء تحويل الملفات واستخراج الجداول",
         "download_btn": "📥 تحميل ملف Excel المنسق",
-        "processing": "جاري معالجة الملفات وإصلاح اتجاه النصوص العربية...",
+        "processing": "جاري معالجة الملفات وضبط اتجاه النصوص والحفاظ على الأرقام...",
         "success": "تمت معالجة الملفات واستخراج الجداول بنجاح!",
         "no_tables": "لم يتم العثور على جداول صالحة. تأكد أن ملف الـ PDF يحتوي على نصوص جدولية وليست صوراً مسحوحة ضوئياً (Scanned).",
         "select_file_warn": "يرجى رفع ملف واحد على الأقل أولاً."
@@ -134,7 +156,7 @@ TRANSLATIONS = {
         "ocr_upload_label": "Drag and drop document images (PNG, JPG, JPEG) here",
         "convert_btn": "⚡ Start Converting Files & Extract Tables",
         "download_btn": "📥 Download Formatted Excel File",
-        "processing": "Processing files and extracting tables...",
+        "processing": "Processing files and keeping numbers intact...",
         "success": "Files processed successfully!",
         "no_tables": "No valid tables found. Ensure the PDF contains text tables and not scanned images.",
         "select_file_warn": "Please upload at least one file first."
@@ -369,7 +391,6 @@ with tab1:
                 output_buffer = io.BytesIO()
                 tables_count = 0
                 
-                # إنشاء ملف الـ Excel وضبط إعدادات الـ RTL لكل ورقة عمل (Sheet) لمنع انعكاس الحروف
                 with pd.ExcelWriter(output_buffer, engine='openpyxl') as writer:
                     for idx, file in enumerate(uploaded_files):
                         if file.name.endswith('.csv'):
@@ -396,7 +417,6 @@ with tab1:
                             except Exception as e:
                                 st.error(f"خطأ في استخراج جدول الـ PDF: {e}")
 
-                # ضبط اتجاه الأوراق برمجياً في openpyxl لتظهر باليمين لليسار طبيعياً
                 if tables_count > 0:
                     output_buffer.seek(0)
                     import openpyxl
