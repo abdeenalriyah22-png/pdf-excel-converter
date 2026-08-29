@@ -198,7 +198,7 @@ direction = "rtl" if lang_code in ["ar", "ur"] else "ltr"
 text_align = "right" if direction == "rtl" else "left"
 
 # ---------------------------------------------------------
-# 6. الألوان المحدثة والتصميم الاحترافي المتطور
+# 6. الألوان المحدثة وتصحيح ألوان القوائم المنسدلة للوضع الداكن
 # ---------------------------------------------------------
 if is_dark:
     bg_color = "#090d16"
@@ -208,8 +208,12 @@ if is_dark:
     text_secondary = "#9ca3af"
     accent_primary = "#3b82f6"
     accent_gradient = "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
-    tab_bg_active = "#1e293b"
     shadow_effect = "0 10px 30px -10px rgba(0, 0, 0, 0.5)"
+    
+    # إعدادات مخصصة لعناصر القوائم المنسدلة (Dropdowns) في الوضع الداكن
+    dropdown_bg = "#1f2937"
+    dropdown_text = "#ffffff"
+    dropdown_hover = "#374151"
 else:
     bg_color = "#f8fafc"
     card_bg = "#ffffff"
@@ -218,8 +222,11 @@ else:
     text_secondary = "#64748b"
     accent_primary = "#2563eb"
     accent_gradient = "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)"
-    tab_bg_active = "#f1f5f9"
     shadow_effect = "0 10px 25px -5px rgba(0, 0, 0, 0.05)"
+    
+    dropdown_bg = "#ffffff"
+    dropdown_text = "#0f172a"
+    dropdown_hover = "#f1f5f9"
 
 st.markdown(f"""
 <style>
@@ -234,6 +241,31 @@ st.markdown(f"""
     direction: {direction};
     text-align: {text_align};
 }}
+
+/* إصلاح لون النصوص داخل حقول القوائم المنسدلة والعناصر المندمجة */
+.stSelectbox div[data-baseweb="select"] > div {{
+    background-color: {dropdown_bg} !important;
+    color: {dropdown_text} !important;
+    border-color: {card_border} !important;
+}}
+.stSelectbox span {{
+    color: {dropdown_text} !important;
+}}
+
+/* إصلاح ألوان خيارات القائمة المنسدلة عند فتحها */
+div[data-baseweb="popover"] div {{
+    background-color: {dropdown_bg} !important;
+    color: {dropdown_text} !important;
+}}
+div[role="option"] {{
+    background-color: {dropdown_bg} !important;
+    color: {dropdown_text} !important;
+}}
+div[role="option"]:hover {{
+    background-color: {dropdown_hover} !important;
+    color: {dropdown_text} !important;
+}}
+
 .app-header {{
     text-align: center;
     padding: 25px 0 15px 0;
