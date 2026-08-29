@@ -30,7 +30,7 @@ def smart_arabic_ai_fix(text):
     return text
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول وعكس ترتيب الأعمدة لتتطابق مع اليمين لليسار
+# 2. دالة استخراج الجداول والاحتفاظ بالعناوين الأصلية بدقة
 # ---------------------------------------------------------
 def extract_and_combine_tables(uploaded_files):
     all_dfs = []
@@ -86,10 +86,7 @@ def extract_and_combine_tables(uploaded_files):
                         if df.empty or df.shape[0] < 2:
                             continue
 
-                        # تصحيح الاتجاه وعكس الأعمدة لتتوافق مع اللغة العربية (من اليمين لليسار)
-                        df = df.iloc[:, ::-1]
-
-                        # تثبيت الصف الأول كعناوين صحيحة بعد إعادة الترتيب
+                        # تثبيت الصف الأول كعناوين صحيحة للجدول
                         raw_headers = [str(col).replace('\n', ' ') if col is not None else "" for col in df.iloc[0]]
                         fixed_headers = [smart_arabic_ai_fix(h) for h in raw_headers]
                         
@@ -109,6 +106,7 @@ def extract_and_combine_tables(uploaded_files):
     if not all_dfs:
         return None
 
+    # دمج الجداول بناءً على أول جدول رئيسي تم استخراجه للحفاظ على تطابق الأعمدة والعناوين الأصلية
     master_df = pd.concat(all_dfs, ignore_index=True)
     return master_df
 
