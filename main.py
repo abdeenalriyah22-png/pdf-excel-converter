@@ -7,49 +7,48 @@ import io
 import re
 
 # ---------------------------------------------------------
-# 1. دالة معالجة النصوص الذكية (تحافظ على الأرقام والإنجليزية وترتب العربية)
+# 1. دالة معالجة واستعادة النصوص المحاسبية العربية بدقة تامة
 # ---------------------------------------------------------
 def fix_pdf_text_cell(text):
     if not isinstance(text, str) or not text.strip():
         return text
 
-    # إصلاح الأخطاء الخاصة بالعملة
+    # إصلاح الأخطاء الشائعة للعملة
     text = text.replace('.س.ر', 'ر.س.').replace('س.ر.', 'ر.س.')
 
-    # تقسيم النص إلى أجزاء (كلمات عربية، إنجليزية، أرقام، وعلامات ترقيم)
-    # نحافظ على الكلمات الإنجليزية والأرقام كما هي، ونقوم بمعالجة الكلمات العربية فقط
-    def process_match(match):
-        word = match.group(0)
-        # فحص إذا كانت الكلمة تحتوي على حروف عربية
-        if any('\u0600' <= char <= '\u06FF' for char in word):
-            try:
-                reshaped = arabic_reshaper.reshape(word)
-                return get_display(reshaped)
-            except Exception:
-                return word
-        return word
-
-    # معالجة الكلمات العربية فقط داخل النص دون المساس بالأرقام والإنجليزية
-    # نمط يتعرف على الكلمات العربية
-    processed_text = re.sub(r'[\u0600-\u06FF\ufb50-\ufdff\ufe70-\ufeff]+', process_match, text)
+    # تقسيم النص إلى أجزاء (كلمات عربية منفصلة عن الإنجليزية والأرقام والرموز)
+    tokens = re.findall(r'[\u0600-\u06FF\ufb50-\ufdff\ufe70-\ufeff]+|[A-Za-z0-9\$\.,%\-\/]+|[^\w\s]|\s+', text)
     
-    # إذا كانت الجملة عربية بالكامل وعكس ترتيبها مطلوب بصرياً
-    has_arabic = any('\u0600' <= char <= '\u06FF' for char in text)
-    has_english_or_nums = any(('a' <= char <= 'z') or ('A' <= char <= 'Z') or ('0' <= char <= '9') for char in text)
-    
-    # إذا كانت الخلية تحتوي على عربي خالص، نعيد ترتيب الكلمات لتبدو صحيحة في الإكسيل
-    if has_arabic and not has_english_or_nums:
-        words = text.split()
-        if len(words) > 1:
-            reversed_words = words[::-1]
-            reconstructed = " ".join(reversed_words)
-            try:
-                reshaped = arabic_reshaper.reshape(reconstructed)
-                return get_display(reshaped)
-            except Exception:
-                return text
+    processed_tokens = []
+    arabic_buffer = []
 
-    return processed_text
+    def flush_arabic_buffer():
+        if arabic_buffer:
+            # دمج الكلمات العربية وعكس ترتيبها البصري لتظهر صحيحة تماماً مع RTL في Excel
+            joined_arabic = "".join(arabic_buffer)
+            # في حال كانت جملة عربية مكونة من عدة كلمات، نعكس ترتيب الكلمات لتظهر بشكل صحيح
+            words = joined_arabic.split()
+            if len(words) > 1:
+                joined_arabic = " ".join(words[::-1])
+            try:
+                reshaped = arabic_reshaper.reshape(joined_arabic)
+                corrected = get_display(reshaped)
+            except Exception:
+                corrected = joined_arabic
+            processed_tokens.append(corrected)
+            arabic_buffer.clear()
+
+    for token in tokens:
+        # إذا كان الرمز عربي
+        if any('\u0600' <= char <= '\u06FF' for char in token):
+            arabic_buffer.append(token)
+        else:
+            flush_arabic_buffer()
+            # ترك الإنجليزية والأرقام والرموز كما هي دون قلب
+            processed_tokens.append(token)
+
+    flush_arabic_buffer()
+    return "".join(processed_tokens)
 
 # ---------------------------------------------------------
 # 2. دالة استخراج الجداول المتقدمة
@@ -137,7 +136,7 @@ TRANSLATIONS = {
         "ocr_upload_label": "قم بسحب وإفلات صور المستندات (PNG, JPG, JPEG) هنا",
         "convert_btn": "⚡ بدء تحويل الملفات واستخراج الجداول",
         "download_btn": "📥 تحميل ملف Excel المنسق",
-        "processing": "جاري معالجة الملفات وضبط اتجاه النصوص والحفاظ على الأرقام...",
+        "processing": "جاري معالجة الملفات وضبط النصوص العربية والأرقام بدقة...",
         "success": "تمت معالجة الملفات واستخراج الجداول بنجاح!",
         "no_tables": "لم يتم العثور على جداول صالحة. تأكد أن ملف الـ PDF يحتوي على نصوص جدولية وليست صوراً مسحوحة ضوئياً (Scanned).",
         "select_file_warn": "يرجى رفع ملف واحد على الأقل أولاً."
@@ -156,7 +155,7 @@ TRANSLATIONS = {
         "ocr_upload_label": "Drag and drop document images (PNG, JPG, JPEG) here",
         "convert_btn": "⚡ Start Converting Files & Extract Tables",
         "download_btn": "📥 Download Formatted Excel File",
-        "processing": "Processing files and keeping numbers intact...",
+        "processing": "Processing files and formatting Arabic text...",
         "success": "Files processed successfully!",
         "no_tables": "No valid tables found. Ensure the PDF contains text tables and not scanned images.",
         "select_file_warn": "Please upload at least one file first."
