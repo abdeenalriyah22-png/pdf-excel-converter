@@ -7,7 +7,7 @@ import io
 import re
 
 # ---------------------------------------------------------
-# 1. نظام ذكاء اصطناعي متطور لإصلاح الحروف وتنسيق النصوص
+# 1. نظام تصحيح وإصلاح النصوص العربية القادم من الـ PDF
 # ---------------------------------------------------------
 def smart_arabic_ai_fix(text):
     if not isinstance(text, str) or not text.strip():
@@ -21,25 +21,15 @@ def smart_arabic_ai_fix(text):
         corrected_words = []
         for word in words:
             if any('\u0600' <= char <= '\u06FF' for char in word):
-                try:
-                    # عكس الكلمة أولاً لإصلاح الانعكاس البصري من ملف الـ PDF
-                    unreversed_word = word[::-1]
-                    reshaped = arabic_reshaper.reshape(unreversed_word)
-                    bidi_text = get_display(reshaped)
-                    corrected_words.append(bidi_text)
-                except Exception:
-                    corrected_words.append(word)
+                # عكس الكلمة لإصلاح الانعكاس البصري الناتج عن استخراج الـ PDF
+                fixed_word = word[::-1]
+                corrected_words.append(fixed_word)
             else:
                 corrected_words.append(word)
-        
-        text = " ".join(corrected_words[::-1])
+        # إعادة ترتيب الجملة بالشكل السليم
+        return " ".join(corrected_words[::-1])
 
-    try:
-        reshaped_full = arabic_reshaper.reshape(text)
-        final_text = get_display(reshaped_full, base_dir='R')
-        return final_text
-    except Exception:
-        return text
+    return text
 
 # ---------------------------------------------------------
 # 2. دالة استخراج الجداول وترتيب الأعمدة بالوضع الصحيح
@@ -230,7 +220,7 @@ direction = "rtl" if lang_code in ["ar", "ur"] else "ltr"
 text_align = "right" if direction == "rtl" else "left"
 
 # ---------------------------------------------------------
-# 6. الألوان وتصحيح القوائم المنسدلة للوضع الداكن
+# 6. الألوان وتصحيح القوائم المنسدلة
 # ---------------------------------------------------------
 if is_dark:
     bg_color = "#090d16"
@@ -422,7 +412,8 @@ with tab1:
                     wb = openpyxl.load_workbook(output_buffer)
                     ws = wb["Master_Data"]
                     
-                    ws.views.sheetView[0].rightToLeft = False
+                    # ضبط اتجاه الشيت في إكسل من اليمين إلى اليسار للبيانات العربية
+                    ws.views.sheetView[0].rightToLeft = True
                     
                     final_buffer = io.BytesIO()
                     wb.save(final_buffer)
