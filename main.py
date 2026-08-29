@@ -30,7 +30,6 @@ def fix_pdf_text_cell(text):
         
     return corrected
 
-# دالة مساعدة لتطبيق التعديل على DataFrame بشكل آمن تماماً
 def safe_apply_text_fix(df):
     for col in df.columns:
         df[col] = df[col].apply(lambda x: fix_pdf_text_cell(str(x)) if x is not None else "")
@@ -143,7 +142,7 @@ TRANSLATIONS = {
         "download_btn": "📥 تحميل ملف Excel المنسق",
         "processing": "جاري معالجة الملفات وإصلاح النصوص والأرقام...",
         "success": "تمت معالجة الملفات واستخراج الجداول بنجاح!",
-        "no_tables": "لم يتم العثور على جداول صالحة. تأكد أن ملف الـ PDF يحتوي على نصوص جدولية وليست صوراً مسحوحة ضوئياً (Scanned).",
+        "no_tables": "لم يتم العثور على جداول صالحة في الملفات المرفوعة. تأكد أن ملف الـ PDF يحتوي على نصوص جدولية وليست صوراً مسحوحة ضوئياً (Scanned).",
         "select_file_warn": "يرجى رفع ملف واحد على الأقل أولاً."
     },
     "en": {
@@ -162,7 +161,7 @@ TRANSLATIONS = {
         "download_btn": "📥 Download Formatted Excel File",
         "processing": "Processing files and extracting numbers...",
         "success": "Files processed successfully!",
-        "no_tables": "No valid tables found. Ensure the PDF contains text tables and not scanned images.",
+        "no_tables": "No valid tables found in the uploaded files. Ensure the PDF contains text tables and not scanned images.",
         "select_file_warn": "Please upload at least one file first."
     },
     "ur": {
@@ -304,34 +303,36 @@ with tab1:
             st.warning(t['select_file_warn'])
         else:
             with st.spinner(t['processing']):
-                output_buffer = io.BytesIO()
-                tables_count = 0
+                all_extracted_data = []
                 
-                with pd.ExcelWriter(output_buffer, engine='openpyxl') as writer:
-                    for idx, file in enumerate(uploaded_files):
-                        if file.name.endswith('.csv'):
-                            try:
-                                df = pd.read_csv(file)
-                                df = safe_apply_text_fix(df)
-                                df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
-                                df = clean_numeric_columns(df)
-                                
-                                sheet_name = f"CSV_{idx+1}"[:31]
-                                df.to_excel(writer, sheet_name=sheet_name, index=False)
-                                tables_count += 1
-                            except Exception as e:
-                                st.error(f"خطأ في معالجة ملف CSV: {e}")
-                        
-                        elif file.name.endswith('.pdf'):
-                            try:
-                                extracted_tables = extract_tables_from_pdf(file)
-                                for sheet_name, df in extracted_tables:
-                                    df.to_excel(writer, sheet_name=sheet_name, index=False)
-                                    tables_count += 1
-                            except Exception as e:
-                                st.error(f"خطأ في استخراج جدول الـ PDF: {e}")
+                for idx, file in enumerate(uploaded_files):
+                    if file.name.endswith('.csv'):
+                        try:
+                            df = pd.read_csv(file)
+                            df = safe_apply_text_fix(df)
+                            df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+                            df = clean_numeric_columns(df)
+                            
+                            sheet_name = f"CSV_{idx+1}"[:31]
+                            all_extracted_data.append((sheet_name, df))
+                        except Exception as e:
+                            st.error(f"خطأ في معالجة ملف CSV: {e}")
+                    
+                    elif file.name.endswith('.pdf'):
+                        try:
+                            extracted_tables = extract_tables_from_pdf(file)
+                            for sheet_name, df in extracted_tables:
+                                all_extracted_data.append((sheet_name, df))
+                        except Exception as e:
+                            st.error(f"خطأ في استخراج جدول الـ PDF: {e}")
 
-                if tables_count > 0:
+                # التحقق الآمن من وجود بيانات قبل إنشاء ملف Excel لمنع خطأ الـ IndexError
+                if len(all_extracted_data) > 0:
+                    output_buffer = io.BytesIO()
+                    with pd.ExcelWriter(output_buffer, engine='openpyxl') as writer:
+                        for sheet_name, df in all_extracted_data:
+                            df.to_excel(writer, sheet_name=sheet_name, index=False)
+                    
                     st.success(t['success'])
                     st.download_button(
                         label=t['download_btn'],
