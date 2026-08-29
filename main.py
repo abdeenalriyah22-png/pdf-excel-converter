@@ -22,14 +22,17 @@ def smart_arabic_ai_fix(text):
         for word in words:
             if any('\u0600' <= char <= '\u06FF' for char in word):
                 try:
-                    reshaped = arabic_reshaper.reshape(word)
+                    # عكس الكلمة أولاً لإصلاح الانعكاس البصري من ملف الـ PDF
+                    unreversed_word = word[::-1]
+                    reshaped = arabic_reshaper.reshape(unreversed_word)
                     bidi_text = get_display(reshaped)
                     corrected_words.append(bidi_text)
                 except Exception:
                     corrected_words.append(word)
             else:
                 corrected_words.append(word)
-        text = " ".join(corrected_words)
+        
+        text = " ".join(corrected_words[::-1])
 
     try:
         reshaped_full = arabic_reshaper.reshape(text)
@@ -113,7 +116,6 @@ def extract_and_combine_tables(uploaded_files):
     if not all_dfs:
         return None
 
-    # توحيد عدد الأعمدة وترتيبها بشكل صحيح وسلس
     max_cols = max(df.shape[1] for df in all_dfs)
     standardized_dfs = []
     
@@ -420,7 +422,6 @@ with tab1:
                     wb = openpyxl.load_workbook(output_buffer)
                     ws = wb["Master_Data"]
                     
-                    # ضبط اتجاه الشيت الافتراضي (من اليسار لليمين) ليتطابق تماماً مع بيانات الأعمدة
                     ws.views.sheetView[0].rightToLeft = False
                     
                     final_buffer = io.BytesIO()
