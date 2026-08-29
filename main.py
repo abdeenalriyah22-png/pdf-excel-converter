@@ -20,14 +20,9 @@ def fix_pdf_text_cell(text):
     if not has_arabic:
         return text
 
-    # تقسيم الكلمات وإعادة ترتيب الكلمات المعكوسة
-    words = text.split()
-    reversed_words = words[::-1]
-    reconstructed_text = " ".join(reversed_words)
-
-    # تطبيق إعادة التشكيل والاتجاه RTL
+    # ضبط الترتيب والبصمة البصرية للنص العربي في ملفات التصدير الخارجية
     try:
-        reshaped = arabic_reshaper.reshape(reconstructed_text)
+        reshaped = arabic_reshaper.reshape(text)
         corrected = get_display(reshaped)
     except Exception:
         corrected = text
@@ -40,7 +35,6 @@ def fix_pdf_text_cell(text):
 def extract_tables_from_pdf(pdf_file):
     extracted_dfs = []
     
-    # قائمة استراتيجيات بحث متدرجة لالتقاط الجداول الصامتة أو بدون خطوط
     strategies = [
         {"vertical_strategy": "lines", "horizontal_strategy": "lines"},
         {"vertical_strategy": "text", "horizontal_strategy": "text", "snap_tolerance": 5, "join_tolerance": 5},
@@ -51,7 +45,6 @@ def extract_tables_from_pdf(pdf_file):
         for page_num, page in enumerate(pdf.pages):
             tables = []
             
-            # تجربة الاستراتيجيات تباعاً حتى يتم العثور على جدول
             for settings in strategies:
                 try:
                     tables = page.extract_tables(table_settings=settings)
@@ -60,7 +53,6 @@ def extract_tables_from_pdf(pdf_file):
                 except Exception:
                     continue
             
-            # إذا فشلت الاستراتيجيات المتقدمة، نستخدم الافتراضية
             if not tables:
                 try:
                     tables = page.extract_tables()
@@ -75,18 +67,14 @@ def extract_tables_from_pdf(pdf_file):
                     continue
                 
                 df = pd.DataFrame(table)
-                
-                # تنظيف الصفوف والأعمدة الفارغة تماماً
                 df = df.dropna(how='all').dropna(how='all', axis=1)
                 if df.empty or df.shape[0] < 1:
                     continue
 
-                # تعيين الصف الأول كعناوين إذا كان مناسباً
                 if df.shape[0] > 1:
                     df.columns = [str(col) if col is not None else "" for col in df.iloc[0]]
                     df = df[1:].reset_index(drop=True)
 
-                # معالجة النصوص المحاسبية العربية
                 try:
                     df = df.map(fix_pdf_text_cell)
                     df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
@@ -127,7 +115,7 @@ TRANSLATIONS = {
         "ocr_upload_label": "قم بسحب وإفلات صور المستندات (PNG, JPG, JPEG) هنا",
         "convert_btn": "⚡ بدء تحويل الملفات واستخراج الجداول",
         "download_btn": "📥 تحميل ملف Excel المنسق",
-        "processing": "جاري معالجة الملفات وإصلاح النصوص العربية...",
+        "processing": "جاري معالجة الملفات وإصلاح اتجاه النصوص العربية...",
         "success": "تمت معالجة الملفات واستخراج الجداول بنجاح!",
         "no_tables": "لم يتم العثور على جداول صالحة. تأكد أن ملف الـ PDF يحتوي على نصوص جدولية وليست صوراً مسحوحة ضوئياً (Scanned).",
         "select_file_warn": "يرجى رفع ملف واحد على الأقل أولاً."
@@ -198,7 +186,7 @@ direction = "rtl" if lang_code in ["ar", "ur"] else "ltr"
 text_align = "right" if direction == "rtl" else "left"
 
 # ---------------------------------------------------------
-# 6. الألوان المحدثة وتصحيح ألوان القوائم المنسدلة للوضع الداكن
+# 6. الألوان وتصحيح القوائم المنسدلة للوضع الداكن
 # ---------------------------------------------------------
 if is_dark:
     bg_color = "#090d16"
@@ -210,7 +198,6 @@ if is_dark:
     accent_gradient = "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
     shadow_effect = "0 10px 30px -10px rgba(0, 0, 0, 0.5)"
     
-    # إعدادات مخصصة لعناصر القوائم المنسدلة (Dropdowns) في الوضع الداكن
     dropdown_bg = "#1f2937"
     dropdown_text = "#ffffff"
     dropdown_hover = "#374151"
@@ -242,7 +229,6 @@ st.markdown(f"""
     text-align: {text_align};
 }}
 
-/* إصلاح لون النصوص داخل حقول القوائم المنسدلة والعناصر المندمجة */
 .stSelectbox div[data-baseweb="select"] > div {{
     background-color: {dropdown_bg} !important;
     color: {dropdown_text} !important;
@@ -251,8 +237,6 @@ st.markdown(f"""
 .stSelectbox span {{
     color: {dropdown_text} !important;
 }}
-
-/* إصلاح ألوان خيارات القائمة المنسدلة عند فتحها */
 div[data-baseweb="popover"] div {{
     background-color: {dropdown_bg} !important;
     color: {dropdown_text} !important;
@@ -385,6 +369,7 @@ with tab1:
                 output_buffer = io.BytesIO()
                 tables_count = 0
                 
+                # إنشاء ملف الـ Excel وضبط إعدادات الـ RTL لكل ورقة عمل (Sheet) لمنع انعكاس الحروف
                 with pd.ExcelWriter(output_buffer, engine='openpyxl') as writer:
                     for idx, file in enumerate(uploaded_files):
                         if file.name.endswith('.csv'):
@@ -411,11 +396,23 @@ with tab1:
                             except Exception as e:
                                 st.error(f"خطأ في استخراج جدول الـ PDF: {e}")
 
+                # ضبط اتجاه الأوراق برمجياً في openpyxl لتظهر باليمين لليسار طبيعياً
                 if tables_count > 0:
+                    output_buffer.seek(0)
+                    import openpyxl
+                    wb = openpyxl.load_workbook(output_buffer)
+                    for sheet in wb.sheetnames:
+                        ws = wb[sheet]
+                        ws.views.sheetView[0].rightToLeft = True
+                    
+                    final_buffer = io.BytesIO()
+                    wb.save(final_buffer)
+                    final_buffer.seek(0)
+
                     st.success(t['success'])
                     st.download_button(
                         label=t['download_btn'],
-                        data=output_buffer.getvalue(),
+                        data=final_buffer.getvalue(),
                         file_name="converted_tables.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         use_container_width=True
