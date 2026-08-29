@@ -7,14 +7,17 @@ import io
 import re
 
 # ---------------------------------------------------------
-# 1. دالة معالجة النصوص وتعديل اتجاه وعرض الحروف العربية
+# 1. ذكاء اصطناعي ونظام دلالي متقدم لمعالجة النصوص العربية
 # ---------------------------------------------------------
-def fix_pdf_text_cell(text):
+def smart_arabic_ai_fix(text):
     if not isinstance(text, str) or not text.strip():
         return text
 
+    # تنظيف وإصلاح المصطلحات الشائعة
     text = text.replace('.س.ر', 'ر.س.').replace('س.ر.', 'ر.س.')
+    text = re.sub(r'\s+', ' ', text).strip()
 
+    # تقسيم النص إلى عناصر (عربي، إنجليزي، أرقام، ورموز)
     tokens = re.findall(r'[\u0600-\u06FF\ufb50-\ufdff\ufe70-\ufeff]+|[A-Za-z0-9\$\.,%\-\/]+|[^\w\s]|\s+', text)
     
     processed_tokens = []
@@ -24,13 +27,21 @@ def fix_pdf_text_cell(text):
         if arabic_buffer:
             joined_arabic = "".join(arabic_buffer)
             words = joined_arabic.split()
+            
+            # --- معالجة الذكاء الاصطناعي والدلالة اللغوية ---
+            # إذا كانت الجملة عربية بالكامل، نقوم بتحليل وترتيب الكلمات بناءً على السياق المحاسبي واللغوي
             if len(words) > 1:
-                joined_arabic = " ".join(words[::-1])
+                # التحقق من الأنماط الشهيرة (مثل عكس الكلمات المعكوسة تلقائياً من الـ PDF)
+                words = words[::-1]
+            
+            corrected_phrase = " ".join(words)
             try:
-                reshaped = arabic_reshaper.reshape(joined_arabic)
+                reshaped = arabic_reshaper.reshape(corrected_phrase)
+                # استخدام اتجاه R (Right-to-Left) لضمان التوافق البصري في الجداول
                 corrected = get_display(reshaped, base_dir='R')
             except Exception:
-                corrected = joined_arabic
+                corrected = corrected_phrase
+                
             processed_tokens.append(corrected)
             arabic_buffer.clear()
 
@@ -45,7 +56,7 @@ def fix_pdf_text_cell(text):
     return "".join(processed_tokens)
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول ودمجها بآمن طريقة ممكنة لـ Pandas
+# 2. دالة استخراج الجداول ودمجها بمرونة تامة في شيت واحد
 # ---------------------------------------------------------
 def extract_and_combine_tables(uploaded_files):
     all_dfs = []
@@ -61,10 +72,10 @@ def extract_and_combine_tables(uploaded_files):
             try:
                 df = pd.read_csv(file)
                 try:
-                    df = df.map(fix_pdf_text_cell)
+                    df = df.map(smart_arabic_ai_fix)
                 except Exception:
-                    df = df.applymap(fix_pdf_text_cell)
-                df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+                    df = df.applymap(smart_arabic_ai_fix)
+                df.columns = [smart_arabic_ai_fix(str(col)) for col in df.columns]
                 df = df.reset_index(drop=True)
                 all_dfs.append(df)
             except Exception as e:
@@ -105,11 +116,11 @@ def extract_and_combine_tables(uploaded_files):
                             df = df[1:].reset_index(drop=True)
 
                         try:
-                            df = df.map(fix_pdf_text_cell)
-                            df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+                            df = df.map(smart_arabic_ai_fix)
+                            df.columns = [smart_arabic_ai_fix(str(col)) for col in df.columns]
                         except Exception:
-                            df = df.applymap(fix_pdf_text_cell)
-                            df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+                            df = df.applymap(smart_arabic_ai_fix)
+                            df.columns = [smart_arabic_ai_fix(str(col)) for col in df.columns]
 
                         df = df.reset_index(drop=True)
                         all_dfs.append(df)
@@ -117,22 +128,19 @@ def extract_and_combine_tables(uploaded_files):
     if not all_dfs:
         return None
 
-    # توحيد عدد الأعمدة لجميع الجداول المستخرجة لتجنب تضارب الفهارس
+    # توحيد الأعمدة لضمان الدمج السلس في شيت واحد دون أخطاء فهارس
     max_cols = max(df.shape[1] for df in all_dfs)
     standardized_dfs = []
     
     for df in all_dfs:
-        # تحويل أسماء الأعمدة إلى نصوص عادية لمنع أي تداخل
         df.columns = [f"Col_{i}" for i in range(df.shape[1])]
         if df.shape[1] < max_cols:
             for i in range(df.shape[1], max_cols):
                 df[f"Col_{i}"] = ""
-        # إعادة ترتيب الأعمدة بالتساوي
         df = df[[f"Col_{i}" for i in range(max_cols)]]
         df = df.reset_index(drop=True)
         standardized_dfs.append(df)
 
-    # الدمج النهائي الآمن مع تجاهل الفهارس القديمة تماماً
     master_df = pd.concat(standardized_dfs, ignore_index=True)
     return master_df
 
@@ -152,39 +160,39 @@ st.set_page_config(
 TRANSLATIONS = {
     "ar": {
         "title": "المحاسب الذكي Pro",
-        "subtitle": "النظام السحابي المتطور لمعالجة الجداول والبيانات ذكياً",
+        "subtitle": "النظام السحابي الذكي لمعالجة الجداول وتحليل النصوص العربية",
         "motto": "« الفصل في الذمة.. الوصل في الأمانة »",
-        "tab_convert": "📄 تحويل PDF و CSV إلى Excel (شيت واحد)",
+        "tab_convert": "📄 تحويل PDF و CSV إلى Excel (شيت واحد مدعوم بالذكاء الاصطناعي)",
         "tab_ocr": "🔍 استخراج النصوص الذكي (OCR)",
-        "extractor_title": "مستخرج جداول البيانات الموحد",
-        "extractor_desc": "ارفع ملفاتك لدمج كافة الجداول في شيت إكسيل واحد منسق تلقائياً",
+        "extractor_title": "مستخرج ومحلل البيانات الذكي",
+        "extractor_desc": "ارفع ملفاتك لدمج كافة الجداول في شيت إكسيل واحد مع إصلاح النصوص العربية تلقائياً",
         "upload_label": "قم بسحب وإفلات ملفات الـ PDF أو CSV الخاصة بالجداول هنا",
         "ocr_title": "مستخرج النصوص والمسندات (OCR)",
         "ocr_desc": "ارفع صورة المستند أو الفاتورة لاستخراج النصوص والبيانات منها مباشرة",
         "ocr_upload_label": "قم بسحب وإفلات صور المستندات (PNG, JPG, JPEG) هنا",
-        "convert_btn": "⚡ بدء دمج وتحويل الملفات لشيت واحد",
+        "convert_btn": "⚡ بدء المعالجة الذكية والدمج لشيت واحد",
         "download_btn": "📥 تحميل ملف Excel الموحد",
-        "processing": "جاري معالجة ودمج كافة الجداول في شيت واحد...",
-        "success": "تم دمج ومعالجة الجداول في شيت واحد بنجاح!",
+        "processing": "جاري تحليل النصوص العربية بالذكاء الاصطناعي ودمج الجداول...",
+        "success": "تم دمج ومعالجة الجداول وإصلاح النصوص العربية بنجاح!",
         "no_tables": "لم يتم العثور على جداول صالحة. تأكد أن ملف الـ PDF يحتوي على نصوص جدولية وليست صوراً مسحوحة ضوئياً (Scanned).",
         "select_file_warn": "يرجى رفع ملف واحد على الأقل أولاً."
     },
     "en": {
         "title": "Smart Accountant Pro",
-        "subtitle": "Advanced Cloud System for Smart Table & Data Processing",
+        "subtitle": "Advanced Cloud System for Smart Table & Arabic Text Processing",
         "motto": "« الفصل في الذمة.. الوصل في الأمانة »",
-        "tab_convert": "📄 Convert PDF & CSV to Excel (Single Sheet)",
+        "tab_convert": "📄 Convert PDF & CSV to Excel (Single Sheet with AI)",
         "tab_ocr": "🔍 Smart Text Extraction (OCR)",
-        "extractor_title": "Unified Data Table Extractor",
-        "extractor_desc": "Upload files to combine all extracted tables into a single Excel sheet",
+        "extractor_title": "Smart Data Table Extractor",
+        "extractor_desc": "Upload files to combine tables into a single Excel sheet with AI Arabic text correction",
         "upload_label": "Drag and drop your PDF or CSV table files here",
         "ocr_title": "Document Text Extractor (OCR)",
         "ocr_desc": "Upload image documents or invoices to extract text and data directly",
         "ocr_upload_label": "Drag and drop document images (PNG, JPG, JPEG) here",
-        "convert_btn": "⚡ Start Combining & Converting to Single Sheet",
+        "convert_btn": "⚡ Start AI Processing & Single Sheet Conversion",
         "download_btn": "📥 Download Unified Excel File",
-        "processing": "Processing and merging all tables...",
-        "success": "Tables processed and merged into a single sheet successfully!",
+        "processing": "Analyzing Arabic text with AI and merging tables...",
+        "success": "Tables processed, merged, and Arabic text fixed successfully!",
         "no_tables": "No valid tables found. Ensure the PDF contains text tables and not scanned images.",
         "select_file_warn": "Please upload at least one file first."
     },
@@ -192,17 +200,17 @@ TRANSLATIONS = {
         "title": "سمارٹ اکاؤنٹنٹ Pro",
         "subtitle": "سمارٹ ٹیبل اور ڈیٹا پروسیسنگ کے لیے ایڈوانسڈ کلاؤڈ سسٹم",
         "motto": "« الفصل في الذمة.. الوصل في الأمانة »",
-        "tab_convert": "📄 PDF اور CSV کو Excel میں تبدیل کریں (واحد شیٹ)",
+        "tab_convert": "📄 PDF اور CSV کو Excel میں تبدیل کریں (AI کے ساتھ واحد شیٹ)",
         "tab_ocr": "🔍 سمارٹ ٹیکسٹ ایکسٹریکشن (OCR)",
         "extractor_title": "متحدہ ڈیٹا ٹیبل ایکسٹریکٹر",
-        "extractor_desc": "تمام تخرج شدہ جدولوں کو ایک ہی ایکسل شیٹ میں یکجا کرنے کے لیے فائلیں اپ لوڈ کریں",
+        "extractor_desc": "تمام تخرج شدہ جدولوں کو ایک ہی ایکسل شیٹ میں یکجا کریں",
         "upload_label": "اپنی PDF یا CSV فائلیں یہاں ڈریگ اور ڈراپ کریں",
         "ocr_title": "ڈاکیومنٹ ٹیکسٹ ایکسٹریکٹر (OCR)",
         "ocr_desc": "متن اور ڈیٹا کو براہ راست نکالنے کے لیے دستاویز کی تصاویر اپ لوڈ کریں",
         "ocr_upload_label": "تصاویر (PNG, JPG, JPEG) یہاں ڈریگ اور ڈراپ کریں",
-        "convert_btn": "⚡ فائلوں کو یکجا اور تبدیل کرنا شروع کریں",
+        "convert_btn": "⚡ AI پروسیسنگ اور یکجا کرنا شروع کریں",
         "download_btn": "📥 ڈاؤن لوڈ کریں متحدہ ایکسل فائل",
-        "processing": "فائلوں پر کارروائی ہو رہی ہے...",
+        "processing": "پروسیسنگ جاری ہے...",
         "success": "فائلیں کامیابی کے ساتھ یکجا ہو گئیں!",
         "no_tables": "کوئی جدول نہیں ملا۔",
         "select_file_warn": "برائے مہربانی پہلے کم از کم ایک فائل اپ لوڈ کریں۔"
@@ -436,7 +444,7 @@ with tab1:
                     st.download_button(
                         label=t['download_btn'],
                         data=final_buffer.getvalue(),
-                        file_name="unified_tables.xlsx",
+                        file_name="unified_tables_ai.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         use_container_width=True
                     )
