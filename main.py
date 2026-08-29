@@ -7,7 +7,7 @@ import io
 import re
 
 # ---------------------------------------------------------
-# 1. نظام ذكاء اصطناعي متطور لإصلاح الحروف والعكس في النصوص العربية
+# 1. نظام ذكاء اصطناعي متطور لإصلاح الحروف وتنسيق النصوص
 # ---------------------------------------------------------
 def smart_arabic_ai_fix(text):
     if not isinstance(text, str) or not text.strip():
@@ -40,7 +40,7 @@ def smart_arabic_ai_fix(text):
         return text
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول وترتيب الأعمدة بالشكل الصحيح
+# 2. دالة استخراج الجداول وإصلاح المحاذاة والأعمدة
 # ---------------------------------------------------------
 def extract_and_combine_tables(uploaded_files):
     all_dfs = []
@@ -59,11 +59,11 @@ def extract_and_combine_tables(uploaded_files):
                     df = df.map(smart_arabic_ai_fix)
                 except Exception:
                     df = df.applymap(smart_arabic_ai_fix)
-                # عكس ترتيب الأعمدة لتناسب العرض العربي الصحيح
-                df = df.iloc[:, ::-1]
-                df.columns = [smart_arabic_ai_fix(str(col)) for col in df.columns]
-                df = df.reset_index(drop=True)
-                all_dfs.append(df)
+                df = df.dropna(how='all', axis=1).reset_index(drop=True)
+                if not df.empty:
+                    df = df.iloc[:, ::-1] # عكس الأعمدة لتناسب الاتجاه العربي
+                    df.columns = [smart_arabic_ai_fix(str(col)) for col in df.columns]
+                    all_dfs.append(df)
             except Exception as e:
                 st.error(f"خطأ في معالجة ملف CSV: {e}")
                 
@@ -93,6 +93,7 @@ def extract_and_combine_tables(uploaded_files):
                             continue
                         
                         df = pd.DataFrame(table)
+                        # إزالة الصفوف والأعمدة الفارغة تماماً
                         df = df.dropna(how='all').dropna(how='all', axis=1)
                         if df.empty or df.shape[0] < 1:
                             continue
@@ -103,20 +104,22 @@ def extract_and_combine_tables(uploaded_files):
 
                         try:
                             df = df.map(smart_arabic_ai_fix)
-                            # عكس ترتيب الأعمدة لتبدأ الجداول من اليمين لليسار بصرياً
-                            df = df.iloc[:, ::-1]
-                            df.columns = [smart_arabic_ai_fix(str(col)) for col in df.columns]
                         except Exception:
                             df = df.applymap(smart_arabic_ai_fix)
+
+                        # إزالة الأعمدة التي أصبحت فارغة بعد التنظيف
+                        df = df.dropna(how='all', axis=1)
+                        if not df.empty:
+                            # عكس ترتيب الأعمدة لتبدأ من اليمين بصرياً بشكل صحيح
                             df = df.iloc[:, ::-1]
                             df.columns = [smart_arabic_ai_fix(str(col)) for col in df.columns]
-
-                        df = df.reset_index(drop=True)
-                        all_dfs.append(df)
+                            df = df.reset_index(drop=True)
+                            all_dfs.append(df)
 
     if not all_dfs:
         return None
 
+    # توحيد عدد الأعمدة في شيت واحد
     max_cols = max(df.shape[1] for df in all_dfs)
     standardized_dfs = []
     
@@ -372,7 +375,7 @@ div[role="option"]:hover {{
     padding: 10px 28px;
     border-radius: 30px;
     display: inline-block;
-    border: 1px solid {'rgba(59, 130, 246, 0.25)' if is_dark else 'rgba(37, 99, 235,.15)'};
+    border: 1px solid {'rgba(59, 130, 246, 0.25)' if is_dark else 'rgba(37, 99, 235, 0.15)'};
     box-shadow: {shadow_effect};
 }}
 </style>
@@ -423,8 +426,8 @@ with tab1:
                     wb = openpyxl.load_workbook(output_buffer)
                     ws = wb["Master_Data"]
                     
-                    # إبقاء اتجاه الشيت افتراضياً (من اليسار لليمين) لكي يتطابق تماماً مع هيكلة الأعمدة المعكوسة برمجياً
-                    ws.views.sheetView[0].rightToLeft = False
+                    # تفعيل اتجاه الشيت من اليمين لليسار ليتوافق مع الجداول المحاسبية العربية
+                    ws.views.sheetView[0].rightToLeft = True
                     
                     final_buffer = io.BytesIO()
                     wb.save(final_buffer)
