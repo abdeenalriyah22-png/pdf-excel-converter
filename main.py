@@ -7,7 +7,7 @@ import io
 import re
 
 # ---------------------------------------------------------
-# 1. دالة معالجة النصوص لتناسب الجداول من اليسار لليمين (LTR) وترتيب العربي
+# 1. دالة معالجة النصوص وتعديل اتجاه وعرض الحروف العربية
 # ---------------------------------------------------------
 def fix_pdf_text_cell(text):
     if not isinstance(text, str) or not text.strip():
@@ -25,13 +25,13 @@ def fix_pdf_text_cell(text):
     def flush_arabic_buffer():
         if arabic_buffer:
             joined_arabic = "".join(arabic_buffer)
+            # إعادة ترتيب الكلمات العربية لتظهر بشكل طبيعي وصحيح بصرياً
             words = joined_arabic.split()
-            # في الجداول LTR، لكي يظهر النص العربي مرتباً من اليمين لليسار بصرياً داخل الخلية، نقوم بعكس ترتيب الكلمات وعرضها بـ LTR
             if len(words) > 1:
                 joined_arabic = " ".join(words[::-1])
             try:
                 reshaped = arabic_reshaper.reshape(joined_arabic)
-                corrected = get_display(reshaped, base_dir='L')
+                corrected = get_display(reshaped, base_dir='R')
             except Exception:
                 corrected = joined_arabic
             processed_tokens.append(corrected)
@@ -48,7 +48,7 @@ def fix_pdf_text_cell(text):
     return "".join(processed_tokens)
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول المتقدمة ودمجها
+# 2. دالة استخراج الجداول ودمجها بمرونة لتجنب تعارض الأعمدة
 # ---------------------------------------------------------
 def extract_and_combine_tables(uploaded_files):
     all_dfs = []
@@ -118,8 +118,20 @@ def extract_and_combine_tables(uploaded_files):
     if not all_dfs:
         return None
 
-    # دمج جميع الجداول المستخرجة في جدول واحد متكامل
-    master_df = pd.concat(all_dfs, ignore_index=True)
+    # دمج الجداول مع توحيد الأعمدة بناءً على المواقع لتجنب أي أخطاء مطابقة
+    try:
+        master_df = pd.concat(all_dfs, ignore_index=True, join='outer')
+    except Exception:
+        # حل بديل في حال اختلاف عدد الأعمدة تماماً: توحيدها بأقصى عدد أعمدة
+        max_cols = max(df.shape[1] for df in all_dfs)
+        standardized_dfs = []
+        for df in all_dfs:
+            if df.shape[1] < max_cols:
+                for i in range(df.shape[1], max_cols):
+                    df[f"Col_{i}"] = ""
+            standardized_dfs.append(df)
+        master_df = pd.concat(standardized_dfs, ignore_index=True)
+
     return master_df
 
 # ---------------------------------------------------------
@@ -143,14 +155,14 @@ TRANSLATIONS = {
         "tab_convert": "📄 تحويل PDF و CSV إلى Excel (شيت واحد)",
         "tab_ocr": "🔍 استخراج النصوص الذكي (OCR)",
         "extractor_title": "مستخرج جداول البيانات الموحد",
-        "extractor_desc": "ارفع ملفاتك لدمج كافة الجداول المستخرجة في شيت إكسيل واحد منسق من اليسار لليمين تلقائياً",
+        "extractor_desc": "ارفع ملفاتك لدمج كافة الجداول في شيت إكسيل واحد منسق تلقائياً",
         "upload_label": "قم بسحب وإفلات ملفات الـ PDF أو CSV الخاصة بالجداول هنا",
         "ocr_title": "مستخرج النصوص والمسندات (OCR)",
         "ocr_desc": "ارفع صورة المستند أو الفاتورة لاستخراج النصوص والبيانات منها مباشرة",
         "ocr_upload_label": "قم بسحب وإفلات صور المستندات (PNG, JPG, JPEG) هنا",
         "convert_btn": "⚡ بدء دمج وتحويل الملفات لشيت واحد",
         "download_btn": "📥 تحميل ملف Excel الموحد",
-        "processing": "جاري معالجة ودمج كافة الجداول في شيت واحد وضبط النصوص العربية والأرقام...",
+        "processing": "جاري معالجة ودمج كافة الجداول في شيت واحد...",
         "success": "تم دمج ومعالجة الجداول في شيت واحد بنجاح!",
         "no_tables": "لم يتم العثور على جداول صالحة. تأكد أن ملف الـ PDF يحتوي على نصوص جدولية وليست صوراً مسحوحة ضوئياً (Scanned).",
         "select_file_warn": "يرجى رفع ملف واحد على الأقل أولاً."
@@ -162,14 +174,14 @@ TRANSLATIONS = {
         "tab_convert": "📄 Convert PDF & CSV to Excel (Single Sheet)",
         "tab_ocr": "🔍 Smart Text Extraction (OCR)",
         "extractor_title": "Unified Data Table Extractor",
-        "extractor_desc": "Upload files to combine all extracted tables into a single LTR formatted Excel sheet",
+        "extractor_desc": "Upload files to combine all extracted tables into a single Excel sheet",
         "upload_label": "Drag and drop your PDF or CSV table files here",
         "ocr_title": "Document Text Extractor (OCR)",
         "ocr_desc": "Upload image documents or invoices to extract text and data directly",
         "ocr_upload_label": "Drag and drop document images (PNG, JPG, JPEG) here",
         "convert_btn": "⚡ Start Combining & Converting to Single Sheet",
         "download_btn": "📥 Download Unified Excel File",
-        "processing": "Processing and merging all tables into a single sheet...",
+        "processing": "Processing and merging all tables...",
         "success": "Tables processed and merged into a single sheet successfully!",
         "no_tables": "No valid tables found. Ensure the PDF contains text tables and not scanned images.",
         "select_file_warn": "Please upload at least one file first."
@@ -412,7 +424,7 @@ with tab1:
                     import openpyxl
                     wb = openpyxl.load_workbook(output_buffer)
                     ws = wb["Master_Data"]
-                    # ضبط الشيت ليكون من اليسار لليمين (LTR)
+                    # ضبط اتجاه الشيت ليطابق القراءة السليمة
                     ws.views.sheetView[0].rightToLeft = False
                     
                     final_buffer = io.BytesIO()
