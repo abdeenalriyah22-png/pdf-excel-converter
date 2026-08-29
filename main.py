@@ -30,7 +30,7 @@ def smart_arabic_ai_fix(text):
     return text
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول والاحتفاظ بالعناوين الأصلية بدقة
+# 2. دالة استخراج الجداول وتوحيد الأعمدة والعناوين بأمان تامة
 # ---------------------------------------------------------
 def extract_and_combine_tables(uploaded_files):
     all_dfs = []
@@ -78,20 +78,13 @@ def extract_and_combine_tables(uploaded_files):
                         continue
                         
                     for table in tables:
-                        if not table or len(table) < 2:
+                        if not table or len(table) < 1:
                             continue
                         
                         df = pd.DataFrame(table)
                         df = df.dropna(how='all').dropna(how='all', axis=1)
-                        if df.empty or df.shape[0] < 2:
+                        if df.empty or df.shape[0] < 1:
                             continue
-
-                        # تثبيت الصف الأول كعناوين صحيحة للجدول
-                        raw_headers = [str(col).replace('\n', ' ') if col is not None else "" for col in df.iloc[0]]
-                        fixed_headers = [smart_arabic_ai_fix(h) for h in raw_headers]
-                        
-                        df = df[1:].reset_index(drop=True)
-                        df.columns = fixed_headers
 
                         try:
                             df = df.map(smart_arabic_ai_fix)
@@ -106,8 +99,25 @@ def extract_and_combine_tables(uploaded_files):
     if not all_dfs:
         return None
 
-    # دمج الجداول بناءً على أول جدول رئيسي تم استخراجه للحفاظ على تطابق الأعمدة والعناوين الأصلية
-    master_df = pd.concat(all_dfs, ignore_index=True)
+    # توحيد عدد الأعمدة لجميع الجداول المستخرجة بناءً على أقصى عدد أعمدة موجود
+    max_cols = max(df.shape[1] for df in all_dfs)
+    standardized_dfs = []
+    
+    for df in all_dfs:
+        # إعادة تعيين أسماء الأعمدة بأرقام مؤقتة لتجنب أي تعارض في الحجم
+        df.columns = [f"col_{i}" for i in range(df.shape[1])]
+        
+        if df.shape[1] < max_cols:
+            for i in range(df.shape[1], max_cols):
+                df[f"col_{i}"] = ""
+        elif df.shape[1] > max_cols:
+            df = df.iloc[:, :max_cols]
+            
+        df.columns = [f"عمود_{i+1}" for i in range(max_cols)]
+        df = df.reset_index(drop=True)
+        standardized_dfs.append(df)
+
+    master_df = pd.concat(standardized_dfs, ignore_index=True)
     return master_df
 
 # ---------------------------------------------------------
