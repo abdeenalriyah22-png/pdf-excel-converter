@@ -7,7 +7,7 @@ import io
 import re
 
 # ---------------------------------------------------------
-# 1. دالة معالجة النصوص لتناسب الجداول من اليسار لليمين (LTR)
+# 1. دالة معالجة النصوص لتناسب الجداول من اليسار لليمين (LTR) وترتيب العربي
 # ---------------------------------------------------------
 def fix_pdf_text_cell(text):
     if not isinstance(text, str) or not text.strip():
@@ -25,12 +25,12 @@ def fix_pdf_text_cell(text):
     def flush_arabic_buffer():
         if arabic_buffer:
             joined_arabic = "".join(arabic_buffer)
-            # بما أن الإكسيل LTR، نعيد ترتيب الكلمات العربية من اليسار لليمين بشكل بصري صحيح
             words = joined_arabic.split()
-            # في الجداول LTR، النص العربي يقرأ طبيعياً بدون قلب ترتيب الكلمات الكلي إذا عُرض ككتلة واحدة معالجة
+            # في الجداول LTR، لكي يظهر النص العربي مرتباً من اليمين لليسار بصرياً داخل الخلية، نقوم بعكس ترتيب الكلمات وعرضها بـ LTR
+            if len(words) > 1:
+                joined_arabic = " ".join(words[::-1])
             try:
                 reshaped = arabic_reshaper.reshape(joined_arabic)
-                # استخدام bidi بوضع LTR ليتوافق مع الجداول التي على اليسار
                 corrected = get_display(reshaped, base_dir='L')
             except Exception:
                 corrected = joined_arabic
@@ -48,10 +48,10 @@ def fix_pdf_text_cell(text):
     return "".join(processed_tokens)
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول المتقدمة
+# 2. دالة استخراج الجداول المتقدمة ودمجها
 # ---------------------------------------------------------
-def extract_tables_from_pdf(pdf_file):
-    extracted_dfs = []
+def extract_and_combine_tables(uploaded_files):
+    all_dfs = []
     
     strategies = [
         {"vertical_strategy": "lines", "horizontal_strategy": "lines"},
@@ -59,51 +59,68 @@ def extract_tables_from_pdf(pdf_file):
         {"vertical_strategy": "explicit", "horizontal_strategy": "text"}
     ]
     
-    with pdfplumber.open(pdf_file) as pdf:
-        for page_num, page in enumerate(pdf.pages):
-            tables = []
-            
-            for settings in strategies:
-                try:
-                    tables = page.extract_tables(table_settings=settings)
-                    if tables and len(tables) > 0:
-                        break
-                except Exception:
-                    continue
-            
-            if not tables:
-                try:
-                    tables = page.extract_tables()
-                except Exception:
-                    tables = []
-            
-            if not tables:
-                continue
-                
-            for tbl_idx, table in enumerate(tables):
-                if not table or len(table) < 1:
-                    continue
-                
-                df = pd.DataFrame(table)
-                df = df.dropna(how='all').dropna(how='all', axis=1)
-                if df.empty or df.shape[0] < 1:
-                    continue
-
-                if df.shape[0] > 1:
-                    df.columns = [str(col) if col is not None else "" for col in df.iloc[0]]
-                    df = df[1:].reset_index(drop=True)
-
+    for file in uploaded_files:
+        if file.name.endswith('.csv'):
+            try:
+                df = pd.read_csv(file)
                 try:
                     df = df.map(fix_pdf_text_cell)
-                    df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
                 except Exception:
                     df = df.applymap(fix_pdf_text_cell)
-                    df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
-
-                sheet_name = f"P{page_num+1}_T{tbl_idx+1}"[:31]
-                extracted_dfs.append((sheet_name, df))
+                df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+                all_dfs.append(df)
+            except Exception as e:
+                st.error(f"خطأ في معالجة ملف CSV: {e}")
                 
-    return extracted_dfs
+        elif file.name.endswith('.pdf'):
+            with pdfplumber.open(file) as pdf:
+                for page in pdf.pages:
+                    tables = []
+                    for settings in strategies:
+                        try:
+                            tables = page.extract_tables(table_settings=settings)
+                            if tables and len(tables) > 0:
+                                break
+                        except Exception:
+                            continue
+                    
+                    if not tables:
+                        try:
+                            tables = page.extract_tables()
+                        except Exception:
+                            tables = []
+                    
+                    if not tables:
+                        continue
+                        
+                    for table in tables:
+                        if not table or len(table) < 1:
+                            continue
+                        
+                        df = pd.DataFrame(table)
+                        df = df.dropna(how='all').dropna(how='all', axis=1)
+                        if df.empty or df.shape[0] < 1:
+                            continue
+
+                        if df.shape[0] > 1:
+                            df.columns = [str(col) if col is not None else "" for col in df.iloc[0]]
+                            df = df[1:].reset_index(drop=True)
+
+                        try:
+                            df = df.map(fix_pdf_text_cell)
+                            df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+                        except Exception:
+                            df = df.applymap(fix_pdf_text_cell)
+                            df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+
+                        all_dfs.append(df)
+
+    if not all_dfs:
+        return None
+
+    # دمج جميع الجداول المستخرجة في جدول واحد متكامل
+    master_df = pd.concat(all_dfs, ignore_index=True)
+    return master_df
 
 # ---------------------------------------------------------
 # 3. إعدادات الصفحة
@@ -123,18 +140,18 @@ TRANSLATIONS = {
         "title": "المحاسب الذكي Pro",
         "subtitle": "النظام السحابي المتطور لمعالجة الجداول والبيانات ذكياً",
         "motto": "« الفصل في الذمة.. الوصل في الأمانة »",
-        "tab_convert": "📄 تحويل PDF و CSV إلى جداول Excel",
+        "tab_convert": "📄 تحويل PDF و CSV إلى Excel (شيت واحد)",
         "tab_ocr": "🔍 استخراج النصوص الذكي (OCR)",
-        "extractor_title": "مستخرج جداول البيانات",
-        "extractor_desc": "ارفع ملفاتك لتحويل أي جدول صامت داخل الـ PDF أو ملفات CSV إلى ملف إكسيل منسق تلقائياً",
+        "extractor_title": "مستخرج جداول البيانات الموحد",
+        "extractor_desc": "ارفع ملفاتك لدمج كافة الجداول المستخرجة في شيت إكسيل واحد منسق من اليسار لليمين تلقائياً",
         "upload_label": "قم بسحب وإفلات ملفات الـ PDF أو CSV الخاصة بالجداول هنا",
         "ocr_title": "مستخرج النصوص والمسندات (OCR)",
         "ocr_desc": "ارفع صورة المستند أو الفاتورة لاستخراج النصوص والبيانات منها مباشرة",
         "ocr_upload_label": "قم بسحب وإفلات صور المستندات (PNG, JPG, JPEG) هنا",
-        "convert_btn": "⚡ بدء تحويل الملفات واستخراج الجداول",
-        "download_btn": "📥 تحميل ملف Excel المنسق",
-        "processing": "جاري معالجة الملفات وضبط الجداول لتكون من اليسار لليمين...",
-        "success": "تمت معالجة الملفات واستخراج الجداول بنجاح!",
+        "convert_btn": "⚡ بدء دمج وتحويل الملفات لشيت واحد",
+        "download_btn": "📥 تحميل ملف Excel الموحد",
+        "processing": "جاري معالجة ودمج كافة الجداول في شيت واحد وضبط النصوص العربية والأرقام...",
+        "success": "تم دمج ومعالجة الجداول في شيت واحد بنجاح!",
         "no_tables": "لم يتم العثور على جداول صالحة. تأكد أن ملف الـ PDF يحتوي على نصوص جدولية وليست صوراً مسحوحة ضوئياً (Scanned).",
         "select_file_warn": "يرجى رفع ملف واحد على الأقل أولاً."
     },
@@ -142,18 +159,18 @@ TRANSLATIONS = {
         "title": "Smart Accountant Pro",
         "subtitle": "Advanced Cloud System for Smart Table & Data Processing",
         "motto": "« الفصل في الذمة.. الوصل في الأمانة »",
-        "tab_convert": "📄 Convert PDF & CSV to Excel",
+        "tab_convert": "📄 Convert PDF & CSV to Excel (Single Sheet)",
         "tab_ocr": "🔍 Smart Text Extraction (OCR)",
-        "extractor_title": "Data Table Extractor",
-        "extractor_desc": "Upload your files to automatically convert silent tables in PDF or CSV to formatted Excel files",
+        "extractor_title": "Unified Data Table Extractor",
+        "extractor_desc": "Upload files to combine all extracted tables into a single LTR formatted Excel sheet",
         "upload_label": "Drag and drop your PDF or CSV table files here",
         "ocr_title": "Document Text Extractor (OCR)",
         "ocr_desc": "Upload image documents or invoices to extract text and data directly",
         "ocr_upload_label": "Drag and drop document images (PNG, JPG, JPEG) here",
-        "convert_btn": "⚡ Start Converting Files & Extract Tables",
-        "download_btn": "📥 Download Formatted Excel File",
-        "processing": "Processing files and setting tables to LTR...",
-        "success": "Files processed successfully!",
+        "convert_btn": "⚡ Start Combining & Converting to Single Sheet",
+        "download_btn": "📥 Download Unified Excel File",
+        "processing": "Processing and merging all tables into a single sheet...",
+        "success": "Tables processed and merged into a single sheet successfully!",
         "no_tables": "No valid tables found. Ensure the PDF contains text tables and not scanned images.",
         "select_file_warn": "Please upload at least one file first."
     },
@@ -161,19 +178,19 @@ TRANSLATIONS = {
         "title": "سمارٹ اکاؤنٹنٹ Pro",
         "subtitle": "سمارٹ ٹیبل اور ڈیٹا پروسیسنگ کے لیے ایڈوانسڈ کلاؤڈ سسٹم",
         "motto": "« الفصل في الذمة.. الوصل في الأمانة »",
-        "tab_convert": "📄 PDF اور CSV کو Excel میں تبدیل کریں",
+        "tab_convert": "📄 PDF اور CSV کو Excel میں تبدیل کریں (واحد شیٹ)",
         "tab_ocr": "🔍 سمارٹ ٹیکسٹ ایکسٹریکشن (OCR)",
-        "extractor_title": "ڈیٹا ٹیبل ایکسٹریکٹر",
-        "extractor_desc": "PDF یا CSV میں خاموش ٹیبلز کو فارمیٹ شدہ ایکسل فائلوں میں خودکار تبدیل کرنے کے لیے فائلیں اپ لوڈ کریں",
+        "extractor_title": "متحدہ ڈیٹا ٹیبل ایکسٹریکٹر",
+        "extractor_desc": "تمام تخرج شدہ جدولوں کو ایک ہی ایکسل شیٹ میں یکجا کرنے کے لیے فائلیں اپ لوڈ کریں",
         "upload_label": "اپنی PDF یا CSV فائلیں یہاں ڈریگ اور ڈراپ کریں",
         "ocr_title": "ڈاکیومنٹ ٹیکسٹ ایکسٹریکٹر (OCR)",
         "ocr_desc": "متن اور ڈیٹا کو براہ راست نکالنے کے لیے دستاویز کی تصاویر اپ لوڈ کریں",
         "ocr_upload_label": "تصاویر (PNG, JPG, JPEG) یہاں ڈریگ اور ڈراپ کریں",
-        "convert_btn": "⚡ فائلوں کو تبدیل کرنا شروع کریں",
-        "download_btn": "📥 ڈاؤن لوڈ کریں فارمیٹ شدہ ایکسل فائل",
+        "convert_btn": "⚡ فائلوں کو یکجا اور تبدیل کرنا شروع کریں",
+        "download_btn": "📥 ڈاؤن لوڈ کریں متحدہ ایکسل فائل",
         "processing": "فائلوں پر کارروائی ہو رہی ہے...",
-        "success": "فائلیں کامیابی کے ساتھ پروسیس ہو گئیں!",
-        "no_tables": "کوئی جدول نہیں ملا۔ یقینی بنائیں کہ PDF میں اسکین شدہ تصاویر کے بجائے متن موجود ہے۔",
+        "success": "فائلیں کامیابی کے ساتھ یکجا ہو گئیں!",
+        "no_tables": "کوئی جدول نہیں ملا۔",
         "select_file_warn": "برائے مہربانی پہلے کم از کم ایک فائل اپ لوڈ کریں۔"
     }
 }
@@ -384,43 +401,19 @@ with tab1:
             st.warning(t['select_file_warn'])
         else:
             with st.spinner(t['processing']):
-                output_buffer = io.BytesIO()
-                tables_count = 0
+                master_df = extract_and_combine_tables(uploaded_files)
                 
-                with pd.ExcelWriter(output_buffer, engine='openpyxl') as writer:
-                    for idx, file in enumerate(uploaded_files):
-                        if file.name.endswith('.csv'):
-                            try:
-                                df = pd.read_csv(file)
-                                try:
-                                    df = df.map(fix_pdf_text_cell)
-                                except Exception:
-                                    df = df.applymap(fix_pdf_text_cell)
-                                df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
-                                
-                                sheet_name = f"CSV_{idx+1}"[:31]
-                                df.to_excel(writer, sheet_name=sheet_name, index=False)
-                                tables_count += 1
-                            except Exception as e:
-                                st.error(f"خطأ في معالجة ملف CSV: {e}")
-                        
-                        elif file.name.endswith('.pdf'):
-                            try:
-                                extracted_tables = extract_tables_from_pdf(file)
-                                for sheet_name, df in extracted_tables:
-                                    df.to_excel(writer, sheet_name=sheet_name, index=False)
-                                    tables_count += 1
-                            except Exception as e:
-                                st.error(f"خطأ في استخراج جدول الـ PDF: {e}")
+                if master_df is not None and not master_df.empty:
+                    output_buffer = io.BytesIO()
+                    with pd.ExcelWriter(output_buffer, engine='openpyxl') as writer:
+                        master_df.to_excel(writer, sheet_name="Master_Data", index=False)
 
-                if tables_count > 0:
                     output_buffer.seek(0)
                     import openpyxl
                     wb = openpyxl.load_workbook(output_buffer)
-                    for sheet in wb.sheetnames:
-                        ws = wb[sheet]
-                        # جعل الجدول واتجاه الورقة على اليسار دائماً (LTR)
-                        ws.views.sheetView[0].rightToLeft = False
+                    ws = wb["Master_Data"]
+                    # ضبط الشيت ليكون من اليسار لليمين (LTR)
+                    ws.views.sheetView[0].rightToLeft = False
                     
                     final_buffer = io.BytesIO()
                     wb.save(final_buffer)
@@ -430,7 +423,7 @@ with tab1:
                     st.download_button(
                         label=t['download_btn'],
                         data=final_buffer.getvalue(),
-                        file_name="converted_tables.xlsx",
+                        file_name="unified_tables.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         use_container_width=True
                     )
