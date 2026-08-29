@@ -17,16 +17,10 @@ def smart_arabic_ai_fix(text):
     text = text.replace('.س.ر', 'ر.س.').replace('س.ر.', 'ر.س.')
     text = re.sub(r'\s+', ' ', text).strip()
 
-    # إذا كان النص يحتوي على حروف عربية، نقوم بإعادة ترتيب الكلمات والحروف بصورة صحيحة
     if any('\u0600' <= char <= '\u06FF' for char in text):
-        # تقسيم النص إلى كلمات
         words = text.split()
-        
-        # بعض ملفات الـ PDF تعكس ترتيب الكلمات بالكامل (مثل: "رقم الفاتورة 79" تصبح "79 الفاتورة رقم")
-        # نقوم بالتحقق وإعادة ترتيب الكلمات العربية إذا لزم الأمر، أو معالجة كل كلمة على حدة
         corrected_words = []
         for word in words:
-            # إذا كانت الكلمة تحتوي على حروف عربية، نقوم بعمل reshape و bidi لضمان اتصال الحروف
             if any('\u0600' <= char <= '\u06FF' for char in word):
                 try:
                     reshaped = arabic_reshaper.reshape(word)
@@ -36,13 +30,9 @@ def smart_arabic_ai_fix(text):
                     corrected_words.append(word)
             else:
                 corrected_words.append(word)
-        
-        # إذا كانت الجملة مقلوبة بالكامل من مصدر الـ PDF، نعكس ترتيب الكلمات العربية لتُقرا بالشكل الصحيح
-        # (نحافظ على الأرقام والرموز الإنجليزية في مكانها الصحيح)
         text = " ".join(corrected_words)
 
     try:
-        # التطبيق النهائي للتوافق البصري في الجداول
         reshaped_full = arabic_reshaper.reshape(text)
         final_text = get_display(reshaped_full, base_dir='R')
         return final_text
@@ -50,7 +40,7 @@ def smart_arabic_ai_fix(text):
         return text
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول ودمجها بمرونة تامة في شيت واحد
+# 2. دالة استخراج الجداول وترتيب الأعمدة بالشكل الصحيح
 # ---------------------------------------------------------
 def extract_and_combine_tables(uploaded_files):
     all_dfs = []
@@ -69,6 +59,8 @@ def extract_and_combine_tables(uploaded_files):
                     df = df.map(smart_arabic_ai_fix)
                 except Exception:
                     df = df.applymap(smart_arabic_ai_fix)
+                # عكس ترتيب الأعمدة لتناسب العرض العربي الصحيح
+                df = df.iloc[:, ::-1]
                 df.columns = [smart_arabic_ai_fix(str(col)) for col in df.columns]
                 df = df.reset_index(drop=True)
                 all_dfs.append(df)
@@ -111,9 +103,12 @@ def extract_and_combine_tables(uploaded_files):
 
                         try:
                             df = df.map(smart_arabic_ai_fix)
+                            # عكس ترتيب الأعمدة لتبدأ الجداول من اليمين لليسار بصرياً
+                            df = df.iloc[:, ::-1]
                             df.columns = [smart_arabic_ai_fix(str(col)) for col in df.columns]
                         except Exception:
                             df = df.applymap(smart_arabic_ai_fix)
+                            df = df.iloc[:, ::-1]
                             df.columns = [smart_arabic_ai_fix(str(col)) for col in df.columns]
 
                         df = df.reset_index(drop=True)
@@ -122,7 +117,6 @@ def extract_and_combine_tables(uploaded_files):
     if not all_dfs:
         return None
 
-    # توحيد الأعمدة لضمان الدمج السلس في شيت واحد دون أخطاء فهارس
     max_cols = max(df.shape[1] for df in all_dfs)
     standardized_dfs = []
     
@@ -378,7 +372,7 @@ div[role="option"]:hover {{
     padding: 10px 28px;
     border-radius: 30px;
     display: inline-block;
-    border: 1px solid {'rgba(59, 130, 246, 0.25)' if is_dark else 'rgba(37, 99, 235, 0.15)'};
+    border: 1px solid {'rgba(59, 130, 246, 0.25)' if is_dark else 'rgba(37, 99, 235,.15)'};
     box-shadow: {shadow_effect};
 }}
 </style>
@@ -429,8 +423,8 @@ with tab1:
                     wb = openpyxl.load_workbook(output_buffer)
                     ws = wb["Master_Data"]
                     
-                    # ضبط اتجاه الشيت في إكسيل ليصبح من اليمين لليسار تلقائياً
-                    ws.views.sheetView[0].rightToLeft = True
+                    # إبقاء اتجاه الشيت افتراضياً (من اليسار لليمين) لكي يتطابق تماماً مع هيكلة الأعمدة المعكوسة برمجياً
+                    ws.views.sheetView[0].rightToLeft = False
                     
                     final_buffer = io.BytesIO()
                     wb.save(final_buffer)
