@@ -20,7 +20,7 @@ def smart_arabic_ai_fix(text):
         words = text.split()
         corrected_words = []
         for word in words:
-            if any('\u0600' <= char <= '\u06FF' for word in [word]):
+            if any('\u0600' <= char <= '\u06FF' for char in word):
                 fixed_word = word[::-1]
                 corrected_words.append(fixed_word)
             else:
@@ -30,7 +30,7 @@ def smart_arabic_ai_fix(text):
     return text
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول وتوحيد الأعمدة والعناوين بأمان تام
+# 2. دالة استخراج الجداول وعكس ترتيب الأعمدة لتتطابق مع اليمين لليسار
 # ---------------------------------------------------------
 def extract_and_combine_tables(uploaded_files):
     all_dfs = []
@@ -78,13 +78,23 @@ def extract_and_combine_tables(uploaded_files):
                         continue
                         
                     for table in tables:
-                        if not table or len(table) < 1:
+                        if not table or len(table) < 2:
                             continue
                         
                         df = pd.DataFrame(table)
                         df = df.dropna(how='all').dropna(how='all', axis=1)
-                        if df.empty or df.shape[0] < 1:
+                        if df.empty or df.shape[0] < 2:
                             continue
+
+                        # تصحيح الاتجاه وعكس الأعمدة لتتوافق مع اللغة العربية (من اليمين لليسار)
+                        df = df.iloc[:, ::-1]
+
+                        # تثبيت الصف الأول كعناوين صحيحة بعد إعادة الترتيب
+                        raw_headers = [str(col).replace('\n', ' ') if col is not None else "" for col in df.iloc[0]]
+                        fixed_headers = [smart_arabic_ai_fix(h) for h in raw_headers]
+                        
+                        df = df[1:].reset_index(drop=True)
+                        df.columns = fixed_headers
 
                         try:
                             df = df.map(smart_arabic_ai_fix)
@@ -99,24 +109,7 @@ def extract_and_combine_tables(uploaded_files):
     if not all_dfs:
         return None
 
-    # توحيد عدد الأعمدة لجميع الجداول المستخرجة بناءً على أقصى عدد أعمدة موجود
-    max_cols = max(df.shape[1] for df in all_dfs)
-    standardized_dfs = []
-    
-    for df in all_dfs:
-        df.columns = [f"col_{i}" for i in range(df.shape[1])]
-        
-        if df.shape[1] < max_cols:
-            for i in range(df.shape[1], max_cols):
-                df[f"col_{i}"] = ""
-        elif df.shape[1] > max_cols:
-            df = df.iloc[:, :max_cols]
-            
-        df.columns = [f"عمود_{i+1}" for i in range(max_cols)]
-        df = df.reset_index(drop=True)
-        standardized_dfs.append(df)
-
-    master_df = pd.concat(standardized_dfs, ignore_index=True)
+    master_df = pd.concat(all_dfs, ignore_index=True)
     return master_df
 
 # ---------------------------------------------------------
