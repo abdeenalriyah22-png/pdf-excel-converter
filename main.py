@@ -20,7 +20,7 @@ def fix_pdf_text_cell(text):
     if not has_arabic:
         return text
 
-    # تقسيم الكلمات وإعادة ترتيب الكلمات المعكوسة (إذا لزم الأمر حسب طبيعة استخراج pdfplumber)
+    # تقسيم الكلمات وإعادة ترتيب الكلمات المعكوسة
     words = text.split()
     reversed_words = words[::-1]
     reconstructed_text = " ".join(reversed_words)
@@ -83,9 +83,7 @@ def extract_tables_from_pdf(pdf_file):
 
                 # تعيين الصف الأول كعناوين إذا كان مناسباً
                 if df.shape[0] > 1:
-                    df.columns = [str(col) if col is not None else "" for col.iloc[0] if hasattr(df, 'iloc')] rescue None
-                    # الطريقة الآمنة لتعيين الهيدر:
-                    df.columns = [str(c) for c in df.iloc[0]]
+                    df.columns = [str(col) if col is not None else "" for col in df.iloc[0]]
                     df = df[1:].reset_index(drop=True)
 
                 # معالجة النصوص المحاسبية العربية (باستخدام map المتوافقة مع Pandas الحديثة)
@@ -93,7 +91,6 @@ def extract_tables_from_pdf(pdf_file):
                     df = df.map(fix_pdf_text_cell)
                     df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
                 except Exception:
-                    # توافقية مع الإصدارات القديمة إن وجدت
                     df = df.applymap(fix_pdf_text_cell)
                     df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
 
