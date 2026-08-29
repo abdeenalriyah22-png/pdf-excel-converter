@@ -21,18 +21,16 @@ def smart_arabic_ai_fix(text):
         corrected_words = []
         for word in words:
             if any('\u0600' <= char <= '\u06FF' for char in word):
-                # عكس الكلمة لإصلاح الانعكاس البصري الناتج عن استخراج الـ PDF
                 fixed_word = word[::-1]
                 corrected_words.append(fixed_word)
             else:
                 corrected_words.append(word)
-        # إعادة ترتيب الجملة بالشكل السليم
         return " ".join(corrected_words[::-1])
 
     return text
 
 # ---------------------------------------------------------
-# 2. دالة استخراج الجداول وترتيب الأعمدة بالوضع الصحيح
+# 2. دالة استخراج الجداول وتوحيد العناوين بالشكل الصحيح
 # ---------------------------------------------------------
 def extract_and_combine_tables(uploaded_files):
     all_dfs = []
@@ -88,8 +86,10 @@ def extract_and_combine_tables(uploaded_files):
                         if df.empty or df.shape[0] < 1:
                             continue
 
+                        # جعل الصف الأول هو أسماء الأعمدة إذا وجد
                         if df.shape[0] > 1:
-                            df.columns = [str(col) if col is not None else "" for col in df.iloc[0]]
+                            raw_columns = [str(col) if col is not None and str(col).strip() != "" else f"عمود_{i}" for i, col in enumerate(df.iloc[0])]
+                            df.columns = [smart_arabic_ai_fix(col) for col in raw_columns]
                             df = df[1:].reset_index(drop=True)
 
                         try:
@@ -99,22 +99,22 @@ def extract_and_combine_tables(uploaded_files):
 
                         df = df.dropna(how='all', axis=1)
                         if not df.empty:
-                            df.columns = [smart_arabic_ai_fix(str(col)) for col in df.columns]
                             df = df.reset_index(drop=True)
                             all_dfs.append(df)
 
     if not all_dfs:
         return None
 
+    # توحيد الأعمدة بناءً على أقصى عدد أعمدة مع الحفاظ على التسميات النصية وليست Col_
     max_cols = max(df.shape[1] for df in all_dfs)
     standardized_dfs = []
     
     for df in all_dfs:
-        df.columns = [f"Col_{i}" for i in range(df.shape[1])]
-        if df.shape[1] < max_cols:
-            for i in range(df.shape[1], max_cols):
-                df[f"Col_{i}"] = ""
-        df = df[[f"Col_{i}" for i in range(max_cols)]]
+        current_cols = list(df.columns)
+        if len(current_cols) < max_cols:
+            for i in range(len(current_cols), max_cols):
+                current_cols.append(f"عمود_{i}")
+        df.columns = current_cols[:max_cols]
         df = df.reset_index(drop=True)
         standardized_dfs.append(df)
 
