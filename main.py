@@ -86,7 +86,7 @@ def extract_tables_from_pdf(pdf_file):
                     df.columns = [str(col) if col is not None else "" for col in df.iloc[0]]
                     df = df[1:].reset_index(drop=True)
 
-                # معالجة النصوص المحاسبية العربية (باستخدام map المتوافقة مع Pandas الحديثة)
+                # معالجة النصوص المحاسبية العربية
                 try:
                     df = df.map(fix_pdf_text_cell)
                     df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
@@ -173,7 +173,7 @@ TRANSLATIONS = {
 }
 
 # ---------------------------------------------------------
-# 5. شريط الخيارات العلوي
+# 5. شريط الخيارات العلوي والترويسة
 # ---------------------------------------------------------
 top_col1, top_col2 = st.columns([1, 1])
 
@@ -198,14 +198,28 @@ direction = "rtl" if lang_code in ["ar", "ur"] else "ltr"
 text_align = "right" if direction == "rtl" else "left"
 
 # ---------------------------------------------------------
-# 6. تنسيقات CSS لدعم الاتجاه والتصميم
+# 6. الألوان المحدثة والتصميم الاحترافي المتطور
 # ---------------------------------------------------------
-bg_color = "#0b0f19" if is_dark else "#f1f5f9"
-text_primary = "#f8fafc" if is_dark else "#0f172a"
-text_secondary = "#94a3b8" if is_dark else "#475569"
-card_bg = "#1e293b" if is_dark else "#ffffff"
-card_border = "#334155" if is_dark else "#cbd5e1"
-accent_color = "#3b82f6"
+if is_dark:
+    bg_color = "#090d16"
+    card_bg = "#111827"
+    card_border = "#1f2937"
+    text_primary = "#f3f4f6"
+    text_secondary = "#9ca3af"
+    accent_primary = "#3b82f6"
+    accent_gradient = "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
+    tab_bg_active = "#1e293b"
+    shadow_effect = "0 10px 30px -10px rgba(0, 0, 0, 0.5)"
+else:
+    bg_color = "#f8fafc"
+    card_bg = "#ffffff"
+    card_border = "#e2e8f0"
+    text_primary = "#0f172a"
+    text_secondary = "#64748b"
+    accent_primary = "#2563eb"
+    accent_gradient = "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)"
+    tab_bg_active = "#f1f5f9"
+    shadow_effect = "0 10px 25px -5px rgba(0, 0, 0, 0.05)"
 
 st.markdown(f"""
 <style>
@@ -220,46 +234,92 @@ st.markdown(f"""
     direction: {direction};
     text-align: {text_align};
 }}
-.main-header {{
+.app-header {{
     text-align: center;
-    padding: 10px 0 20px 0;
+    padding: 25px 0 15px 0;
+    background: {card_bg};
+    border: 1px solid {card_border};
+    border-radius: 20px;
+    margin-bottom: 25px;
+    box-shadow: {shadow_effect};
 }}
 .main-title {{
-    font-size: 2.6rem;
+    font-size: 2.4rem;
     font-weight: 800;
     color: {text_primary};
     margin: 0;
+    letter-spacing: -0.5px;
 }}
 .main-subtitle {{
-    font-size: 1.05rem;
+    font-size: 1.02rem;
     color: {text_secondary};
-    margin-top: 6px;
+    margin-top: 8px;
+    font-weight: 400;
 }}
 .card-box {{
     background-color: {card_bg};
     border: 1px solid {card_border};
-    border-radius: 16px;
-    padding: 28px;
-    margin-top: 10px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+    border-radius: 20px;
+    padding: 32px;
+    margin-top: 15px;
+    box-shadow: {shadow_effect};
+    transition: all 0.3s ease;
+}}
+.stTabs [data-baseweb="tab-list"] {{
+    gap: 8px;
+    background-color: {card_bg};
+    padding: 6px;
+    border-radius: 14px;
+    border: 1px solid {card_border};
+}}
+.stTabs [data-baseweb="tab"] {{
+    border-radius: 10px;
+    color: {text_secondary};
+    font-weight: 600;
+    padding: 10px 20px;
+}}
+.stTabs [aria-selected="true"] {{
+    background: {accent_gradient} !important;
+    color: #ffffff !important;
+}}
+.stButton button {{
+    background: {accent_gradient};
+    color: white;
+    border-radius: 12px;
+    font-weight: 600;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    transition: all 0.2s ease-in-out;
+}}
+.stButton button:hover {{
+    opacity: 0.95;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
 }}
 .footer-motto-wrapper {{
     text-align: center;
-    margin-top: 40px;
-    margin-bottom: 20px;
+    margin-top: 50px;
+    margin-bottom: 25px;
 }}
 .footer-motto-box {{
     text-align: center;
     font-size: 1.1rem;
     font-weight: 700;
-    color: {accent_color};
-    background: {'rgba(59, 130, 246, 0.12)' if is_dark else 'rgba(59, 130, 246, 0.08)'};
-    padding: 8px 24px;
-    border-radius: 25px;
+    color: {accent_primary};
+    background: {'rgba(59, 130, 246, 0.1)' if is_dark else 'rgba(37, 99, 235, 0.06)'};
+    padding: 10px 28px;
+    border-radius: 30px;
     display: inline-block;
-    border: 1px solid {'rgba(59, 130, 246, 0.3)' if is_dark else 'rgba(59, 130, 246, 0.2)'};
+    border: 1px solid {'rgba(59, 130, 246, 0.25)' if is_dark else 'rgba(37, 99, 235, 0.15)'};
+    box-shadow: {shadow_effect};
 }}
 </style>
+
+<div class="app-header">
+    <div class="main-title">{t['title']}</div>
+    <div class="main-subtitle">{t['subtitle']}</div>
+</div>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
@@ -271,8 +331,8 @@ with tab1:
     st.markdown(f"""
     <div class="card-box">
         <div style="text-align: center; margin-bottom: 15px;">
-            <div style="font-size: 2.8rem; color: #10b981;">📊</div>
-            <h2 style="margin: 5px 0; color: {text_primary};">{t['extractor_title']}</h2>
+            <div style="font-size: 2.8rem; margin-bottom: 5px;">📊</div>
+            <h2 style="margin: 5px 0; color: {text_primary}; font-size: 1.5rem;">{t['extractor_title']}</h2>
             <p style="color: {text_secondary}; font-size: 0.95rem;">{t['extractor_desc']}</p>
         </div>
     </div>
@@ -335,8 +395,8 @@ with tab2:
     st.markdown(f"""
     <div class="card-box">
         <div style="text-align: center; margin-bottom: 15px;">
-            <div style="font-size: 2.8rem; color: #3b82f6;">🖼️</div>
-            <h2 style="margin: 5px 0; color: {text_primary};">{t['ocr_title']}</h2>
+            <div style="font-size: 2.8rem; margin-bottom: 5px;">🖼️</div>
+            <h2 style="margin: 5px 0; color: {text_primary}; font-size: 1.5rem;">{t['ocr_title']}</h2>
             <p style="color: {text_secondary}; font-size: 0.95rem;">{t['ocr_desc']}</p>
         </div>
     </div>
