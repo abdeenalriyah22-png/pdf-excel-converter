@@ -12,20 +12,16 @@ def fix_pdf_text_cell(text):
     if not isinstance(text, str) or not text.strip():
         return text
 
-    # إصلاح الأخطاء الخاصة بالعملة
     text = text.replace('.س.ر', 'ر.س.').replace('س.ر.', 'ر.س.')
 
-    # فحص وجود حروف عربية
     has_arabic = any('\u0600' <= char <= '\u06FF' for char in text)
     if not has_arabic:
         return text
 
-    # تقسيم الكلمات وإعادة ترتيب الكلمات المعكوسة
     words = text.split()
     reversed_words = words[::-1]
     reconstructed_text = " ".join(reversed_words)
 
-    # تطبيق إعادة التشكيل والاتجاه RTL
     try:
         reshaped = arabic_reshaper.reshape(reconstructed_text)
         corrected = get_display(reshaped)
@@ -34,15 +30,18 @@ def fix_pdf_text_cell(text):
         
     return corrected
 
+# دالة مساعدة لتطبيق التعديل على DataFrame بشكل آمن تماماً
+def safe_apply_text_fix(df):
+    for col in df.columns:
+        df[col] = df[col].apply(lambda x: fix_pdf_text_cell(str(x)) if x is not None else "")
+    return df
+
 # ---------------------------------------------------------
-# 2. دالة تحويل الأعمدة الرقمية لمنع ظهور علامة التعجب نهائياً
+# 2. دالة تحويل الأعمدة الرقمية لمنع ظهور علامة التعجب
 # ---------------------------------------------------------
 def clean_numeric_columns(df):
     for col in df.columns:
-        # تحويل السلسلة النصية وإزالة المسافات ورموز العملات أو الفواصل لضمان التحويل السليم
         s = df[col].astype(str).str.strip()
-        
-        # تنظيف الرموز الشائعة لتسهيل التحويل الرقمي
         cleaned = s.str.replace('US$', '', regex=False)\
                    .str.replace('ر.س', '', regex=False)\
                    .str.replace(',', '', regex=False)\
@@ -50,11 +49,9 @@ def clean_numeric_columns(df):
         
         numeric_col = pd.to_numeric(cleaned, errors='coerce')
         
-        # إذا كان العمود يحتوي على نسبة جيدة من الأرقام، نحوله بالكامل ليتم تخزينه فرقم حقيقي
         if numeric_col.notna().sum() > 0:
-            # التحقق إذا كانت الأغلبية أرقاماً
             valid_ratio = numeric_col.notna().sum() / len(df)
-            if valid_ratio >= 0.3: # إذا كان 30% أو أكثر من الخلية رقماً
+            if valid_ratio >= 0.3:
                 df[col] = numeric_col
     return df
 
@@ -95,7 +92,6 @@ def extract_tables_from_pdf(pdf_file):
                     continue
                 
                 df = pd.DataFrame(table)
-                
                 df = df.dropna(how='all').dropna(how='all', axis=1)
                 if df.empty or df.shape[0] < 1:
                     continue
@@ -104,14 +100,12 @@ def extract_tables_from_pdf(pdf_file):
                     df.columns = [str(col) if col is not None else "" for col in df.iloc[0]]
                     df = df[1:].reset_index(drop=True)
 
+                df = safe_apply_text_fix(df)
                 try:
-                    df = df.map(fix_pdf_text_cell)
                     df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
                 except Exception:
-                    df = df.applymap(fix_pdf_text_cell)
-                    df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
+                    pass
 
-                # تنظيف وتحويل الأرقام لتتخلص من علامة التعجب وتصبح أرقاماً حقيقية
                 df = clean_numeric_columns(df)
 
                 sheet_name = f"P{page_num+1}_T{tbl_idx+1}"[:31]
@@ -318,10 +312,7 @@ with tab1:
                         if file.name.endswith('.csv'):
                             try:
                                 df = pd.read_csv(file)
-                                try:
-                                    df = df.map(fix_pdf_text_cell)
-                                except Exception:
-                                    df = df.applymap(fix_pdf_text_cell)
+                                df = safe_apply_text_fix(df)
                                 df.columns = [fix_pdf_text_cell(str(col)) for col in df.columns]
                                 df = clean_numeric_columns(df)
                                 
