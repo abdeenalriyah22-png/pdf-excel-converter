@@ -64,9 +64,9 @@ translations = {
         "btn_convert": "بدء تحويل وجدولة الملف",
         "btn_ocr": "🚀 تشغيل الذكاء الاصطناعي لقراءة النص",
         "status_preparing": "📁 ملف قيد التحضير: ",
-        "status_loading": "جاري تفكيك الجداول وهيكلتها...",
+        "status_loading": "جاري تفكيك الجداول وهيكلتها وتطهير البيانات...",
         "status_ocr_loading": "جاري المسح الضوئي للمستند وتفسير الحروف...",
-        "success_convert": "🚀 اكتمل التحويل بنجاح وبأعلى دقة!",
+        "success_convert": "🚀 اكتمل التحويل بنجاح وبأعلى دقة وتنظيف كامل!",
         "warning_no_tables": "⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.",
         "warning_no_text": "نعتذر، لم نكتشف حروفاً أو نصوصاً مقروءة في هذا المستند.",
         "download_excel": "📥 تحميل ملف Excel المستخرج",
@@ -94,7 +94,7 @@ translations = {
         "btn_convert": "Start Converting File",
         "btn_ocr": "🚀 Launch AI to Read Text",
         "status_preparing": "📁 File preparing: ",
-        "status_loading": "Deconstructing and structuring tables...",
+        "status_loading": "Deconstructing, structuring tables and cleaning data...",
         "status_ocr_loading": "Scanning document and interpreting characters...",
         "success_convert": "🚀 Conversion completed successfully with highest accuracy!",
         "warning_no_tables": "⚠️ No clear numerical tables detected in this file.",
@@ -464,10 +464,9 @@ def apply_theme_and_styles(direction, align, c):
     </style>
     """, unsafe_allow_html=True)
 
-# تطبيق الستايلات والدوال فوراً في البداية
 apply_theme_and_styles(lang["direction"], lang["align"], colors)
 
-# --- 5. دمج الخلفية المتحركة المخصصة لكل ثيم عبر iframe ---
+# --- 5. الخلفية المتحركة ---
 def render_permanent_background(theme):
     if theme == "cyberpunk":
         bg_code = """
@@ -513,7 +512,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
 
-# --- التبويب الأول ---
+# --- التبويب الأول (مع التعديلات الذكية لتنظيف Unnamed وتحويل الأرقام الحقيقية) ---
 with tab1:
     st.markdown(f"""
     <div class="custom-card">
@@ -545,7 +544,25 @@ with tab1:
                                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                                     current_row = 0
                                     for df in dfs:
+                                        # تعبئة القيم الفارغة
                                         df = df.fillna('').replace([float('inf'), float('-inf')], 0)
+                                        
+                                        # 1. إزالة وتنظيف أعمدة الـ Unnamed أو إعادة تسميتها لتجنب الفراغات المزعجة
+                                        df.columns = [str(col).strip() if not str(col).startswith('Unnamed') else '' for col in df.columns]
+                                        
+                                        # 2. تحويل الأعمدة الرقمية (مثل المدين والدائن والرصيد) إلى أرقام صريحة لإزالة علامة التعجب الخضراء
+                                        for col in df.columns:
+                                            # محاولة تحويل القيم النصية الرقمية التي تحتوي على فواصل أو أرقام إلى أرقام حقيقية
+                                            try:
+                                                # إزالة الفواصل إن وجدت وتحويلها لـ numeric
+                                                cleaned_col = df[col].astype(str).str.replace(',', '').str.strip()
+                                                numeric_series = pd.to_numeric(cleaned_col, errors='coerce')
+                                                # إذا كانت نسبة الأرقام الناجحة عالية في العمود، نثبتها كأرقام حقيقية
+                                                if numeric_series.notnull().sum() > 0 and (numeric_series.notnull().sum() / len(df) > 0.3):
+                                                    df[col] = numeric_series.fillna(0)
+                                            except:
+                                                pass
+
                                         df.to_excel(writer, index=False, startrow=current_row, sheet_name='Data')
                                         current_row += len(df) + 2
                                 
