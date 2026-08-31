@@ -176,62 +176,62 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. محرك الأنماط الديناميكي وضبط وضوح نصوص التبويبات ---
+# --- 5. محرك الأنماط الديناميكي وضبط رؤية جميع النصوص (بما فيها الـ Selectbox والـ Uploader) ---
 def apply_theme_and_styles(direction, align, theme):
     if theme == "cyberpunk":
         font_family = "'Orbitron', 'Cairo', sans-serif"
         bg_gradient = "linear-gradient(135deg, rgba(10, 10, 20, 0.95) 0%, rgba(20, 5, 25, 0.95) 100%)"
         text_color = "#f43f5e"
-        main_text = "#e2e8f0"
+        main_text = "#ffffff"
         card_bg = "linear-gradient(145deg, rgba(18, 18, 35, 0.9) 0%, rgba(10, 10, 20, 0.95) 100%)"
         border_color = "#f43f5e"
         accent_color = "#06b6d4"
         btn_gradient = "linear-gradient(135deg, #f43f5e 0%, #06b6d4 100%)"
         btn_hover = "linear-gradient(135deg, #06b6d4 0%, #f43f5e 100%)"
         select_bg = "#0f0f1a"
-        select_text = "#22d3ee"
+        select_text = "#ffffff"
         dropdown_hover = "#1e1b4b"
         tab_text_color = "#38bdf8"
     elif theme == "gold":
         font_family = "'Amiri', 'Cairo', serif"
         bg_gradient = "linear-gradient(135deg, rgba(15, 13, 11, 0.96) 0%, rgba(28, 22, 15, 0.96) 100%)"
         text_color = "#fbbf24"
-        main_text = "#fef3c7"
+        main_text = "#fffbeb"
         card_bg = "linear-gradient(145deg, rgba(30, 24, 16, 0.9) 0%, rgba(18, 14, 9, 0.95) 100%)"
         border_color = "#d97706"
         accent_color = "#fbbf24"
         btn_gradient = "linear-gradient(135deg, #d97706 0%, #b45309 100%)"
         btn_hover = "linear-gradient(135deg, #fbbf24 0%, #d97706 100%)"
         select_bg = "#1c140c"
-        select_text = "#fde68a"
+        select_text = "#ffffff"
         dropdown_hover = "#451a03"
         tab_text_color = "#fcd34d"
     elif theme == "forest":
         font_family = "'Tajawal', 'Cairo', sans-serif"
         bg_gradient = "linear-gradient(135deg, rgba(2, 44, 34, 0.95) 0%, rgba(1, 20, 15, 0.95) 100%)"
         text_color = "#34d399"
-        main_text = "#ecfdf5"
+        main_text = "#f0fdf4"
         card_bg = "linear-gradient(145deg, rgba(4, 58, 44, 0.9) 0%, rgba(2, 35, 27, 0.95) 100%)"
         border_color = "#059669"
         accent_color = "#34d399"
         btn_gradient = "linear-gradient(135deg, #059669 0%, #047857 100%)"
         btn_hover = "linear-gradient(135deg, #34d399 0%, #059669 100%)"
         select_bg = "#022c22"
-        select_text = "#a7f3d0"
+        select_text = "#ffffff"
         dropdown_hover = "#064e3b"
         tab_text_color = "#6ee7b7"
     else:
         font_family = "'Cairo', sans-serif"
         bg_gradient = "linear-gradient(180deg, rgba(10,25,47,0.85) 0%, rgba(6,16,30,0.85) 60%, rgba(3,7,12,0.85) 100%)"
         text_color = "#e6edf3"
-        main_text = "#e6edf3"
+        main_text = "#ffffff"
         card_bg = "linear-gradient(145deg, rgba(22, 27, 34, 0.9) 0%, rgba(15, 19, 25, 0.95) 100%)"
         border_color = "#30363d"
         accent_color = "#38bdf8"
         btn_gradient = "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)"
         btn_hover = "linear-gradient(135deg, #0369a1 0%, #0284c7 100%)"
         select_bg = "#0b1329"
-        select_text = "#f8fafc"
+        select_text = "#ffffff"
         dropdown_hover = "#1e293b"
         tab_text_color = "#38bdf8"
 
@@ -248,7 +248,7 @@ def apply_theme_and_styles(direction, align, theme):
 
     .stApp {{
         background: {bg_gradient} !important;
-        color: {main_text};
+        color: {main_text} !important;
     }}
 
     header, [data-testid="stHeader"] {{
@@ -263,6 +263,7 @@ def apply_theme_and_styles(direction, align, theme):
         padding-right: 5rem !important;
     }}
 
+    /* --- تعديل شامل لـ Selectbox والقوائم المنسدلة لضمان وضوح النص 100% --- */
     [data-testid="stSelectbox"] {{
         background-color: {select_bg} !important;
         padding: 10px 15px !important;
@@ -271,7 +272,7 @@ def apply_theme_and_styles(direction, align, theme):
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
     }}
 
-    [data-testid="stSelectbox"] label p {{
+    [data-testid="stSelectbox"] label p, [data-testid="stSelectbox"] label span {{
         font-size: 15px !important;
         font-weight: 700 !important;
         color: {accent_color} !important;
@@ -285,9 +286,11 @@ def apply_theme_and_styles(direction, align, theme):
         color: {select_text} !important;
     }}
 
-    [data-testid="stSelectbox"] div[data-baseweb="select"] * {{
+    [data-testid="stSelectbox"] div[data-baseweb="select"] *, 
+    [data-testid="stSelectbox"] span {{
         color: {select_text} !important;
         background-color: transparent !important;
+        font-weight: bold !important;
     }}
 
     div[data-baseweb="popover"], 
@@ -304,7 +307,8 @@ def apply_theme_and_styles(direction, align, theme):
 
     li[role="option"], 
     div[role="option"],
-    [data-baseweb="menu"] li {{
+    [data-baseweb="menu"] li,
+    [data-baseweb="menu"] li span {{
         background-color: {select_bg} !important;
         color: {select_text} !important;
         font-weight: bold !important;
@@ -319,7 +323,7 @@ def apply_theme_and_styles(direction, align, theme):
         color: {accent_color} !important;
     }}
 
-    /* --- تعديل وتحسين رؤية نصوص التبويبات (Tabs) بشكل كامل --- */
+    /* --- تعديل وتحسين رؤية نصوص التبويبات (Tabs) --- */
     .stTabs [data-baseweb="tab-list"] {{
         gap: 15px;
         background-color: rgba(0, 0, 0, 0.5);
@@ -357,12 +361,24 @@ def apply_theme_and_styles(direction, align, theme):
         font-weight: 900 !important;
     }}
 
+    /* --- تعديل ألوان الـ File Uploader لضمان ظهور النصوص والتعليمات بوضوح --- */
     [data-testid="stFileUploader"] {{
         background-color: {card_bg} !important;
         border: 2px dashed {border_color} !important;
         border-radius: 20px !important;
         padding: 30px !important;
         box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }}
+
+    [data-testid="stFileUploader"] section {{
+        background-color: transparent !important;
+    }}
+
+    [data-testid="stFileUploader"] span, 
+    [data-testid="stFileUploader"] small, 
+    [data-testid="stFileUploader"] p,
+    [data-testid="stFileUploader"] div {{
+        color: {main_text} !important;
     }}
 
     .custom-card {{
