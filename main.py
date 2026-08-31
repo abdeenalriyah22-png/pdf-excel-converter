@@ -137,14 +137,14 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. ستايل النيون المتطور مع دعم الثيمات والخلفية المتحركة ثلاثية الأبعاد (3D Shapes) الواضحة ---
+# --- 5. ستايل التصميم الخلاب مع خلفية البحر، الأمواج، الأشجار، والطيور المتحركة ---
 def apply_neon_style(direction, align, theme):
-    bg_gradient = "radial-gradient(circle at center, #111723 0%, #07090e 100%)" if theme == "dark" else "radial-gradient(circle at center, #f0f4f8 0%, #d9e2ec 100%)"
-    text_color = "#e6edf3" if theme == "dark" else "#1f2937"
-    card_bg = "linear-gradient(145deg, #161b22 0%, #0f1319 100%)" if theme == "dark" else "linear-gradient(145deg, #ffffff 0%, #f7f9fc 100%)"
-    border_color = "#30363d" if theme == "dark" else "#cbd5e1"
-    sub_text = "#8b949e" if theme == "dark" else "#4b5563"
-    accent_color = "#58a6ff" if theme == "dark" else "#0284c7"
+    bg_gradient = "linear-gradient(180deg, #0a192f 0%, #06101e 60%, #03070c 100%)" if theme == "dark" else "linear-gradient(180deg, #e0f2fe 0%, #bae6fd 60%, #7dd3fc 100%)"
+    text_color = "#e6edf3" if theme == "dark" else "#0f172a"
+    card_bg = "linear-gradient(145deg, rgba(22, 27, 34, 0.85) 0%, rgba(15, 19, 25, 0.9) 100%)" if theme == "dark" else "linear-gradient(145deg, rgba(255, 255, 255, 0.9) 100%, rgba(240, 249, 255, 0.9) 100%)"
+    border_color = "#30363d" if theme == "dark" else "#bae6fd"
+    sub_text = "#8b949e" if theme == "dark" else "#334155"
+    accent_color = "#38bdf8" if theme == "dark" else "#0284c7"
     
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -161,10 +161,11 @@ def apply_neon_style(direction, align, theme):
     .stApp {{
         background: {bg_gradient} !important;
         color: {text_color};
+        background-attachment: fixed;
     }}
 
-    /* --- خلفية الأشكال ثلاثية الأبعاد المتحركة (مربعات ودوائر واضحة) --- */
-    .background-shapes {{
+    /* --- خلفية الطبيعة المتكاملة (بحر، أمواج، أشجار، طيور) --- */
+    .nature-background {{
         position: fixed;
         top: 0;
         left: 0;
@@ -175,35 +176,61 @@ def apply_neon_style(direction, align, theme):
         pointer-events: none;
     }}
 
-    .shape {{
+    /* الأمواج المتحركة في الأسفل */
+    .ocean-waves {{
         position: absolute;
-        opacity: 0.35;
-        animation: floatShape 15s infinite linear;
+        bottom: 0;
+        left: 0;
+        width: 200%;
+        height: 120px;
+        background: url('https://cdn.jsdelivr.net/gh/arhamitech/hosted-images/wave.png') repeat-x;
+        background-size: 50% 100px;
+        opacity: 0.15;
+        animation: waveAnimation 12s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite;
+    }}
+    .ocean-waves:nth-child(2) {{
+        bottom: 10px;
+        opacity: 0.08;
+        animation: waveAnimation 18s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite reverse;
     }}
 
-    .shape.circle {{
+    @keyframes waveAnimation {{
+        0% {{ transform: translateX(0); }}
+        100% {{ transform: translateX(-50%); }}
+    }}
+
+    /* الأشجار الناعمة في الجانبين */
+    .trees-silhouette {{
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 150px;
+        background-image: radial-gradient(circle, rgba(16, 185, 129, 0.12) 10%, transparent 20%), radial-gradient(circle, rgba(5, 150, 105, 0.1) 15%, transparent 25%);
+        background-size: 60px 90px;
+        background-repeat: repeat-x;
+        opacity: 0.6;
+    }}
+
+    /* طيور تحلق في الأفق */
+    .bird {{
+        position: absolute;
+        width: 18px;
+        height: 10px;
+        border-bottom: 2px solid {accent_color};
         border-radius: 50%;
-        background: linear-gradient(135deg, {accent_color}, #4facfe);
-        box-shadow: inset -8px -8px 20px rgba(0,0,0,0.5), 0 0 25px {accent_color};
+        opacity: 0.4;
+        animation: flyBird 25s linear infinite;
     }}
 
-    .shape.square {{
-        border-radius: 16px;
-        background: linear-gradient(45deg, #4facfe, {accent_color});
-        box-shadow: inset 8px 8px 20px rgba(255,255,255,0.3), 0 0 25px rgba(0,0,0,0.4);
-        transform: rotate(45deg);
-    }}
+    .bird:nth-of-type(1) {{ top: 15%; left: -10%; animation-duration: 22s; animation-delay: 0s; }}
+    .bird:nth-of-type(2) {{ top: 25%; left: -15%; animation-duration: 28s; animation-delay: 5s; transform: scale(0.8); }}
+    .bird:nth-of-type(3) {{ top: 10%; left: -20%; animation-duration: 20s; animation-delay: 10s; transform: scale(0.6); }}
 
-    .shape:nth-child(1) {{ width: 90px; height: 90px; top: 15%; left: 10%; animation-duration: 12s; }}
-    .shape:nth-child(2) {{ width: 130px; height: 130px; top: 65%; left: 80%; animation-duration: 18s; }}
-    .shape:nth-child(3) {{ width: 70px; height: 70px; top: 35%; left: 85%; animation-duration: 10s; }}
-    .shape:nth-child(4) {{ width: 110px; height: 110px; top: 75%; left: 15%; animation-duration: 16s; }}
-    .shape:nth-child(5) {{ width: 95px; height: 95px; top: 20%; left: 70%; animation-duration: 14s; }}
-
-    @keyframes floatShape {{
-        0% {{ transform: translateY(0) rotate(0deg) scale(1); }}
-        50% {{ transform: translateY(-120px) rotate(180deg) scale(1.15); }}
-        100% {{ transform: translateY(0) rotate(360deg) scale(1); }}
+    @keyframes flyBird {{
+        0% {{ transform: translateX(0) translateY(0) rotate(0deg); }}
+        50% {{ transform: translateX(60vw) translateY(-30px) rotate(-10deg); }}
+        100% {{ transform: translateX(120vw) translateY(10px) rotate(5deg); }}
     }}
 
     header, [data-testid="stHeader"] {{
@@ -222,14 +249,14 @@ def apply_neon_style(direction, align, theme):
         font-size: 18px !important;
         font-weight: bold !important;
         color: {accent_color} !important;
-        text-shadow: 0 0 12px rgba(88, 166, 255, 0.4);
+        text-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
     }}
     
     [data-testid="stSelectbox"] div[data-baseweb="select"] {{
-        background: linear-gradient(135deg, rgba(31, 111, 235, 0.2) 0%, rgba(13, 68, 165, 0.3) 100%) !important;
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(2, 132, 199, 0.25) 100%) !important;
         border: 2px solid {accent_color} !important;
         border-radius: 12px !important;
-        box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
     }}
 
     [data-testid="stFileUploader"] button span span {{
@@ -242,7 +269,7 @@ def apply_neon_style(direction, align, theme):
 
     .stTabs [data-baseweb="tab-list"] {{
         gap: 15px;
-        background-color: rgba(22, 27, 34, 0.5);
+        background-color: rgba(22, 27, 34, 0.6);
         padding: 8px;
         border-radius: 12px;
         border: 1px solid {border_color};
@@ -260,18 +287,18 @@ def apply_neon_style(direction, align, theme):
     }}
 
     .stTabs [aria-selected="true"] {{
-        background: linear-gradient(135deg, #1f6feb 0%, #0d44a5) !important;
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1) !important;
         color: white !important;
-        box-shadow: 0 0 15px rgba(31, 111, 235, 0.6);
+        box-shadow: 0 0 15px rgba(2, 132, 199, 0.5);
         transform: scale(1.02);
     }}
 
     [data-testid="stFileUploader"] {{
-        background-color: rgba(22, 27, 34, 0.6) !important;
+        background-color: {card_bg} !important;
         border: 2px dashed {border_color} !important;
         border-radius: 20px !important;
         padding: 30px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }}
 
     .custom-card {{
@@ -282,6 +309,7 @@ def apply_neon_style(direction, align, theme):
         text-align: center;
         margin-bottom: 20px;
         box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        backdrop-filter: blur(5px);
     }}
 
     h1 {{
@@ -293,7 +321,7 @@ def apply_neon_style(direction, align, theme):
     }}
 
     .stButton>button {{
-        background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important;
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
         color: white !important;
         border: none !important;
         border-radius: 12px !important;
@@ -301,7 +329,7 @@ def apply_neon_style(direction, align, theme):
         font-weight: bold !important;
         font-size: 16px !important;
         width: 100%;
-        box-shadow: 0 4px 12px rgba(46, 160, 67, 0.2);
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
     }}
 
     .footer {{
@@ -309,7 +337,7 @@ def apply_neon_style(direction, align, theme):
         bottom: 0;
         left: 0;
         width: 100%;
-        background-color: rgba(22, 27, 34, 0.9);
+        background-color: rgba(15, 23, 42, 0.85);
         backdrop-filter: blur(8px);
         color: {sub_text};
         text-align: center;
@@ -320,13 +348,14 @@ def apply_neon_style(direction, align, theme):
     }}
     </style>
     
-    <!-- الأشكال الهندسية ثلاثية الأبعاد المتحركة بوضوح -->
-    <div class="background-shapes">
-        <div class="shape circle"></div>
-        <div class="shape square"></div>
-        <div class="shape circle"></div>
-        <div class="shape square"></div>
-        <div class="shape circle"></div>
+    <!-- خلفية الطبيعة (البحر، الأمواج، الأشجار، والطيور) -->
+    <div class="nature-background">
+        <div class="bird"></div>
+        <div class="bird"></div>
+        <div class="bird"></div>
+        <div class="trees-silhouette"></div>
+        <div class="ocean-waves"></div>
+        <div class="ocean-waves"></div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -348,7 +377,7 @@ tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
 with tab1:
     st.markdown(f"""
     <div class="custom-card">
-        <div class="icon-container excel-icon"><i class="fa-solid fa-file-excel" style="font-size: 50px; color: #2ea043;"></i></div>
+        <div class="icon-container excel-icon"><i class="fa-solid fa-file-excel" style="font-size: 50px; color: #38bdf8;"></i></div>
         <h3 style='margin:0;'>{lang["card1_title"]}</h3>
         <p style='font-size:14px; margin:5px 0;'>{lang["card1_desc"]}</p>
     </div>
@@ -402,7 +431,7 @@ with tab1:
 with tab2:
     st.markdown(f"""
     <div class="custom-card">
-        <div class="icon-container ocr-icon"><i class="fa-solid fa-eye" style="font-size: 50px; color: #58a6ff;"></i></div>
+        <div class="icon-container ocr-icon"><i class="fa-solid fa-eye" style="font-size: 50px; color: #38bdf8;"></i></div>
         <h3 style='margin:0;'>{lang["card2_title"]}</h3>
         <p style='font-size:14px; margin:5px 0;'>{lang["card2_desc"]}</p>
     </div>
@@ -475,6 +504,6 @@ components.html(ads_code, height=110)
 # التذييل الاحترافي الثابت في قاع الموقع
 st.markdown(f"""
     <div class="footer">
-        المحاسب الذكي Pro | <span style="color:#58a6ff;">{lang["motto"]}</span> | 2026 ©
+        المحاسب الذكي Pro | <span style="color:#38bdf8;">{lang["motto"]}</span> | 2026 ©
     </div>
 """, unsafe_allow_html=True)
