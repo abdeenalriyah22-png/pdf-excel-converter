@@ -17,130 +17,81 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. دمج الخلفية المتحركة عبر مكون HTML مستقل تماماً (iframe لا يعيد التحميل أبداً) ---
-def render_permanent_background(theme):
-    bg_color = "#03070c" if theme == "dark" else "#7dd3fc"
-    accent_color = "#38bdf8" if theme == "dark" else "#0284c7"
-    
-    bg_html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <style>
-        body, html {{
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: {bg_color};
-        }}
-        .nature-background {{
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            z-index: 9999;
-            pointer-events: none;
-        }}
-        .ocean-waves {{
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 200%;
-            height: 120px;
-            background: linear-gradient(0deg, rgba(2, 132, 199, 0.35), transparent);
-            border-radius: 100% 100% 0 0;
-            animation: waveAnimation 8s ease-in-out infinite alternate;
-        }}
-        .ocean-waves:nth-child(2) {{
-            bottom: -25px;
-            opacity: 0.6;
-            animation: waveAnimation 12s ease-in-out infinite alternate-reverse;
-        }}
-        @keyframes waveAnimation {{
-            0% {{ transform: translateX(-10%) translateY(0); }}
-            100% {{ transform: translateX(-30%) translateY(-15px); }}
-        }}
-        .trees-silhouette {{
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 90px;
-            background: repeating-linear-gradient(90deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.25) 30px, transparent 30px, transparent 60px);
-            clip-path: polygon(0% 100%, 5% 40%, 10% 100%, 15% 30%, 20% 100%, 25% 50%, 30% 100%, 35% 20%, 40% 100%, 45% 45%, 50% 100%, 55% 35%, 60% 100%, 65% 25%, 70% 100%, 75% 50%, 80% 100%, 85% 30%, 90% 100%, 95% 45%, 100% 100%);
-        }}
-        .bird {{
-            position: absolute;
-            width: 20px;
-            height: 10px;
-            border-bottom: 2px solid {accent_color};
-            border-radius: 50%;
-            opacity: 0.8;
-            animation: flyBird 20s linear infinite;
-        }}
-        .bird:nth-of-type(1) {{ top: 15%; left: -10%; animation-duration: 18s; animation-delay: 0s; }}
-        .bird:nth-of-type(2) {{ top: 25%; left: -15%; animation-duration: 24s; animation-delay: 4s; transform: scale(0.7); }}
-        .bird:nth-of-type(3) {{ top: 10%; left: -20%; animation-duration: 15s; animation-delay: 8s; transform: scale(0.5); }}
-        @keyframes flyBird {{
-            0% {{ transform: translateX(0) translateY(0) rotate(0deg); }}
-            50% {{ transform: translateX(60vw) translateY(-40px) rotate(-10deg); }}
-            100% {{ transform: translateX(120vw) translateY(10px) rotate(5deg); }}
-        }}
-    </style>
-    </head>
-    <body>
-        <div class="nature-background">
-            <div class="bird"></div>
-            <div class="bird"></div>
-            <div class="bird"></div>
-            <div class="trees-silhouette"></div>
-            <div class="ocean-waves"></div>
-            <div class="ocean-waves"></div>
-        </div>
-    </body>
-    </html>
-    """
-    components.html(f"""
-    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -999; pointer-events: none;">
-        <iframe srcdoc="{bg_html.replace('"', '&quot;')}" style="width: 100%; height: 100%; border: none; pointer-events: none;"></iframe>
-    </div>
-    """, height=0, width=0)
-
-# --- 3. زر تبديل الثيم (داكن / فاتح) واختيار اللغة في الأعلى ---
-col_top1, col_top2 = st.columns([6, 1])
+# --- 2. التحكم في اختيار الثيم واللغة من الأعلى ---
+col_top1, col_top2, col_top3 = st.columns([3, 3, 2])
 
 with col_top1:
     selected_lang = st.selectbox(
-        "🌐 Choose Language / اختر اللغة / زبان کا انتخاب کریں",
+        "🌐 Choose Language / اختر اللغة",
         ["العربية", "English", "اردو"],
         index=0,
         key="language_selector"
     )
 
 with col_top2:
+    selected_theme_name = st.selectbox(
+        "🎨 Select Theme / اختر الثيم الفني",
+        ["🌌 نيون سايبربانك (Cyberpunk Neon)", "👑 رويال جولد (Royal Gold)", "🌲 الطبيعة المريحة (Emerald Forest)", "🌙 الكلاسيكي الداكن (Dark Mode)"],
+        index=0,
+        key="theme_selector"
+    )
+
+with col_top3:
     st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
-    theme_mode = st.toggle("☀️ / 🌙", value=True, key="theme_switcher_toggle", help="تبديل الثيم (داكن / فاتح)")
+    # خريطة لربط اسم الثيم بنوع الثيم البرمجي
+    theme_mapping = {
+        "🌌 نيون سايبربانك (Cyberpunk Neon)": "cyberpunk",
+        "👑 رويال جولد (Royal Gold)": "gold",
+        "🌲 الطبيعة المريحة (Emerald Forest)": "forest",
+        "🌙 الكلاسيكي الداكن (Dark Mode)": "dark"
+    }
+    current_theme = theme_mapping.get(selected_theme_name, "cyberpunk")
 
-current_theme = "dark" if theme_mode else "light"
+# --- 3. دمج الخلفية المتحركة المخصصة لكل ثيم عبر iframe ---
+def render_permanent_background(theme):
+    if theme == "cyberpunk":
+        bg_code = """
+        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #05050a; }
+        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; }
+        .grid-line { position: absolute; width: 200%; height: 200%; background-image: linear-gradient(rgba(236, 72, 153, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px); background-size: 40px 40px; animation: moveGrid 20s linear infinite; }
+        @keyframes moveGrid { 0% { transform: translateY(0); } 100% { transform: translateY(40px); } }
+        """
+    elif theme == "gold":
+        bg_code = """
+        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #0c0a09; }
+        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; background: radial-gradient(circle at 50% 20%, rgba(217, 119, 6, 0.12) 0%, transparent 60%); }
+        """
+    elif theme == "forest":
+        bg_code = """
+        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #022c22; }
+        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; background: radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.15) 0%, transparent 50%); }
+        """
+    else:  # dark
+        bg_code = """
+        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #03070c; }
+        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; }
+        """
 
-# استدعاء الخلفية الثابتة والمستقلة للحركة
+    bg_html = f"""<!DOCTYPE html><html><head><style>{bg_code}</style></head><body><div class="bg-fx"><div class="grid-line"></div></div></body></html>"""
+    components.html(f"""
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -999; pointer-events: none;">
+        <iframe srcdoc="{bg_html.replace('"', '&quot;')}" style="width: 100%; height: 100%; border: none; pointer-events: none;"></iframe>
+    </div>
+    """, height=0, width=0)
+
 render_permanent_background(current_theme)
 
-# --- 4. قاموس الترجمة للغات الثلاث (تم تنظيف النصوص المكررة ومنع تداخل الكلمات) ---
+# --- 4. قاموس الترجمة للغات الثلاث ---
 translations = {
     "العربية": {
         "direction": "rtl",
         "align": "right",
-        "title": "📊 المحاسب الذكي <span style='font-size:22px; color:var(--accent-color); font-weight:normal;'>Pro</span>",
+        "title": "📊 المحاسب الذكي <span style='font-size:22px; font-weight:normal;'>Pro</span>",
         "subtitle": "النظام السحابي المطور لمعالجة الجداول والبيانات ذكياً",
         "tab1_title": "📊 تحويل PDF و CSV إلى Excel",
         "tab2_title": "🔍 استخراج النصوص الذكي (OCR)",
         "card1_title": "مستخرج جداول البيانات",
-        "card1_desc": "ارفع ملفاتك لتحويل أي جدول صامت داخل الـ PDF أو ملفات CSV إلى ملف إكسيل منسق تلقائياً",
+        "card1_desc": "ارفع ملفاتك لتحويل أي جدول داخل الـ PDF أو ملفات CSV إلى ملف إكسيل منسق تلقائياً",
         "card2_title": "قارئ النصوص والماسح الضوئي",
         "card2_desc": "استخراج النصوص العربية والإنجليزية والأوردو بدقة كاملة من المستندات المصورة والـ PDF",
         "uploader_pdf": "قم بسحب وإفلات ملفات الـ PDF أو CSV الخاصة بالجداول هنا",
@@ -165,7 +116,7 @@ translations = {
     "English": {
         "direction": "ltr",
         "align": "left",
-        "title": "📊 Smart Accountant <span style='font-size:22px; color:var(--accent-color); font-weight:normal;'>Pro</span>",
+        "title": "📊 Smart Accountant <span style='font-size:22px; font-weight:normal;'>Pro</span>",
         "subtitle": "Advanced cloud system for smart data and table processing",
         "tab1_title": "📊 Convert PDF & CSV to Excel",
         "tab2_title": "🔍 Smart Text Extraction (OCR)",
@@ -195,7 +146,7 @@ translations = {
     "اردو": {
         "direction": "rtl",
         "align": "right",
-        "title": "📊 سمارٹ اکاؤنٹنٹ <span style='font-size:22px; color:var(--accent-color); font-weight:normal;'>Pro</span>",
+        "title": "📊 سمارٹ اکاؤنٹنٹ <span style='font-size:22px; font-weight:normal;'>Pro</span>",
         "subtitle": "سمارٹ ڈیٹا اور ٹیبل پروسیسنگ کے لیے جدید کلاؤڈ سسٹم",
         "tab1_title": "📊 پی ڈی ایف اور سی ایس وی کو ایکسل میں تبدیل کریں",
         "tab2_title": "🔍 سمارٹ ٹیکسٹ نکالنا (OCR)",
@@ -226,34 +177,76 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. تطبيق التنسيقات العامة للواجهة واللمسات الفنية التفاعلية للأزرار ---
-def apply_ui_style(direction, align, theme):
-    bg_gradient = "linear-gradient(180deg, rgba(10,25,47,0.85) 0%, rgba(6,16,30,0.85) 60%, rgba(3,7,12,0.85) 100%)" if theme == "dark" else "linear-gradient(180deg, rgba(224,242,254,0.85) 0%, rgba(186,230,253,0.85) 60%, rgba(125,211,252,0.85) 100%)"
-    text_color = "#e6edf3" if theme == "dark" else "#0f172a"
-    card_bg = "linear-gradient(145deg, rgba(22, 27, 34, 0.9) 0%, rgba(15, 19, 25, 0.95) 100%)" if theme == "dark" else "linear-gradient(145deg, rgba(255, 255, 255, 0.9) 100%, rgba(240, 249, 255, 0.9) 100%)"
-    border_color = "#30363d" if theme == "dark" else "#bae6fd"
-    sub_text = "#8b949e" if theme == "dark" else "#334155"
-    accent_color = "#38bdf8" if theme == "dark" else "#0284c7"
-    
-    select_bg = "#0b1329" if theme == "dark" else "#ffffff"
-    select_text = "#f8fafc" if theme == "dark" else "#0f172a"
-    dropdown_hover = "#1e293b" if theme == "dark" else "#e0f2fe"
-    
+# --- 5. محرك الأنماط الديناميكي للثيمات الثلاث الجديدة والخطوط المتغيرة ---
+def apply_theme_and_styles(direction, align, theme):
+    # إعدادات مخصصة لكل ثيم (الخطوط، الألوان، التدرجات)
+    if theme == "cyberpunk":
+        font_family = "'Orbitron', 'Cairo', sans-serif"
+        bg_gradient = "linear-gradient(135deg, rgba(10, 10, 20, 0.95) 0%, rgba(20, 5, 25, 0.95) 100%)"
+        text_color = "#f43f5e"
+        main_text = "#e2e8f0"
+        card_bg = "linear-gradient(145deg, rgba(18, 18, 35, 0.9) 0%, rgba(10, 10, 20, 0.95) 100%)"
+        border_color = "#f43f5e"
+        accent_color = "#06b6d4"
+        btn_gradient = "linear-gradient(135deg, #f43f5e 0%, #06b6d4 100%)"
+        btn_hover = "linear-gradient(135deg, #06b6d4 0%, #f43f5e 100%)"
+        select_bg = "#0f0f1a"
+        select_text = "#22d3ee"
+        dropdown_hover = "#1e1b4b"
+    elif theme == "gold":
+        font_family = "'Amiri', 'Cairo', serif"
+        bg_gradient = "linear-gradient(135deg, rgba(15, 13, 11, 0.96) 0%, rgba(28, 22, 15, 0.96) 100%)"
+        text_color = "#fbbf24"
+        main_text = "#fef3c7"
+        card_bg = "linear-gradient(145deg, rgba(30, 24, 16, 0.9) 0%, rgba(18, 14, 9, 0.95) 100%)"
+        border_color = "#d97706"
+        accent_color = "#fbbf24"
+        btn_gradient = "linear-gradient(135deg, #d97706 0%, #b45309 100%)"
+        btn_hover = "linear-gradient(135deg, #fbbf24 0%, #d97706 100%)"
+        select_bg = "#1c140c"
+        select_text = "#fde68a"
+        dropdown_hover = "#451a03"
+    elif theme == "forest":
+        font_family = "'Tajawal', 'Cairo', sans-serif"
+        bg_gradient = "linear-gradient(135deg, rgba(2, 44, 34, 0.95) 0%, rgba(1, 20, 15, 0.95) 100%)"
+        text_color = "#34d399"
+        main_text = "#ecfdf5"
+        card_bg = "linear-gradient(145deg, rgba(4, 58, 44, 0.9) 0%, rgba(2, 35, 27, 0.95) 100%)"
+        border_color = "#059669"
+        accent_color = "#34d399"
+        btn_gradient = "linear-gradient(135deg, #059669 0%, #047857 100%)"
+        btn_hover = "linear-gradient(135deg, #34d399 0%, #059669 100%)"
+        select_bg = "#022c22"
+        select_text = "#a7f3d0"
+        dropdown_hover = "#064e3b"
+    else: # dark standard
+        font_family = "'Cairo', sans-serif"
+        bg_gradient = "linear-gradient(180deg, rgba(10,25,47,0.85) 0%, rgba(6,16,30,0.85) 60%, rgba(3,7,12,0.85) 100%)"
+        text_color = "#e6edf3"
+        main_text = "#e6edf3"
+        card_bg = "linear-gradient(145deg, rgba(22, 27, 34, 0.9) 0%, rgba(15, 19, 25, 0.95) 100%)"
+        border_color = "#30363d"
+        accent_color = "#38bdf8"
+        btn_gradient = "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)"
+        btn_hover = "linear-gradient(135deg, #0369a1 0%, #0284c7 100%)"
+        select_bg = "#0b1329"
+        select_text = "#f8fafc"
+        dropdown_hover = "#1e293b"
+
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;700;900&family=Orbitron:wght@500;700;900&family=Tajawal:wght@450;700;900&display=swap" rel="stylesheet">
     
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
-    
     html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea {{
-        font-family: 'Cairo', sans-serif !important;
+        font-family: {font_family} !important;
         direction: {direction} !important;
         text-align: {align} !important;
     }}
 
     .stApp {{
         background: {bg_gradient} !important;
-        color: {text_color};
+        color: {main_text};
     }}
 
     header, [data-testid="stHeader"] {{
@@ -268,17 +261,17 @@ def apply_ui_style(direction, align, theme):
         padding-right: 5rem !important;
     }}
 
-    /* صندوق اختيار اللغة الرئيسي */
+    /* صناديق الاختيار والقوائم المنسدلة */
     [data-testid="stSelectbox"] {{
         background-color: {select_bg} !important;
         padding: 10px 15px !important;
         border-radius: 14px !important;
-        border: 2px solid {accent_color} !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+        border: 2px solid {border_color} !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
     }}
 
     [data-testid="stSelectbox"] label p {{
-        font-size: 16px !important;
+        font-size: 15px !important;
         font-weight: 700 !important;
         color: {accent_color} !important;
         margin-bottom: 5px !important;
@@ -296,16 +289,16 @@ def apply_ui_style(direction, align, theme):
         background-color: transparent !important;
     }}
 
-    /* القائمة المنبثقة وعناصر القائمة لمنع الشفافية وضمان عدم التداخل */
+    /* القوائم المنبثقة لمنع الشفافية وضمان وضوح خيارات اللغات والثيمات */
     div[data-baseweb="popover"], 
     div[data-baseweb="menu"], 
     ul[role="listbox"],
     div[id^="baseui-menu-"] {{
         background-color: {select_bg} !important;
         background: {select_bg} !important;
-        border: 2px solid {accent_color} !important;
+        border: 2px solid {border_color} !important;
         border-radius: 12px !important;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.7) !important;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.8) !important;
         opacity: 1 !important;
     }}
 
@@ -314,9 +307,8 @@ def apply_ui_style(direction, align, theme):
     [data-baseweb="menu"] li {{
         background-color: {select_bg} !important;
         color: {select_text} !important;
-        font-family: 'Cairo', sans-serif !important;
         font-weight: bold !important;
-        padding: 10px 15px !important;
+        padding: 12px 18px !important;
         opacity: 1 !important;
     }}
 
@@ -329,7 +321,7 @@ def apply_ui_style(direction, align, theme):
 
     .stTabs [data-baseweb="tab-list"] {{
         gap: 15px;
-        background-color: rgba(22, 27, 34, 0.7);
+        background-color: rgba(0, 0, 0, 0.4);
         padding: 8px;
         border-radius: 12px;
         border: 1px solid {border_color};
@@ -339,7 +331,7 @@ def apply_ui_style(direction, align, theme):
         height: 48px;
         background-color: transparent;
         border-radius: 8px;
-        color: {sub_text};
+        color: {main_text};
         border: none;
         padding: 0 25px;
         font-weight: bold;
@@ -347,9 +339,9 @@ def apply_ui_style(direction, align, theme):
     }}
 
     .stTabs [aria-selected="true"] {{
-        background: linear-gradient(135deg, #0284c7 0%, #0369a1) !important;
+        background: {btn_gradient} !important;
         color: white !important;
-        box-shadow: 0 0 15px rgba(2, 132, 199, 0.5);
+        box-shadow: 0 0 20px {border_color};
         transform: scale(1.02);
     }}
 
@@ -358,7 +350,7 @@ def apply_ui_style(direction, align, theme):
         border: 2px dashed {border_color} !important;
         border-radius: 20px !important;
         padding: 30px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }}
 
     .custom-card {{
@@ -368,46 +360,41 @@ def apply_ui_style(direction, align, theme):
         padding: 25px;
         text-align: center;
         margin-bottom: 20px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
         backdrop-filter: blur(5px);
     }}
 
     h1 {{
         color: {text_color} !important;
         font-weight: 900 !important;
-        background: linear-gradient(to right, {text_color}, {accent_color});
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }}
 
-    /* --- اللمسة الفنية العصرية للأزرار والتفاعل مع حركة الماوس (Hover Effects & Glassmorphism) --- */
+    /* الأزرار العصرية المتفاعلة مع الماوس (Hover & Glow Effects) */
     .stButton>button, [data-testid="baseButton-secondary"], [data-testid="baseButton-primary"] {{
-        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+        background: {btn_gradient} !important;
         color: white !important;
-        border: 1px solid rgba(56, 189, 248, 0.3) !important;
+        border: 1px solid {border_color} !important;
         border-radius: 14px !important;
         padding: 0.75rem 2rem !important;
         font-weight: 700 !important;
         font-size: 16px !important;
         width: 100%;
-        box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
         position: relative;
         overflow: hidden;
     }}
 
-    /* تأثير التوهج والارتفاع عند مرور الماوس (Hover Animation) */
     .stButton>button:hover, [data-testid="baseButton-secondary"]:hover, [data-testid="baseButton-primary"]:hover {{
-        background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%) !important;
-        border-color: #38bdf8 !important;
-        box-shadow: 0 8px 25px rgba(56, 189, 248, 0.5), 0 0 15px rgba(56, 189, 248, 0.3) !important;
+        background: {btn_hover} !important;
+        border-color: {text_color} !important;
+        box-shadow: 0 8px 30px {border_color}, 0 0 20px {accent_color} !important;
         transform: translateY(-3px) scale(1.01) !important;
     }}
 
-    /* تأثير عند الضغط على الزر (Active Click) */
     .stButton>button:active {{
         transform: translateY(1px) scale(0.99) !important;
-        box-shadow: 0 2px 10px rgba(2, 132, 199, 0.4) !important;
     }}
 
     .footer {{
@@ -415,9 +402,9 @@ def apply_ui_style(direction, align, theme):
         bottom: 0;
         left: 0;
         width: 100%;
-        background-color: rgba(15, 23, 42, 0.9);
+        background-color: rgba(5, 5, 10, 0.95);
         backdrop-filter: blur(8px);
-        color: {sub_text};
+        color: {accent_color};
         text-align: center;
         padding: 12px;
         border-top: 1px solid {border_color};
@@ -427,13 +414,13 @@ def apply_ui_style(direction, align, theme):
     </style>
     """, unsafe_allow_html=True)
 
-apply_ui_style(lang["direction"], lang["align"], current_theme)
+apply_theme_and_styles(lang["direction"], lang["align"], current_theme)
 
 # --- 6. واجهة البرنامج الرئيسية ---
 st.markdown(f"""
 <div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
     <h1>{lang["title"]}</h1>
-    <p style='font-size:16px; color:var(--text-secondary); margin-top:-10px;'>{lang["subtitle"]}</p>
+    <p style='font-size:16px; margin-top:-10px; opacity: 0.8;'>{lang["subtitle"]}</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -445,9 +432,9 @@ tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
 with tab1:
     st.markdown(f"""
     <div class="custom-card">
-        <div class="icon-container excel-icon"><i class="fa-solid fa-file-excel" style="font-size: 50px; color: #38bdf8;"></i></div>
+        <div class="icon-container"><i class="fa-solid fa-file-excel" style="font-size: 50px;"></i></div>
         <h3 style='margin:0;'>{lang["card1_title"]}</h3>
-        <p style='font-size:14px; margin:5px 0;'>{lang["card1_desc"]}</p>
+        <p style='font-size:14px; margin:5px 0; opacity: 0.85;'>{lang["card1_desc"]}</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -495,9 +482,9 @@ with tab1:
 with tab2:
     st.markdown(f"""
     <div class="custom-card">
-        <div class="icon-container ocr-icon"><i class="fa-solid fa-eye" style="font-size: 50px; color: #38bdf8;"></i></div>
+        <div class="icon-container"><i class="fa-solid fa-eye" style="font-size: 50px;"></i></div>
         <h3 style='margin:0;'>{lang["card2_title"]}</h3>
-        <p style='font-size:14px; margin:5px 0;'>{lang["card2_desc"]}</p>
+        <p style='font-size:14px; margin:5px 0; opacity: 0.85;'>{lang["card2_desc"]}</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -567,6 +554,6 @@ components.html(ads_code, height=110)
 
 st.markdown(f"""
     <div class="footer">
-        المحاسب الذكي Pro | <span style="color:#38bdf8;">{lang["motto"]}</span> | 2026 ©
+        المحاسب الذكي Pro | <span>{lang["motto"]}</span> | 2026 ©
     </div>
 """, unsafe_allow_html=True)
