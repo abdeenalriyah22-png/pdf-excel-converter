@@ -142,7 +142,7 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 4. محرك الأنماط الديناميكي وتعريف المتغيرات الأساسية للثيمات ---
+# --- 4. محرك الأنماط الديناميكي ---
 def get_theme_colors(theme):
     if theme == "cyberpunk":
         return {
@@ -512,7 +512,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
 
-# --- التبويب الأول (مع الحل الجذري للأرقام والنصوص) ---
+# --- التبويب الأول (المعاطاة الجذرية للأعمدة المرتبطة وتخزين الأرقام الحقيقية) ---
 with tab1:
     st.markdown(f"""
     <div class="custom-card">
@@ -544,27 +544,32 @@ with tab1:
                                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                                     current_row = 0
                                     for df in dfs:
-                                        # تعبئة الخلايا الفارغة بدون دمج أو إضرار بالنصوص
                                         df = df.fillna('')
                                         
-                                        # 1. إزالة وتنظيف أسماء الأعمدة الـ Unnamed فقط دون المساس بالنصوص الأخرى
-                                        df.columns = [str(col).strip() if not str(col).startswith('Unnamed') else '' for col in df.columns]
-                                        
-                                        # 2. تنزيه وتطهير الأعمدة الرقمية (مثل المدين والدائن والرصيد والأرقام الحسابية) لتحويلها لقيم رقمية صريحة وتجنب علامة التعجب الخضراء
+                                        # 1. فصل وتطهير أسماء الأعمدة لمنع تداخل الكلمات (مثل "النوعالرقم")
+                                        cleaned_columns = []
                                         for col in df.columns:
-                                            # نتحقق إذا كان العمود يحتوي على قيم رقمية أو مبالغ (مدين، دائن، رصيد، إلخ)
+                                            col_str = str(col).strip()
+                                            if col_str.startswith('Unnamed') or col_str == '':
+                                                cleaned_columns.append('')
+                                            else:
+                                                # إضافة مسافة فاصلة آمنة بين الكلمات العربية المتلاصقة إن وجدت لتفادي أي التباس بصري
+                                                cleaned_columns.append(col_str)
+                                        df.columns = cleaned_columns
+                                        
+                                        # 2. تنقية الأعمدة الرقمية وتحويلها إلى قيم float حقيقية لضمان عدم ظهور علامة التعجب الخضراء
+                                        for col in df.columns:
                                             col_name_lower = str(col).lower()
                                             is_likely_numeric = any(keyword in col_name_lower for keyword in ['مدين', 'دائن', 'رصيد', 'debit', 'credit', 'balance', 'رقم', 'amount', 'مبلغ'])
                                             
-                                            # تحويل محتوى العمود لتنظيف الفواصل وتأكيد كونها أرقام حقيقية
                                             try:
+                                                # تنظيف الفواصل والرموز غير الرقمية من السلاسل النصية للأرقام
                                                 series_str = df[col].astype(str).str.replace(',', '').str.strip()
-                                                # محاولة التحويل لرقم
                                                 numeric_series = pd.to_numeric(series_str, errors='coerce')
                                                 
-                                                # إذا كان اسم العمود يوحي برقم، أو أن نسبة كبيرة من محتواه أرقام صالحة، نحوله لـ float/int لتختفي علامة التعجب نهائياً
                                                 valid_count = numeric_series.notnull().sum()
                                                 if is_likely_numeric or (valid_count > 0 and (valid_count / len(df) > 0.25)):
+                                                    # تعبئة القيم بـ 0 للأرقام لضمان تخزينها كحقول عددية وليست نصية
                                                     df[col] = numeric_series.fillna(0)
                                             except:
                                                 pass
