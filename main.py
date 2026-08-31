@@ -1,457 +1,515 @@
-import pdfplumber
-import arabic_reshaper
-from bidi.algorithm import get_display
 import streamlit as st
+import streamlit.components.v1 as components
+import tabula
 import pandas as pd
 import io
-import re
+import base64
+from PIL import Image
+import pytesseract
+import fitz  # PyMuPDF
+from st_copy_to_clipboard import st_copy_to_clipboard
 
-# ---------------------------------------------------------
-# 1. نظام تصحيح وإصلاح النصوص العربية القادم من الـ PDF
-# ---------------------------------------------------------
-def smart_arabic_ai_fix(text):
-    if not isinstance(text, str) or not text.strip():
-        return text
-
-    text = text.replace('.س.ر', 'ر.س.').replace('س.ر.', 'ر.س.')
-    text = re.sub(r'\s+', ' ', text).strip()
-
-    if any('\u0600' <= char <= '\u06FF' for char in text):
-        words = text.split()
-        corrected_words = []
-        for word in words:
-            if any('\u0600' <= char <= '\u06FF' for char in word):
-                fixed_word = word[::-1]
-                corrected_words.append(fixed_word)
-            else:
-                corrected_words.append(word)
-        return " ".join(corrected_words[::-1])
-
-    return text
-
-# ---------------------------------------------------------
-# 2. دالة استخراج الجداول وتوحيد الأعمدة والعناوين بأمان تامة
-# ---------------------------------------------------------
-def extract_and_combine_tables(uploaded_files):
-    all_dfs = []
-    
-    strategies = [
-        {"vertical_strategy": "lines", "horizontal_strategy": "lines"},
-        {"vertical_strategy": "text", "horizontal_strategy": "text", "snap_tolerance": 5, "join_tolerance": 5},
-        {"vertical_strategy": "explicit", "horizontal_strategy": "text"}
-    ]
-    
-    for file in uploaded_files:
-        if file.name.endswith('.csv'):
-            try:
-                df = pd.read_csv(file)
-                try:
-                    df = df.map(smart_arabic_ai_fix)
-                except Exception:
-                    df = df.applymap(smart_arabic_ai_fix)
-                df = df.dropna(how='all', axis=1).reset_index(drop=True)
-                if not df.empty:
-                    df.columns = [smart_arabic_ai_fix(str(col)) for col in df.columns]
-                    all_dfs.append(df)
-            except Exception as e:
-                st.error(f"خطأ في معالجة ملف CSV: {e}")
-                
-        elif file.name.endswith('.pdf'):
-            with pdfplumber.open(file) as pdf:
-                for page in pdf.pages:
-                    tables = []
-                    for settings in strategies:
-                        try:
-                            tables = page.extract_tables(table_settings=settings)
-                            if tables and len(tables) > 0:
-                                break
-                        except Exception:
-                            continue
-                    
-                    if not tables:
-                        try:
-                            tables = page.extract_tables()
-                        except Exception:
-                            tables = []
-                    
-                    if not tables:
-                        continue
-                        
-                    for table in tables:
-                        if not table or len(table) < 1:
-                            continue
-                        
-                        df = pd.DataFrame(table)
-                        df = df.dropna(how='all').dropna(how='all', axis=1)
-                        if df.empty or df.shape[0] < 1:
-                            continue
-
-                        try:
-                            df = df.map(smart_arabic_ai_fix)
-                        except Exception:
-                            df = df.applymap(smart_arabic_ai_fix)
-
-                        df = df.dropna(how='all', axis=1)
-                        if not df.empty:
-                            df = df.reset_index(drop=True)
-                            all_dfs.append(df)
-
-    if not all_dfs:
-        return None
-
-    # توحيد عدد الأعمدة لجميع الجداول المستخرجة بناءً على أقصى عدد أعمدة موجود
-    max_cols = max(df.shape[1] for df in all_dfs)
-    standardized_dfs = []
-    
-    for df in all_dfs:
-        # إعادة تعيين أسماء الأعمدة بأرقام مؤقتة لتجنب أي تعارض في الحجم
-        df.columns = [f"col_{i}" for i in range(df.shape[1])]
-        
-        if df.shape[1] < max_cols:
-            for i in range(df.shape[1], max_cols):
-                df[f"col_{i}"] = ""
-        elif df.shape[1] > max_cols:
-            df = df.iloc[:, :max_cols]
-            
-        df.columns = [f"عمود_{i+1}" for i in range(max_cols)]
-        df = df.reset_index(drop=True)
-        standardized_dfs.append(df)
-
-    master_df = pd.concat(standardized_dfs, ignore_index=True)
-    return master_df
-
-# ---------------------------------------------------------
-# 3. إعدادات الصفحة
-# ---------------------------------------------------------
+# --- 1. إعدادات الصفحة الأساسية ---
 st.set_page_config(
-    page_title="المحاسب الذكي Pro",
+    page_title="المحاسب الذكي Pro / Smart Accountant",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# ---------------------------------------------------------
-# 4. القاموس متعدد اللغات
-# ---------------------------------------------------------
-TRANSLATIONS = {
-    "ar": {
-        "title": "المحاسب الذكي Pro",
-        "subtitle": "النظام السحابي الذكي لمعالجة الجداول وتحليل النصوص العربية",
-        "motto": "« الفصل في الذمة.. الوصل في الأمانة »",
-        "tab_convert": "📄 تحويل PDF و CSV إلى Excel (شيت واحد مدعوم بالذكاء الاصطناعي)",
-        "tab_ocr": "🔍 استخراج النصوص الذكي (OCR)",
-        "extractor_title": "مستخرج ومحلل البيانات الذكي",
-        "extractor_desc": "ارفع ملفاتك لدمج كافة الجداول في شيت إكسيل واحد مع إصلاح النصوص العربية تلقائياً",
-        "upload_label": "قم بسحب وإفلات ملفات الـ PDF أو CSV الخاصة بالجداول هنا",
-        "ocr_title": "مستخرج النصوص والمسندات (OCR)",
-        "ocr_desc": "ارفع صورة المستند أو الفاتورة لاستخراج النصوص والبيانات منها مباشرة",
-        "ocr_upload_label": "قم بسحب وإفلات صور المستندات (PNG, JPG, JPEG) هنا",
-        "convert_btn": "⚡ بدء المعالجة الذكية والدمج لشيت واحد",
-        "download_btn": "📥 تحميل ملف Excel الموحد",
-        "processing": "جاري تحليل النصوص العربية بالذكاء الاصطناعي ودمج الجداول...",
-        "success": "تم دمج ومعالجة الجداول وإصلاح النصوص العربية بنجاح!",
-        "no_tables": "لم يتم العثور على جداول صالحة. تأكد أن ملف الـ PDF يحتوي على نصوص جدولية وليست صوراً مسحوحة ضوئياً (Scanned).",
-        "select_file_warn": "يرجى رفع ملف واحد على الأقل أولاً."
+# --- 2. دمج كود جوجل أدسنس والتحقق في الخلفية ---
+components.html("""
+<meta name="google-adsense-account" content="ca-pub-1091631464795781">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1091631464795781"
+     crossorigin="anonymous"></script>
+""", height=0, width=0)
+
+# --- 3. اختيار اللغة في أعلى الموقع ---
+selected_lang = st.selectbox(
+    "🌐 Choose Language / اختر اللغة / زبان کا انتخاب کریں",
+    ["العربية", "English", "اردو"],
+    index=0,
+    key="language_selector"
+)
+
+# --- 4. قاموس الترجمة للغات الثلاث ---
+translations = {
+    "العربية": {
+        "direction": "rtl",
+        "align": "right",
+        "title": "📊 المحاسب الذكي <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
+        "subtitle": "النظام السحابي المطور لمعالجة الجداول والبيانات ذكياً",
+        "tab1_title": "📊 تحويل PDF و CSV إلى Excel",
+        "tab2_title": "🔍 استخراج النصوص الذكي (OCR)",
+        "card1_title": "مستخرج جداول البيانات",
+        "card1_desc": "ارفع ملفاتك لتحويل أي جدول صامت داخل الـ PDF أو ملفات CSV إلى ملف إكسيل منسق تلقائياً",
+        "card2_title": "قارئ النصوص والماسح الضوئي",
+        "card2_desc": "استخراج النصوص العربية والإنجليزية والأوردو بدقة كاملة من المستندات المصورة والـ PDF",
+        "uploader_pdf": "قم بسحب وإفلات ملفات الـ PDF أو CSV الخاصة بالجداول هنا",
+        "uploader_ocr": "ارفع صورة الفاتورة/المستند (JPG, PNG) أو ملف PDF الممسوح",
+        "btn_convert": "بدأ تحويل وجدولة: ",
+        "btn_ocr": "🚀 اطلَق الذكاء الاصطناعي لقراءة النص",
+        "status_preparing": "📁 ملف قيد التحضير: ",
+        "status_loading": "جاري تفكيك الجداول وهيكلتها...",
+        "status_ocr_loading": "جاري المسح الضوئي للمستند وتفسير الحروف...",
+        "success_convert": "🚀 اكتمل التحويل بنجاح وبأعلى دقة!",
+        "warning_no_tables": "⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.",
+        "warning_no_text": "نعتذر، لم نكتشف حروفاً أو نصوصاً مقروءة في هذا المستند.",
+        "download_excel": "📥 اضغط هنا لتحميل ملف Excel المستخرج",
+        "download_txt": "📥 تحميل النص كملف TXT",
+        "ocr_result_header": "#### ✅ النصوص التي تم العثور عليها ومسحها:",
+        "opt1": "📋 الخيار الأول:",
+        "opt2": "📥 الخيار الثاني:",
+        "btn_copy": "📋 نسخ النص بالكامل",
+        "copied": "✅ تم النسخ بنجاح!",
+        "motto": "الفصل في الذمة.. الوصل في الأمانة"
     },
-    "en": {
-        "title": "Smart Accountant Pro",
-        "subtitle": "Advanced Cloud System for Smart Table & Arabic Text Processing",
-        "motto": "« الفصل في الذمة.. الوصل في الأمانة »",
-        "tab_convert": "📄 Convert PDF & CSV to Excel (Single Sheet with AI)",
-        "tab_ocr": "🔍 Smart Text Extraction (OCR)",
-        "extractor_title": "Smart Data Table Extractor",
-        "extractor_desc": "Upload files to combine tables into a single Excel sheet with AI Arabic text correction",
-        "upload_label": "Drag and drop your PDF or CSV table files here",
-        "ocr_title": "Document Text Extractor (OCR)",
-        "ocr_desc": "Upload image documents or invoices to extract text and data directly",
-        "ocr_upload_label": "Drag and drop document images (PNG, JPG, JPEG) here",
-        "convert_btn": "⚡ Start AI Processing & Single Sheet Conversion",
-        "download_btn": "📥 Download Unified Excel File",
-        "processing": "Analyzing Arabic text with AI and merging tables...",
-        "success": "Tables processed, merged, and Arabic text fixed successfully!",
-        "no_tables": "No valid tables found. Ensure the PDF contains text tables and not scanned images.",
-        "select_file_warn": "Please upload at least one file first."
+    "English": {
+        "direction": "ltr",
+        "align": "left",
+        "title": "📊 Smart Accountant <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
+        "subtitle": "Advanced cloud system for smart data and table processing",
+        "tab1_title": "📊 Convert PDF & CSV to Excel",
+        "tab2_title": "🔍 Smart Text Extraction (OCR)",
+        "card1_title": "Data Table Extractor",
+        "card1_desc": "Upload your files to automatically convert any silent table inside PDF or CSV files into a formatted Excel file",
+        "card2_title": "Text Reader & Scanner",
+        "card2_desc": "Extract Arabic, English, and Urdu text with full accuracy from scanned documents and images",
+        "uploader_pdf": "Drag and drop your PDF or CSV table files here",
+        "uploader_ocr": "Upload invoice/document image (JPG, PNG) or scanned PDF file",
+        "btn_convert": "Start Converting & Scheduling: ",
+        "btn_ocr": "🚀 Launch AI to Read Text",
+        "status_preparing": "📁 File preparing: ",
+        "status_loading": "Deconstructing and structuring tables...",
+        "status_ocr_loading": "Scanning document and interpreting characters...",
+        "success_convert": "🚀 Conversion completed successfully with highest accuracy!",
+        "warning_no_tables": "⚠️ No clear numerical tables detected in this file.",
+        "warning_no_text": "Sorry, no readable characters or text detected in this document.",
+        "download_excel": "📥 Click here to download the extracted Excel file",
+        "download_txt": "📥 Download text as TXT file",
+        "ocr_result_header": "#### ✅ Extracted Text:",
+        "opt1": "📋 Option 1:",
+        "opt2": "📥 Option 2:",
+        "btn_copy": "📋 Copy Full Text",
+        "copied": "✅ Copied Successfully!",
+        "motto": "Separation of liability... connection in trust"
     },
-    "ur": {
-        "title": "سمارٹ اکاؤنٹنٹ Pro",
-        "subtitle": "سمارٹ ٹیبل اور ڈیٹا پروسیسنگ کے لیے ایڈوانسڈ کلاؤڈ سسٹم",
-        "motto": "« الفصل في الذمة.. الوصل في الأمانة »",
-        "tab_convert": "📄 PDF اور CSV کو Excel میں تبدیل کریں (AI کے ساتھ واحد شیٹ)",
-        "tab_ocr": "🔍 سمارٹ ٹیکسٹ ایکسٹریکشن (OCR)",
-        "extractor_title": "متحدہ ڈیٹا ٹیبل ایکسٹریکٹر",
-        "extractor_desc": "تمام تخرج شدہ جدولوں کو ایک ہی ایکسل شیٹ میں یکجا کریں",
-        "upload_label": "اپنی PDF یا CSV فائلیں یہاں ڈریگ اور ڈراپ کریں",
-        "ocr_title": "ڈاکیومنٹ ٹیکسٹ ایکسٹریکٹر (OCR)",
-        "ocr_desc": "متن اور ڈیٹا کو براہ راست نکالنے کے لیے دستاویز کی تصاویر اپ لوڈ کریں",
-        "ocr_upload_label": "تصاویر (PNG, JPG, JPEG) یہاں ڈریگ اور ڈراپ کریں",
-        "convert_btn": "⚡ AI پروسیسنگ اور یکجا کرنا شروع کریں",
-        "download_btn": "📥 ڈاؤن لوڈ کریں متحدہ ایکسل فائل",
-        "processing": "پروسیسنگ جاری ہے...",
-        "success": "فائلیں کامیابی کے ساتھ یکجا ہو گئیں!",
-        "no_tables": "کوئی جدول نہیں ملا۔",
-        "select_file_warn": "برائے مہربانی پہلے کم از کم ایک فائل اپ لوڈ کریں۔"
+    "اردو": {
+        "direction": "rtl",
+        "align": "right",
+        "title": "📊 سمارٹ اکاؤنٹنٹ <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
+        "subtitle": "سمارٹ ڈیٹا اور ٹیبل پروسیسنگ کے لیے جدید کلاؤڈ سسٹم",
+        "tab1_title": "📊 پی ڈی ایف اور سی ایس وی کو ایکسل میں تبدیل کریں",
+        "tab2_title": "🔍 سمارٹ ٹیکسٹ نکالنا (OCR)",
+        "card1_title": "ڈیٹا ٹیبل ایکسٹریکٹر",
+        "card1_desc": "پی ڈی ایف کے اندر موجود کسی بھی پوشیدہ ٹیبل یا سی ایس وی فائلوں کو خودکار طور پر فارمیٹ شدہ ایکسل فائل میں تبدیل کرنے کے لیے اپنی فائلیں اپ لوڈ کریں",
+        "card2_title": "ٹیکسٹ ریڈر اور اسكينر",
+        "card2_desc": "اسکین شدہ दस्तावेजات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
+        "uploader_pdf": "اپنی پی ڈی ایف یا سی ایس وی ٹیبل فائلیں یہاں ڈریگ اور ڈراپ کریں",
+        "uploader_ocr": "انوائس/دستاویز کی تصویر (JPG, PNG) أو اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
+        "btn_convert": "تبدیلی اور شیڈولنگ شروع کریں: ",
+        "btn_ocr": "🚀 ٹیکسٹ پڑھنے کے لیے AI لانچ کریں",
+        "status_preparing": "📁 فائل کی تیاری: ",
+        "status_loading": "ٹیبلز کو ڈی کنسٹریکٹ اور سٹرکچر کیا جا رہا ہے...",
+        "status_ocr_loading": "دستاویز کو اسکین اور حروف کی تشریح کی جا رہی ہے...",
+        "success_convert": "🚀 اعلیٰ ترین درستگی کے ساتھ تبدیلی کامیابی سے مکمل ہو گئی!",
+        "warning_no_tables": "⚠️ اس فائل میں کوئی واضح عددی ٹیبل نہیں ملا۔",
+        "warning_no_text": "معذرت، اس دستاویز میں کوئی پڑھنے کے قابل حروف یا متن نہیں ملا۔",
+        "download_excel": "📥 can ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
+        "download_txt": "📥 متن کو TXT فائل کے طور بر ڈاؤن لوڈ کریں",
+        "ocr_result_header": "#### ✅ نکالا گیا متن:",
+        "opt1": "📋 پہلا آپشن:",
+        "opt2": "📥 دوسرا آپشن:",
+        "btn_copy": "📋 پورا متن کاپی کریں",
+        "copied": "✅ کامیابی سے کاپی ہو گیا!",
+        "motto": "الفصل في الذمة.. الوصل في الأمانة"
     }
 }
 
-# ---------------------------------------------------------
-# 5. شريط الخيارات العلوي والترويسة
-# ---------------------------------------------------------
-top_col1, top_col2 = st.columns([1, 1])
+lang = translations[selected_lang]
 
-with top_col1:
-    theme_choice = st.selectbox(
-        "Theme / المظهر 🎨",
-        ["الفاتح العصري (Light Theme)", "الداكن الأنيق (Dark Theme)"],
-        index=0
-    )
-
-with top_col2:
-    lang_choice = st.selectbox(
-        "Choose Language / اختر اللغة / زبان کا انتخاب کریں 🌐",
-        ["العربية", "English", "اردو"],
-        index=0
-    )
-
-lang_code = "ar" if lang_choice == "العربية" else ("en" if lang_choice == "English" else "ur")
-t = TRANSLATIONS[lang_code]
-is_dark = "Dark" in theme_choice
-direction = "rtl" if lang_code in ["ar", "ur"] else "ltr"
-text_align = "right" if direction == "rtl" else "left"
-
-# ---------------------------------------------------------
-# 6. الألوان وتصحيح القوائم المنسدلة
-# ---------------------------------------------------------
-if is_dark:
-    bg_color = "#090d16"
-    card_bg = "#111827"
-    card_border = "#1f2937"
-    text_primary = "#f3f4f6"
-    text_secondary = "#9ca3af"
-    accent_primary = "#3b82f6"
-    accent_gradient = "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
-    shadow_effect = "0 10px 30px -10px rgba(0, 0, 0, 0.5)"
+# --- 5. ستايل النيون المتطور وتخصيص جذري للمظهر والألوان (CSS الأصلي المستقر) ---
+def apply_neon_style(direction, align):
+    st.markdown(f"""
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    dropdown_bg = "#1f2937"
-    dropdown_text = "#ffffff"
-    dropdown_hover = "#374151"
-else:
-    bg_color = "#f8fafc"
-    card_bg = "#ffffff"
-    card_border = "#e2e8f0"
-    text_primary = "#0f172a"
-    text_secondary = "#64748b"
-    accent_primary = "#2563eb"
-    accent_gradient = "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)"
-    shadow_effect = "0 10px 25px -5px rgba(0, 0, 0, 0.05)"
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap');
     
-    dropdown_bg = "#ffffff"
-    dropdown_text = "#0f172a"
-    dropdown_hover = "#f1f5f9"
+    html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea {{
+        font-family: 'Cairo', sans-serif !important;
+        direction: {direction} !important;
+        text-align: {align} !important;
+    }}
 
+    .stApp {{
+        background: radial-gradient(circle at center, #111723 0%, #07090e 100%) !important;
+        color: #e6edf3;
+    }}
+
+    header, [data-testid="stHeader"] {{
+        visibility: hidden;
+        display: none;
+    }}
+
+    /* === رفع المحتوى ليلتصق بأعلى المتصفح تماماً وتصفير الـ Padding العلوي === */
+    [data-testid="stAppViewBlockContainer"] {{
+        padding-top: 0rem !important;
+        padding-bottom: 8rem !important;
+        padding-left: 5rem !important;
+        padding-right: 5rem !important;
+    }}
+
+    /* === تخصيص جذري وتوهج باللون الأزرق النيوني المضيء لصندوق اللغات === */
+    [data-testid="stSelectbox"] label p {{
+        font-size: 18px !important;
+        font-weight: bold !important;
+        color: #58a6ff !important;
+        text-shadow: 0 0 12px rgba(88, 166, 255, 0.6);
+    }}
+    
+    [data-testid="stSelectbox"] div[data-baseweb="select"] {{
+        background: linear-gradient(135deg, rgba(31, 111, 235, 0.25) 0%, rgba(13, 68, 165, 0.4) 100%) !important;
+        border: 2px solid #58a6ff !important;
+        border-radius: 12px !important;
+        box-shadow: 0 0 15px rgba(88, 166, 255, 0.45);
+        transition: all 0.3s ease-in-out;
+    }}
+    
+    [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
+        color: #ffffff !important;
+        font-weight: bold !important;
+    }}
+    
+    [data-testid="stSelectbox"] div[data-baseweb="select"]:hover {{
+        border-color: #58a6ff !important;
+        background: linear-gradient(135deg, rgba(31, 111, 235, 0.4) 0%, rgba(13, 68, 165, 0.6) 100%) !important;
+        box-shadow: 0 0 25px rgba(88, 166, 255, 0.7);
+    }}
+
+    div[data-baseweb="popover"] {{
+        background-color: #161b22 !important;
+        border: 1px solid #58a6ff !important;
+        box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
+    }}
+    
+    div[data-baseweb="popover"] li {{
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        background-color: transparent !important;
+    }}
+
+    li[role="option"], li[role="option"] span, div[role="listbox"] div, div[role="listbox"] span {{
+        color: #ffffff !important;
+        font-weight: 600 !important;
+    }}
+    
+    div[data-baseweb="popover"] li:hover, li[role="option"]:hover {{
+        background-color: #1f6feb !important;
+        color: #ffffff !important;
+    }}
+
+    /* === حل مشكلة تكرار كلمة Upload بداخل أزرار الرفع بدون لمس التصميم الأساسي === */
+    [data-testid="stFileUploader"] button span span {{
+        display: none !important;  
+    }}
+    [data-testid="stFileUploader"] button span::after {{
+        content: "Upload" !important; 
+        color: white !important;
+    }}
+
+    /* ================================================================= */
+
+    .stTabs [data-baseweb="tab-list"] {{
+        gap: 15px;
+        background-color: rgba(22, 27, 34, 0.5);
+        padding: 8px;
+        border-radius: 12px;
+        border: 1px solid #21262d;
+    }}
+
+    .stTabs [data-baseweb="tab"] {{
+        height: 48px;
+        background-color: transparent;
+        border-radius: 8px;
+        color: #8b949e;
+        border: none;
+        padding: 0 25px;
+        font-weight: bold;
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }}
+
+    .stTabs [aria-selected="true"] {{
+        background: linear-gradient(135deg, #1f6feb 0%, #0d44a5 100%) !important;
+        color: white !important;
+        box-shadow: 0 0 15px rgba(31, 111, 235, 0.6);
+        transform: scale(1.02);
+    }}
+
+    [data-testid="stFileUploader"] {{
+        background-color: rgba(22, 27, 34, 0.7) !important;
+        border: 2px dashed #21262d !important;
+        border-radius: 20px !important;
+        padding: 30px !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        transition: all 0.4s ease;
+    }}
+    
+    [data-testid="stFileUploader"]:hover {{
+        border-color: #58a6ff !important;
+        background-color: rgba(28, 33, 40, 0.9) !important;
+        box-shadow: 0 0 25px rgba(88, 166, 255, 0.25);
+        transform: translateY(-4px);
+    }}
+
+    [data-testid="stFileUploader"] section *, 
+    [data-testid="stFileUploader"] div, 
+    [data-testid="stFileUploader"] span, 
+    [data-testid="stFileUploader"] p {{
+        color: #ffffff !important;
+    }}
+
+    .icon-container {{
+        font-size: 55px;
+        margin-bottom: 15px;
+        transition: all 0.4s ease;
+        display: inline-block;
+    }}
+    
+    .excel-icon {{ color: #2ea043; text-shadow: 0 0 20px rgba(46, 160, 67, 0.4); }}
+    .ocr-icon {{ color: #58a6ff; text-shadow: 0 0 20px rgba(88, 166, 255, 0.4); }}
+    
+    .custom-card:hover .excel-icon {{
+        transform: scale(1.15) translateY(-5px);
+        filter: drop-shadow(0 0 15px #2ea043);
+    }}
+    .custom-card:hover .ocr-icon {{
+        transform: scale(1.15) rotate(10deg);
+        filter: drop-shadow(0 0 15px #58a6ff);
+    }}
+
+    .custom-card {{
+        background: linear-gradient(145deg, #161b22 0%, #0f1319 100%);
+        border: 1px solid #30363d;
+        border-radius: 16px;
+        padding: 25px;
+        text-align: center;
+        margin-bottom: 20px;
+        transition: 0.3s;
+    }}
+
+    h1 {{
+        color: #ffffff !important;
+        font-weight: 900 !important;
+        background: linear-gradient(to right, #ffffff, #58a6ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }}
+
+    .stButton>button {{
+        background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 0.7rem 2rem !important;
+        font-weight: bold !important;
+        font-size: 16px !important;
+        width: 100%;
+        box-shadow: 0 4px 12px rgba(46, 160, 67, 0.2);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }}
+    
+    .stButton>button:hover {{
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(46, 160, 67, 0.5);
+    }}
+
+    [data-testid="stDownloadButton"] button {{
+        background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 12px rgba(31, 111, 235, 0.2);
+        transition: all 0.3s ease;
+        width: 100%;
+    }}
+
+    .stTextArea textarea {{
+        background-color: #0d1117 !important;
+        color: #e6edf3 !important;
+        border: 1px solid #30363d !important;
+        border-radius: 12px !important;
+    }}
+
+    .stCopyButton button {{
+        background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%) !important;
+        color: white !important;
+        border-radius: 12px !important;
+        border: none !important;
+        font-weight: bold !important;
+        width: 100%;
+    }}
+
+    .footer {{
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: rgba(22, 27, 34, 0.9);
+        backdrop-filter: blur(8px);
+        color: #8b949e;
+        text-align: center;
+        padding: 12px;
+        border-top: 1px solid #30363d;
+        font-size: 14px;
+        z-index: 999;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+apply_neon_style(lang["direction"], lang["align"])
+
+# --- 6. واجهة البرنامج الرئيسية المترجمة ---
 st.markdown(f"""
-<style>
-.stApp {{
-    background-color: {bg_color};
-    color: {text_primary};
-    direction: {direction};
-    text-align: {text_align};
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}}
-.stMarkdown, .stSelectbox, .stFileUploader, .stTabs, .stButton {{
-    direction: {direction};
-    text-align: {text_align};
-}}
-
-.stSelectbox div[data-baseweb="select"] > div {{
-    background-color: {dropdown_bg} !important;
-    color: {dropdown_text} !important;
-    border-color: {card_border} !important;
-}}
-.stSelectbox span {{
-    color: {dropdown_text} !important;
-}}
-div[data-baseweb="popover"] div {{
-    background-color: {dropdown_bg} !important;
-    color: {dropdown_text} !important;
-}}
-div[role="option"] {{
-    background-color: {dropdown_bg} !important;
-    color: {dropdown_text} !important;
-}}
-div[role="option"]:hover {{
-    background-color: {dropdown_hover} !important;
-    color: {dropdown_text} !important;
-}}
-
-.app-header {{
-    text-align: center;
-    padding: 25px 0 15px 0;
-    background: {card_bg};
-    border: 1px solid {card_border};
-    border-radius: 20px;
-    margin-bottom: 25px;
-    box-shadow: {shadow_effect};
-}}
-.main-title {{
-    font-size: 2.4rem;
-    font-weight: 800;
-    color: {text_primary};
-    margin: 0;
-    letter-spacing: -0.5px;
-}}
-.main-subtitle {{
-    font-size: 1.02rem;
-    color: {text_secondary};
-    margin-top: 8px;
-    font-weight: 400;
-}}
-.card-box {{
-    background-color: {card_bg};
-    border: 1px solid {card_border};
-    border-radius: 20px;
-    padding: 32px;
-    margin-top: 15px;
-    box-shadow: {shadow_effect};
-    transition: all 0.3s ease;
-}}
-.stTabs [data-baseweb="tab-list"] {{
-    gap: 8px;
-    background-color: {card_bg};
-    padding: 6px;
-    border-radius: 14px;
-    border: 1px solid {card_border};
-}}
-.stTabs [data-baseweb="tab"] {{
-    border-radius: 10px;
-    color: {text_secondary};
-    font-weight: 600;
-    padding: 10px 20px;
-}}
-.stTabs [aria-selected="true"] {{
-    background: {accent_gradient} !important;
-    color: #ffffff !important;
-}}
-.stButton button {{
-    background: {accent_gradient};
-    color: white;
-    border-radius: 12px;
-    font-weight: 600;
-    border: none;
-    padding: 0.6rem 1.2rem;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-    transition: all 0.2s ease-in-out;
-}}
-.stButton button:hover {{
-    opacity: 0.95;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
-}}
-.footer-motto-wrapper {{
-    text-align: center;
-    margin-top: 50px;
-    margin-bottom: 25px;
-}}
-.footer-motto-box {{
-    text-align: center;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: {accent_primary};
-    background: {'rgba(59, 130, 246, 0.1)' if is_dark else 'rgba(37, 99, 235, 0.06)'};
-    padding: 10px 28px;
-    border-radius: 30px;
-    display: inline-block;
-    border: 1px solid {'rgba(59, 130, 246, 0.25)' if is_dark else 'rgba(37, 99, 235, 0.15)'};
-    box-shadow: {shadow_effect};
-}}
-</style>
-
-<div class="app-header">
-    <div class="main-title">{t['title']}</div>
-    <div class="main-subtitle">{t['subtitle']}</div>
+<div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
+    <h1>{lang["title"]}</h1>
+    <p style='font-size:16px; color:#8b949e; margin-top:-10px;'>{lang["subtitle"]}</p>
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------------------------------------------------
-# 7. التبويبات والمعالجة
-# ---------------------------------------------------------
-tab1, tab2 = st.tabs([t['tab_convert'], t['tab_ocr']])
+st.markdown("<br>", unsafe_allow_html=True)
 
+tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
+
+# --- التبويب الأول: تحويل الجداول لـ Excel (يدعم PDF و CSV) ---
 with tab1:
     st.markdown(f"""
-    <div class="card-box">
-        <div style="text-align: center; margin-bottom: 15px;">
-            <div style="font-size: 2.8rem; margin-bottom: 5px;">📊</div>
-            <h2 style="margin: 5px 0; color: {text_primary}; font-size: 1.5rem;">{t['extractor_title']}</h2>
-            <p style="color: {text_secondary}; font-size: 0.95rem;">{t['extractor_desc']}</p>
-        </div>
+    <div class="custom-card">
+        <div class="icon-container excel-icon"><i class="fa-solid fa-file-excel"></i></div>
+        <h3 style='margin:0; color:#ffffff;'>{lang["card1_title"]}</h3>
+        <p style='font-size:14px; color:#8b949e; margin:5px 0;'>{lang["card1_desc"]}</p>
     </div>
     """, unsafe_allow_html=True)
     
-    uploaded_files = st.file_uploader(
-        t['upload_label'],
-        type=["pdf", "csv"],
-        accept_multiple_files=True,
-        key="table_uploader"
-    )
+    uploaded_files = st.file_uploader(lang["uploader_pdf"], type=["pdf", "csv"], key="table_uploader_main", accept_multiple_files=True)
+    
+    if uploaded_files:
+        for file in uploaded_files:
+            st.write("")
+            with st.container():
+                st.info(f"{lang['status_preparing']}{file.name}")
+                if st.button(f"{lang['btn_convert']}{file.name}"):
+                    try:
+                        with st.spinner(lang["status_loading"]):
+                            dfs = []
+                            
+                            # معالجة ملف الـ CSV
+                            if file.name.lower().endswith('.csv'):
+                                df_csv = pd.read_csv(file)
+                                dfs.append(df_csv)
+                            
+                            # معالجة ملف الـ PDF
+                            else:
+                                dfs = tabula.read_pdf(file, pages='all', multiple_tables=True, lattice=True)
+                            
+                            if dfs:
+                                output = io.BytesIO()
+                                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                                    current_row = 0
+                                    for df in dfs:
+                                        df = df.fillna('').replace([float('inf'), float('-inf')], 0)
+                                        df.to_excel(writer, index=False, startrow=current_row, sheet_name='Data')
+                                        current_row += len(df) + 2
+                                    
+                                st.success(lang["success_convert"])
+                                clean_name = file.name.rsplit('.', 1)[0]
+                                st.download_button(
+                                    label=lang["download_excel"],
+                                    data=output.getvalue(),
+                                    file_name=f"Excel_{clean_name}.xlsx",
+                                    mime="application/vnd.ms-excel"
+                                )
+                            else:
+                                st.warning(lang["warning_no_tables"])
+                    except Exception as e:
+                        st.error(f"Error: {str(e)}")
 
-    if st.button(t['convert_btn'], type="primary", use_container_width=True):
-        if not uploaded_files:
-            st.warning(t['select_file_warn'])
-        else:
-            with st.spinner(t['processing']):
-                master_df = extract_and_combine_tables(uploaded_files)
-                
-                if master_df is not None and not master_df.empty:
-                    output_buffer = io.BytesIO()
-                    with pd.ExcelWriter(output_buffer, engine='openpyxl') as writer:
-                        master_df.to_excel(writer, sheet_name="Master_Data", index=False)
-
-                    output_buffer.seek(0)
-                    import openpyxl
-                    wb = openpyxl.load_workbook(output_buffer)
-                    ws = wb["Master_Data"]
-                    
-                    # ضبط اتجاه الشيت في إكسل من اليمين إلى اليسار للبيانات العربية
-                    ws.views.sheetView[0].rightToLeft = True
-                    
-                    final_buffer = io.BytesIO()
-                    wb.save(final_buffer)
-                    final_buffer.seek(0)
-
-                    st.success(t['success'])
-                    st.download_button(
-                        label=t['download_btn'],
-                        data=final_buffer.getvalue(),
-                        file_name="unified_tables_ai.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        use_container_width=True
-                    )
-                else:
-                    st.warning(t['no_tables'])
-
+# --- التبويب الثاني: استخراج النصوص OCR ---
 with tab2:
     st.markdown(f"""
-    <div class="card-box">
-        <div style="text-align: center; margin-bottom: 15px;">
-            <div style="font-size: 2.8rem; margin-bottom: 5px;">🖼️</div>
-            <h2 style="margin: 5px 0; color: {text_primary}; font-size: 1.5rem;">{t['ocr_title']}</h2>
-            <p style="color: {text_secondary}; font-size: 0.95rem;">{t['ocr_desc']}</p>
-        </div>
+    <div class="custom-card">
+        <div class="icon-container ocr-icon"><i class="fa-solid fa-eye"></i></div>
+        <h3 style='margin:0; color:#ffffff;'>{lang["card2_title"]}</h3>
+        <p style='font-size:14px; color:#8b949e; margin:5px 0;'>{lang["card2_desc"]}</p>
     </div>
     """, unsafe_allow_html=True)
     
-    uploaded_ocr_images = st.file_uploader(
-        t['ocr_upload_label'],
-        type=["png", "jpg", "jpeg"],
-        accept_multiple_files=True,
-        key="ocr_uploader"
-    )
+    ocr_file = st.file_uploader(lang["uploader_ocr"], type=["jpg", "png", "jpeg", "pdf"], key="ocr_main")
+    
+    if ocr_file:
+        if st.button(lang["btn_ocr"]):
+            full_text = ""
+            try:
+                with st.spinner(lang["status_ocr_loading"]):
+                    if ocr_file.type == "application/pdf":
+                        doc = fitz.open(stream=ocr_file.read(), filetype="pdf")
+                        for page in doc:
+                            text = page.get_text()
+                            if text.strip():
+                                full_text += text + "\n"
+                            else:
+                                pix = page.get_pixmap()
+                                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                                full_text += pytesseract.image_to_string(img, lang='ara+eng') + "\n"
+                    else:
+                        img = Image.open(ocr_file)
+                        full_text = pytesseract.image_to_string(img, lang='ara+eng+urd')
 
-# ---------------------------------------------------------
-# 8. التوقيع السفلي
-# ---------------------------------------------------------
-st.markdown(f"""
-<div class="footer-motto-wrapper">
-    <div class="footer-motto-box">{t['motto']}</div>
+                if full_text.strip():
+                    st.markdown(lang["ocr_result_header"])
+                    st.text_area("", value=full_text, height=320)
+                    
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown(f"<p style='font-size:14px; color:#8b949e; margin-bottom:5px;'>{lang['opt1']}</p>", unsafe_allow_html=True)
+                        st_copy_to_clipboard(text=full_text, before_copy_label=lang["btn_copy"], after_copy_label=lang["copied"])
+                        
+                    with col2:
+                        st.markdown(f"<p style='font-size:14px; color:#8b949e; margin-bottom:5px;'>{lang['opt2']}</p>", unsafe_allow_html=True)
+                        st.download_button(
+                            label=lang["download_txt"],
+                            data=full_text,
+                            file_name="extracted_text.txt"
+                        )
+                else:
+                    st.warning(lang["warning_no_text"])
+            except Exception as e:
+                st.error(f"OCR Error: {e}")
+
+# --- 7. مساحة إعلانية مخصصة ومتجاوبة في أسفل المحتوى ---
+st.markdown("<br><br>", unsafe_allow_html=True)
+
+ads_code = """
+<div style="text-align: center; width: 100%;">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1091631464795781"
+         crossorigin="anonymous"></script>
+    <ins class="adsbygoogle"
+         style="display:block; min-width:300px; max-width:970px; width:100%; height:90px; margin:auto;"
+         data-ad-client="ca-pub-1091631464795781"
+         data-ad-slot="8159670732"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
 </div>
+"""
+components.html(ads_code, height=110)
+
+# التذييل الاحترافي الثابت في قاع الموقع
+st.markdown(f"""
+    <div class="footer">
+        المحاسب الذكي Pro | <span style="color:#58a6ff;">{lang["motto"]}</span> | 2026 ©
+    </div>
 """, unsafe_allow_html=True)
