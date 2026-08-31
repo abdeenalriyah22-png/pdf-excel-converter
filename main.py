@@ -215,4 +215,380 @@ def apply_theme_and_styles(direction, align, theme):
         btn_gradient = "linear-gradient(135deg, #059669 0%, #047857 100%)"
         btn_hover = "linear-gradient(135deg, #34d399 0%, #059669 100%)"
         select_bg = "#022c22"
-        dropdown_hover
+        dropdown_hover = "#064e3b"
+        tab_text_color = "#f0fdf4"
+    else:
+        font_family = "'Cairo', sans-serif"
+        bg_gradient = "linear-gradient(180deg, rgba(10,25,47,0.85) 0%, rgba(6,16,30,0.85) 60%, rgba(3,7,12,0.85) 100%)"
+        text_color = "#e6edf3"
+        main_text = "#ffffff"
+        card_bg = "linear-gradient(145deg, rgba(22, 27, 34, 0.9) 0%, rgba(15, 19, 25, 0.95) 100%)"
+        border_color = "#30363d"
+        accent_color = "#38bdf8"
+        btn_gradient = "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)"
+        btn_hover = "linear-gradient(135deg, #0369a1 0%, #0284c7 100%)"
+        select_bg = "#0b1329"
+        dropdown_hover = "#1e293b"
+        tab_text_color = "#ffffff"
+
+    st.markdown(f"""
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;700;900&family=Orbitron:wght@500;700;900&family=Tajawal:wght@450;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+    html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea {{
+        font-family: {font_family} !important;
+        direction: {direction} !important;
+        text-align: {align} !important;
+    }}
+
+    .stApp {{
+        background: {bg_gradient} !important;
+        color: {main_text} !important;
+    }}
+
+    header, [data-testid="stHeader"] {{
+        visibility: hidden;
+        display: none;
+    }}
+
+    [data-testid="stAppViewBlockContainer"] {{
+        padding-top: 0rem !important;
+        padding-bottom: 8rem !important;
+        padding-left: 5rem !important;
+        padding-right: 5rem !important;
+    }}
+
+    /* --- تعديل حقول Selectbox --- */
+    [data-testid="stSelectbox"] {{
+        background-color: {select_bg} !important;
+        padding: 10px 15px !important;
+        border-radius: 14px !important;
+        border: 2px solid {border_color} !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+    }}
+
+    [data-testid="stSelectbox"] label p, [data-testid="stSelectbox"] label span {{
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: {accent_color} !important;
+        margin-bottom: 5px !important;
+    }}
+    
+    [data-testid="stSelectbox"] div[data-baseweb="select"],
+    [data-testid="stSelectbox"] div[data-baseweb="select"] > div {{
+        background-color: {select_bg} !important;
+        border: none !important;
+        border-radius: 10px !important;
+    }}
+
+    [data-testid="stSelectbox"] span,
+    [data-testid="stSelectbox"] div,
+    [data-testid="stSelectbox"] input {{
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        font-weight: 900 !important;
+        background-color: transparent !important;
+    }}
+
+    div[data-baseweb="popover"], 
+    div[data-baseweb="menu"], 
+    ul[role="listbox"],
+    div[id^="baseui-menu-"] {{
+        background-color: {select_bg} !important;
+        background: {select_bg} !important;
+        border: 2px solid {border_color} !important;
+        border-radius: 12px !important;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.8) !important;
+        opacity: 1 !important;
+    }}
+
+    li[role="option"], 
+    div[role="option"],
+    [data-baseweb="menu"] li,
+    [data-baseweb="menu"] li span {{
+        background-color: {select_bg} !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        font-weight: bold !important;
+        padding: 12px 18px !important;
+        opacity: 1 !important;
+    }}
+
+    li[role="option"]:hover, 
+    div[role="option"]:hover,
+    [data-baseweb="menu"] li:hover {{
+        background-color: {dropdown_hover} !important;
+        color: {accent_color} !important;
+        -webkit-text-fill-color: {accent_color} !important;
+    }}
+
+    /* --- تعديل شامل وصارم لتصميم ونصوص التبويبات (Tabs) لضمان وضوحها الكامل --- */
+    .stTabs [data-baseweb="tab-list"] {{
+        gap: 15px;
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 10px;
+        border-radius: 14px;
+        border: 2px solid {border_color};
+    }}
+
+    .stTabs [data-baseweb="tab"] {{
+        height: 50px;
+        background-color: rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        color: {tab_text_color} !important;
+        -webkit-text-fill-color: {tab_text_color} !important;
+        border: 1px solid {border_color};
+        padding: 0 25px;
+        font-weight: 800 !important;
+        font-size: 16px !important;
+        transition: all 0.4s ease;
+        opacity: 1 !important;
+    }}
+
+    .stTabs [data-baseweb="tab"] *,
+    .stTabs [data-baseweb="tab"] p,
+    .stTabs [data-baseweb="tab"] span,
+    .stTabs [data-baseweb="tab"] div {{
+        color: {tab_text_color} !important;
+        -webkit-text-fill-color: {tab_text_color} !important;
+        font-weight: 800 !important;
+    }}
+
+    .stTabs [aria-selected="true"] {{
+        background: {btn_gradient} !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        box-shadow: 0 0 25px {border_color};
+        transform: scale(1.02);
+        border-color: #ffffff !important;
+    }}
+
+    .stTabs [aria-selected="true"] *,
+    .stTabs [aria-selected="true"] p,
+    .stTabs [aria-selected="true"] span,
+    .stTabs [aria-selected="true"] div {{
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        font-weight: 900 !important;
+    }}
+
+    /* --- تعديل ألوان الـ File Uploader --- */
+    [data-testid="stFileUploader"] {{
+        background-color: {card_bg} !important;
+        border: 2px dashed {border_color} !important;
+        border-radius: 20px !important;
+        padding: 30px !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }}
+
+    [data-testid="stFileUploader"] section {{
+        background-color: transparent !important;
+    }}
+
+    [data-testid="stFileUploader"] span, 
+    [data-testid="stFileUploader"] small, 
+    [data-testid="stFileUploader"] p,
+    [data-testid="stFileUploader"] div {{
+        color: {main_text} !important;
+    }}
+
+    .custom-card {{
+        background: {card_bg};
+        border: 1px solid {border_color};
+        border-radius: 16px;
+        padding: 25px;
+        text-align: center;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        backdrop-filter: blur(5px);
+    }}
+
+    h1 {{
+        color: {text_color} !important;
+        font-weight: 900 !important;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }}
+
+    .stButton>button, [data-testid="baseButton-secondary"], [data-testid="baseButton-primary"] {{
+        background: {btn_gradient} !important;
+        color: white !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 14px !important;
+        padding: 0.75rem 2rem !important;
+        font-weight: 700 !important;
+        font-size: 16px !important;
+        width: 100%;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        position: relative;
+        overflow: hidden;
+    }}
+
+    .stButton>button:hover, [data-testid="baseButton-secondary"]:hover, [data-testid="baseButton-primary"]:hover {{
+        background: {btn_hover} !important;
+        border-color: {text_color} !important;
+        box-shadow: 0 8px 30px {border_color}, 0 0 20px {accent_color} !important;
+        transform: translateY(-3px) scale(1.01) !important;
+    }}
+
+    .footer {{
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: rgba(5, 5, 10, 0.95);
+        backdrop-filter: blur(8px);
+        color: {accent_color};
+        text-align: center;
+        padding: 12px;
+        border-top: 1px solid {border_color};
+        font-size: 14px;
+        z-index: 999;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+apply_theme_and_styles(lang["direction"], lang["align"], current_theme)
+
+# --- 6. واجهة البرنامج الرئيسية ---
+st.markdown(f"""
+<div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
+    <h1>{lang["title"]}</h1>
+    <p style='font-size:16px; margin-top:-10px; opacity: 0.8;'>{lang["subtitle"]}</p>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
+
+# --- التبويب الأول ---
+with tab1:
+    st.markdown(f"""
+    <div class="custom-card">
+        <div class="icon-container"><i class="fa-solid fa-file-excel" style="font-size: 50px;"></i></div>
+        <h3 style='margin:0;'>{lang["card1_title"]}</h3>
+        <p style='font-size:14px; margin:5px 0; opacity: 0.85;'>{lang["card1_desc"]}</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    uploaded_files = st.file_uploader(lang["uploader_pdf"], type=["pdf", "csv"], key="table_uploader_main", accept_multiple_files=True)
+    
+    if uploaded_files:
+        for file in uploaded_files:
+            st.write("")
+            with st.container():
+                st.info(f"{lang['status_preparing']}{file.name}")
+                if st.button(f"{lang['btn_convert']} ({file.name})", key=f"btn_{file.name}"):
+                    try:
+                        with st.spinner(lang["status_loading"]):
+                            dfs = []
+                            if file.name.lower().endswith('.csv'):
+                                df_csv = pd.read_csv(file)
+                                dfs.append(df_csv)
+                            else:
+                                dfs = tabula.read_pdf(file, pages='all', multiple_tables=True, lattice=True)
+                            
+                            if dfs:
+                                output = io.BytesIO()
+                                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                                    current_row = 0
+                                    for df in dfs:
+                                        df = df.fillna('').replace([float('inf'), float('-inf')], 0)
+                                        df.to_excel(writer, index=False, startrow=current_row, sheet_name='Data')
+                                        current_row += len(df) + 2
+                                    
+                                st.success(lang["success_convert"])
+                                clean_name = file.name.rsplit('.', 1)[0]
+                                st.download_button(
+                                    label=lang["download_excel"],
+                                    data=output.getvalue(),
+                                    file_name=f"Excel_{clean_name}.xlsx",
+                                    mime="application/vnd.ms-excel",
+                                    key=f"dl_{file.name}"
+                                )
+                            else:
+                                st.warning(lang["warning_no_tables"])
+                    except Exception as e:
+                        st.error(f"Error: {str(e)}")
+
+# --- التبويب الثاني ---
+with tab2:
+    st.markdown(f"""
+    <div class="custom-card">
+        <div class="icon-container"><i class="fa-solid fa-eye" style="font-size: 50px;"></i></div>
+        <h3 style='margin:0;'>{lang["card2_title"]}</h3>
+        <p style='font-size:14px; margin:5px 0; opacity: 0.85;'>{lang["card2_desc"]}</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    ocr_file = st.file_uploader(lang["uploader_ocr"], type=["jpg", "png", "jpeg", "pdf"], key="ocr_main")
+    
+    if ocr_file:
+        if st.button(lang["btn_ocr"], key="ocr_run_btn"):
+            full_text = ""
+            try:
+                with st.spinner(lang["status_ocr_loading"]):
+                    if ocr_file.type == "application/pdf":
+                        doc = fitz.open(stream=ocr_file.read(), filetype="pdf")
+                        for page in doc:
+                            text = page.get_text()
+                            if text.strip():
+                                full_text += text + "\n"
+                            else:
+                                pix = page.get_pixmap()
+                                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                                full_text += pytesseract.image_to_string(img, lang='ara+eng') + "\n"
+                    else:
+                        img = Image.open(ocr_file)
+                        full_text = pytesseract.image_to_string(img, lang='ara+eng+urd')
+
+                if full_text.strip():
+                    st.markdown(lang["ocr_result_header"])
+                    st.text_area("", value=full_text, height=320)
+                    
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown(f"<p style='font-size:14px; margin-bottom:5px;'>{lang['opt1']}</p>", unsafe_allow_html=True)
+                        st_copy_to_clipboard(text=full_text, before_copy_label=lang["btn_copy"], after_copy_label=lang["copied"])
+                        
+                    with col2:
+                        st.markdown(f"<p style='font-size:14px; margin-bottom:5px;'>{lang['opt2']}</p>", unsafe_allow_html=True)
+                        st.download_button(
+                            label=lang["download_txt"],
+                            data=full_text,
+                            file_name="extracted_text.txt",
+                            key="dl_txt_file"
+                        )
+                else:
+                    st.warning(lang["warning_no_text"])
+            except Exception as e:
+                st.error(f"OCR Error: {e}")
+
+# --- 7. الإعلانات والتذييل ---
+st.markdown("<br><br>", unsafe_allow_html=True)
+
+ads_code = """
+<div style="text-align: center; width: 100%;">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1091631464795781"
+         crossorigin="anonymous"></script>
+    <ins class="adsbygoogle"
+         style="display:block; min-width:300px; max-width:970px; width:100%; height:90px; margin:auto;"
+         data-ad-client="ca-pub-1091631464795781"
+         data-ad-slot="8159670732"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+</div>
+"""
+components.html(ads_code, height=110)
+
+st.markdown(f"""
+    <div class="footer">
+        المحاسب الذكي Pro | <span>{lang["motto"]}</span> | 2026 ©
+    </div>
+""", unsafe_allow_html=True)
