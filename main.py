@@ -104,7 +104,6 @@ def render_permanent_background(theme):
     </body>
     </html>
     """
-    # حقن الخلفية كطبقة ثابتة تغطي الشاشة الخلفية بالكامل
     components.html(f"""
     <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -999; pointer-events: none;">
         <iframe srcdoc="{bg_html.replace('"', '&quot;')}" style="width: 100%; height: 100%; border: none; pointer-events: none;"></iframe>
@@ -236,6 +235,10 @@ def apply_ui_style(direction, align, theme):
     sub_text = "#8b949e" if theme == "dark" else "#334155"
     accent_color = "#38bdf8" if theme == "dark" else "#0284c7"
     
+    # ألوان خاصة لقائمة خيارات اللغة لضمان وضوحها تماماً وعدم شفوتها
+    select_bg = "#0f172a" if theme == "dark" else "#ffffff"
+    select_text = "#f8fafc" if theme == "dark" else "#0f172a"
+    
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -265,18 +268,32 @@ def apply_ui_style(direction, align, theme):
         padding-right: 5rem !important;
     }}
 
+    /* تنسيق صندوق اختيار اللغة لضمان وضوح النص والخلفية تماماً */
+    [data-testid="stSelectbox"] {{
+        background-color: {select_bg} !important;
+        padding: 10px 15px !important;
+        border-radius: 14px !important;
+        border: 2px solid {accent_color} !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    }}
+
     [data-testid="stSelectbox"] label p {{
-        font-size: 18px !important;
-        font-weight: bold !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
         color: {accent_color} !important;
-        text-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+        margin-bottom: 5px !important;
     }}
     
     [data-testid="stSelectbox"] div[data-baseweb="select"] {{
-        background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(2, 132, 199, 0.25) 100%) !important;
-        border: 2px solid {accent_color} !important;
-        border-radius: 12px !important;
-        box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+        background-color: {select_bg} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 10px !important;
+        color: {select_text} !important;
+    }}
+
+    [data-testid="stSelectbox"] div[data-baseweb="select"] * {{
+        color: {select_text} !important;
+        background-color: transparent !important;
     }}
 
     .stTabs [data-baseweb="tab-list"] {{
