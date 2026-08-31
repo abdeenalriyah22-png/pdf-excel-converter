@@ -176,7 +176,7 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. محرك الأنماط الديناميكي ---
+# --- 5. محرك الأنماط الديناميكي مع ضبط تباين النصوص والتبويبات ---
 def apply_theme_and_styles(direction, align, theme):
     if theme == "cyberpunk":
         font_family = "'Orbitron', 'Cairo', sans-serif"
@@ -190,10 +190,7 @@ def apply_theme_and_styles(direction, align, theme):
         btn_hover = "linear-gradient(135deg, #06b6d4 0%, #f43f5e 100%)"
         select_bg = "#0f0f1a"
         dropdown_hover = "#1e1b4b"
-        # ألوان التبويبات
-        tab_bg = "rgba(255, 255, 255, 0.08)"
-        tab_selected_bg = btn_gradient
-        tab_text = "#ffffff" # الأبيض الناصع
+        tab_text_color = "#ffffff"
     elif theme == "gold":
         font_family = "'Amiri', 'Cairo', serif"
         bg_gradient = "linear-gradient(135deg, rgba(15, 13, 11, 0.96) 0%, rgba(28, 22, 15, 0.96) 100%)"
@@ -206,10 +203,7 @@ def apply_theme_and_styles(direction, align, theme):
         btn_hover = "linear-gradient(135deg, #fbbf24 0%, #d97706 100%)"
         select_bg = "#1c140c"
         dropdown_hover = "#451a03"
-        # ألوان التبويبات
-        tab_bg = "rgba(255, 255, 255, 0.08)"
-        tab_selected_bg = btn_gradient
-        tab_text = "#fffbeb"
+        tab_text_color = "#fffbeb"
     elif theme == "forest":
         font_family = "'Tajawal', 'Cairo', sans-serif"
         bg_gradient = "linear-gradient(135deg, rgba(2, 44, 34, 0.95) 0%, rgba(1, 20, 15, 0.95) 100%)"
@@ -217,3 +211,8 @@ def apply_theme_and_styles(direction, align, theme):
         main_text = "#f0fdf4"
         card_bg = "linear-gradient(145deg, rgba(4, 58, 44, 0.9) 0%, rgba(2, 35, 27, 0.95) 100%)"
         border_color = "#059669"
+        accent_color = "#34d399"
+        btn_gradient = "linear-gradient(135deg, #059669 0%, #047857 100%)"
+        btn_hover = "linear-gradient(135deg, #34d399 0%, #059669 100%)"
+        select_bg = "#022c22"
+        dropdown_hover
