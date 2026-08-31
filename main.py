@@ -235,9 +235,10 @@ def apply_ui_style(direction, align, theme):
     sub_text = "#8b949e" if theme == "dark" else "#334155"
     accent_color = "#38bdf8" if theme == "dark" else "#0284c7"
     
-    # ألوان خاصة لقائمة خيارات اللغة لضمان وضوحها تماماً وعدم شفوتها
+    # ألوان دقيقة ومستقلة للقائمة المنسدلة وعناصرها المنبثقة لمنع الشفافية تماماً
     select_bg = "#0f172a" if theme == "dark" else "#ffffff"
     select_text = "#f8fafc" if theme == "dark" else "#0f172a"
+    dropdown_hover = "#1e293b" if theme == "dark" else "#e0f2fe"
     
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -268,7 +269,7 @@ def apply_ui_style(direction, align, theme):
         padding-right: 5rem !important;
     }}
 
-    /* تنسيق صندوق اختيار اللغة لضمان وضوح النص والخلفية تماماً */
+    /* الحاوية الأساسية لصندوق اللغة */
     [data-testid="stSelectbox"] {{
         background-color: {select_bg} !important;
         padding: 10px 15px !important;
@@ -294,6 +295,27 @@ def apply_ui_style(direction, align, theme):
     [data-testid="stSelectbox"] div[data-baseweb="select"] * {{
         color: {select_text} !important;
         background-color: transparent !important;
+    }}
+
+    /* استهداف القائمة المنبثقة (Dropdown Menu Popover) لإزالة الشفافية تماماً */
+    div[data-baseweb="popover"], div[data-baseweb="menu"], ul[role="listbox"] {{
+        background-color: {select_bg} !important;
+        background: {select_bg} !important;
+        border: 1px solid {accent_color} !important;
+        border-radius: 10px !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+    }}
+
+    div[data-baseweb="popover"] li[role="option"], ul[role="listbox"] li[role="option"] {{
+        background-color: {select_bg} !important;
+        color: {select_text} !important;
+        font-family: 'Cairo', sans-serif !important;
+        font-weight: bold !important;
+    }}
+
+    div[data-baseweb="popover"] li[role="option"]:hover, ul[role="listbox"] li[role="option"]:hover {{
+        background-color: {dropdown_hover} !important;
+        color: {accent_color} !important;
     }}
 
     .stTabs [data-baseweb="tab-list"] {{
