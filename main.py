@@ -64,9 +64,9 @@ translations = {
         "btn_convert": "بدء تحويل وجدولة الملف",
         "btn_ocr": "🚀 تشغيل الذكاء الاصطناعي لقراءة النص",
         "status_preparing": "📁 ملف قيد التحضير: ",
-        "status_loading": "جاري تفكيك الجداول وهيكلتها وتطهير البيانات...",
+        "status_loading": "جاري تفكيك الجداول وهيكلتها وتطهير البيانات بدقة...",
         "status_ocr_loading": "جاري المسح الضوئي للمستند وتفسير الحروف...",
-        "success_convert": "🚀 اكتمل التحويل بنجاح وبأعلى دقة وتنظيف كامل!",
+        "success_convert": "🚀 اكتمل التحويل بنجاح وبأعلى دقة وتنظيف كامل للأرقام والنصوص!",
         "warning_no_tables": "⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.",
         "warning_no_text": "نعتذر، لم نكتشف حروفاً أو نصوصاً مقروءة في هذا المستند.",
         "download_excel": "📥 تحميل ملف Excel المستخرج",
@@ -512,7 +512,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
 
-# --- التبويب الأول (مع التعديلات الذكية لتنظيف Unnamed وتحويل الأرقام الحقيقية) ---
+# --- التبويب الأول (مع الحل الجذري للأرقام والنصوص) ---
 with tab1:
     st.markdown(f"""
     <div class="custom-card">
@@ -544,21 +544,27 @@ with tab1:
                                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                                     current_row = 0
                                     for df in dfs:
-                                        # تعبئة القيم الفارغة
-                                        df = df.fillna('').replace([float('inf'), float('-inf')], 0)
+                                        # تعبئة الخلايا الفارغة بدون دمج أو إضرار بالنصوص
+                                        df = df.fillna('')
                                         
-                                        # 1. إزالة وتنظيف أعمدة الـ Unnamed أو إعادة تسميتها لتجنب الفراغات المزعجة
+                                        # 1. إزالة وتنظيف أسماء الأعمدة الـ Unnamed فقط دون المساس بالنصوص الأخرى
                                         df.columns = [str(col).strip() if not str(col).startswith('Unnamed') else '' for col in df.columns]
                                         
-                                        # 2. تحويل الأعمدة الرقمية (مثل المدين والدائن والرصيد) إلى أرقام صريحة لإزالة علامة التعجب الخضراء
+                                        # 2. تنزيه وتطهير الأعمدة الرقمية (مثل المدين والدائن والرصيد والأرقام الحسابية) لتحويلها لقيم رقمية صريحة وتجنب علامة التعجب الخضراء
                                         for col in df.columns:
-                                            # محاولة تحويل القيم النصية الرقمية التي تحتوي على فواصل أو أرقام إلى أرقام حقيقية
+                                            # نتحقق إذا كان العمود يحتوي على قيم رقمية أو مبالغ (مدين، دائن، رصيد، إلخ)
+                                            col_name_lower = str(col).lower()
+                                            is_likely_numeric = any(keyword in col_name_lower for keyword in ['مدين', 'دائن', 'رصيد', 'debit', 'credit', 'balance', 'رقم', 'amount', 'مبلغ'])
+                                            
+                                            # تحويل محتوى العمود لتنظيف الفواصل وتأكيد كونها أرقام حقيقية
                                             try:
-                                                # إزالة الفواصل إن وجدت وتحويلها لـ numeric
-                                                cleaned_col = df[col].astype(str).str.replace(',', '').str.strip()
-                                                numeric_series = pd.to_numeric(cleaned_col, errors='coerce')
-                                                # إذا كانت نسبة الأرقام الناجحة عالية في العمود، نثبتها كأرقام حقيقية
-                                                if numeric_series.notnull().sum() > 0 and (numeric_series.notnull().sum() / len(df) > 0.3):
+                                                series_str = df[col].astype(str).str.replace(',', '').str.strip()
+                                                # محاولة التحويل لرقم
+                                                numeric_series = pd.to_numeric(series_str, errors='coerce')
+                                                
+                                                # إذا كان اسم العمود يوحي برقم، أو أن نسبة كبيرة من محتواه أرقام صالحة، نحوله لـ float/int لتختفي علامة التعجب نهائياً
+                                                valid_count = numeric_series.notnull().sum()
+                                                if is_likely_numeric or (valid_count > 0 and (valid_count / len(df) > 0.25)):
                                                     df[col] = numeric_series.fillna(0)
                                             except:
                                                 pass
