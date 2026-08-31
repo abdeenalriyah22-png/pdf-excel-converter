@@ -17,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. دمج كود جوجل أدسنس والتحقق في الخلفية ---
+# --- 2. دمج كود جوجل أدسنس في الخلفية ---
 components.html("""
 <meta name="google-adsense-account" content="ca-pub-1091631464795781">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1091631464795781"
@@ -137,7 +137,7 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. حقن خلفية البحر، الأمواج، الأشجار، والطيور المتحركة بـ HTML/CSS مستقل تماماً لضمان الحركة المستمرة ---
+# --- 5. حقن التنسيقات والحركات مباشرة داخل الصفحة عبر st.markdown لضمان عملها المستمر ---
 def apply_nature_style(direction, align, theme):
     bg_gradient = "linear-gradient(180deg, #0a192f 0%, #06101e 60%, #03070c 100%)" if theme == "dark" else "linear-gradient(180deg, #e0f2fe 0%, #bae6fd 60%, #7dd3fc 100%)"
     text_color = "#e6edf3" if theme == "dark" else "#0f172a"
@@ -277,68 +277,65 @@ def apply_nature_style(direction, align, theme):
         font-size: 14px;
         z-index: 999;
     }}
-    </style>
-    """, unsafe_allow_html=True)
 
-    # تشغيل الرسوم المتحركة كعنصر HTML مستقل لضمان عملها المستمر دون توقف مع إعادة التحميل
-    animation_html = f"""
-    <style>
-        .nature-background {{
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            z-index: -999;
-            pointer-events: none;
-        }}
-        .ocean-waves {{
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 200%;
-            height: 120px;
-            background: linear-gradient(0deg, rgba(2, 132, 199, 0.25), transparent);
-            border-radius: 100% 100% 0 0;
-            animation: waveAnimation 8s ease-in-out infinite alternate;
-        }}
-        .ocean-waves:nth-child(2) {{
-            bottom: -20px;
-            opacity: 0.5;
-            animation: waveAnimation 12s ease-in-out infinite alternate-reverse;
-        }}
-        @keyframes waveAnimation {{
-            0% {{ transform: translateX(-10%) translateY(0); }}
-            100% {{ transform: translateX(-30%) translateY(-15px); }}
-        }}
-        .trees-silhouette {{
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 90px;
-            background: repeating-linear-gradient(90deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.2) 30px, transparent 30px, transparent 60px);
-            clip-path: polygon(0% 100%, 5% 40%, 10% 100%, 15% 30%, 20% 100%, 25% 50%, 30% 100%, 35% 20%, 40% 100%, 45% 45%, 50% 100%, 55% 35%, 60% 100%, 65% 25%, 70% 100%, 75% 50%, 80% 100%, 85% 30%, 90% 100%, 95% 45%, 100% 100%);
-        }}
-        .bird {{
-            position: absolute;
-            width: 20px;
-            height: 10px;
-            border-bottom: 2px solid {accent_color};
-            border-radius: 50%;
-            opacity: 0.6;
-            animation: flyBird 20s linear infinite;
-        }}
-        .bird:nth-of-type(1) {{ top: 15%; left: -10%; animation-duration: 18s; animation-delay: 0s; }}
-        .bird:nth-of-type(2) {{ top: 25%; left: -15%; animation-duration: 24s; animation-delay: 4s; transform: scale(0.7); }}
-        .bird:nth-of-type(3) {{ top: 10%; left: -20%; animation-duration: 15s; animation-delay: 8s; transform: scale(0.5); }}
-        @keyframes flyBird {{
-            0% {{ transform: translateX(0) translateY(0) rotate(0deg); }}
-            50% {{ transform: translateX(60vw) translateY(-40px) rotate(-10deg); }}
-            100% {{ transform: translateX(120vw) translateY(10px) rotate(5deg); }}
-        }}
+    /* الرسوم المتحركة للخلفية (أمواج، أشجار، طيور) */
+    .nature-background {{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        z-index: -999;
+        pointer-events: none;
+    }}
+    .ocean-waves {{
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 200%;
+        height: 120px;
+        background: linear-gradient(0deg, rgba(2, 132, 199, 0.25), transparent);
+        border-radius: 100% 100% 0 0;
+        animation: waveAnimation 8s ease-in-out infinite alternate;
+    }}
+    .ocean-waves:nth-child(2) {{
+        bottom: -20px;
+        opacity: 0.5;
+        animation: waveAnimation 12s ease-in-out infinite alternate-reverse;
+    }}
+    @keyframes waveAnimation {{
+        0% {{ transform: translateX(-10%) translateY(0); }}
+        100% {{ transform: translateX(-30%) translateY(-15px); }}
+    }}
+    .trees-silhouette {{
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 90px;
+        background: repeating-linear-gradient(90deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.2) 30px, transparent 30px, transparent 60px);
+        clip-path: polygon(0% 100%, 5% 40%, 10% 100%, 15% 30%, 20% 100%, 25% 50%, 30% 100%, 35% 20%, 40% 100%, 45% 45%, 50% 100%, 55% 35%, 60% 100%, 65% 25%, 70% 100%, 75% 50%, 80% 100%, 85% 30%, 90% 100%, 95% 45%, 100% 100%);
+    }}
+    .bird {{
+        position: absolute;
+        width: 20px;
+        height: 10px;
+        border-bottom: 2px solid {accent_color};
+        border-radius: 50%;
+        opacity: 0.6;
+        animation: flyBird 20s linear infinite;
+    }}
+    .bird:nth-of-type(1) {{ top: 15%; left: -10%; animation-duration: 18s; animation-delay: 0s; }}
+    .bird:nth-of-type(2) {{ top: 25%; left: -15%; animation-duration: 24s; animation-delay: 4s; transform: scale(0.7); }}
+    .bird:nth-of-type(3) {{ top: 10%; left: -20%; animation-duration: 15s; animation-delay: 8s; transform: scale(0.5); }}
+    @keyframes flyBird {{
+        0% {{ transform: translateX(0) translateY(0) rotate(0deg); }}
+        50% {{ transform: translateX(60vw) translateY(-40px) rotate(-10deg); }}
+        100% {{ transform: translateX(120vw) translateY(10px) rotate(5deg); }}
+    }}
     </style>
+    
     <div class="nature-background">
         <div class="bird"></div>
         <div class="bird"></div>
@@ -347,8 +344,7 @@ def apply_nature_style(direction, align, theme):
         <div class="ocean-waves"></div>
         <div class="ocean-waves"></div>
     </div>
-    """
-    components.html(animation_html, height=0, width=0)
+    """, unsafe_allow_html=True)
 
 apply_nature_style(lang["direction"], lang["align"], current_theme)
 
@@ -386,12 +382,9 @@ with tab1:
                         with st.spinner(lang["status_loading"]):
                             dfs = []
                             
-                            # معالجة ملف الـ CSV
                             if file.name.lower().endswith('.csv'):
                                 df_csv = pd.read_csv(file)
                                 dfs.append(df_csv)
-                            
-                            # معالجة ملف الـ PDF
                             else:
                                 dfs = tabula.read_pdf(file, pages='all', multiple_tables=True, lattice=True)
                             
