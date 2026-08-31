@@ -137,8 +137,8 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. ستايل التصميم الخلاب مع خلفية البحر، الأمواج، الأشجار، والطيور المتحركة ---
-def apply_neon_style(direction, align, theme):
+# --- 5. حقن خلفية البحر، الأمواج، الأشجار، والطيور المتحركة بـ HTML/CSS مستقل تماماً لضمان الحركة المستمرة ---
+def apply_nature_style(direction, align, theme):
     bg_gradient = "linear-gradient(180deg, #0a192f 0%, #06101e 60%, #03070c 100%)" if theme == "dark" else "linear-gradient(180deg, #e0f2fe 0%, #bae6fd 60%, #7dd3fc 100%)"
     text_color = "#e6edf3" if theme == "dark" else "#0f172a"
     card_bg = "linear-gradient(145deg, rgba(22, 27, 34, 0.85) 0%, rgba(15, 19, 25, 0.9) 100%)" if theme == "dark" else "linear-gradient(145deg, rgba(255, 255, 255, 0.9) 100%, rgba(240, 249, 255, 0.9) 100%)"
@@ -162,75 +162,6 @@ def apply_neon_style(direction, align, theme):
         background: {bg_gradient} !important;
         color: {text_color};
         background-attachment: fixed;
-    }}
-
-    /* --- خلفية الطبيعة المتكاملة (بحر، أمواج، أشجار، طيور) --- */
-    .nature-background {{
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        z-index: -1;
-        pointer-events: none;
-    }}
-
-    /* الأمواج المتحركة في الأسفل */
-    .ocean-waves {{
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 200%;
-        height: 120px;
-        background: url('https://cdn.jsdelivr.net/gh/arhamitech/hosted-images/wave.png') repeat-x;
-        background-size: 50% 100px;
-        opacity: 0.15;
-        animation: waveAnimation 12s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite;
-    }}
-    .ocean-waves:nth-child(2) {{
-        bottom: 10px;
-        opacity: 0.08;
-        animation: waveAnimation 18s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite reverse;
-    }}
-
-    @keyframes waveAnimation {{
-        0% {{ transform: translateX(0); }}
-        100% {{ transform: translateX(-50%); }}
-    }}
-
-    /* الأشجار الناعمة في الجانبين */
-    .trees-silhouette {{
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 150px;
-        background-image: radial-gradient(circle, rgba(16, 185, 129, 0.12) 10%, transparent 20%), radial-gradient(circle, rgba(5, 150, 105, 0.1) 15%, transparent 25%);
-        background-size: 60px 90px;
-        background-repeat: repeat-x;
-        opacity: 0.6;
-    }}
-
-    /* طيور تحلق في الأفق */
-    .bird {{
-        position: absolute;
-        width: 18px;
-        height: 10px;
-        border-bottom: 2px solid {accent_color};
-        border-radius: 50%;
-        opacity: 0.4;
-        animation: flyBird 25s linear infinite;
-    }}
-
-    .bird:nth-of-type(1) {{ top: 15%; left: -10%; animation-duration: 22s; animation-delay: 0s; }}
-    .bird:nth-of-type(2) {{ top: 25%; left: -15%; animation-duration: 28s; animation-delay: 5s; transform: scale(0.8); }}
-    .bird:nth-of-type(3) {{ top: 10%; left: -20%; animation-duration: 20s; animation-delay: 10s; transform: scale(0.6); }}
-
-    @keyframes flyBird {{
-        0% {{ transform: translateX(0) translateY(0) rotate(0deg); }}
-        50% {{ transform: translateX(60vw) translateY(-30px) rotate(-10deg); }}
-        100% {{ transform: translateX(120vw) translateY(10px) rotate(5deg); }}
     }}
 
     header, [data-testid="stHeader"] {{
@@ -347,8 +278,67 @@ def apply_neon_style(direction, align, theme):
         z-index: 999;
     }}
     </style>
-    
-    <!-- خلفية الطبيعة (البحر، الأمواج، الأشجار، والطيور) -->
+    """, unsafe_allow_html=True)
+
+    # تشغيل الرسوم المتحركة كعنصر HTML مستقل لضمان عملها المستمر دون توقف مع إعادة التحميل
+    animation_html = f"""
+    <style>
+        .nature-background {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            z-index: -999;
+            pointer-events: none;
+        }}
+        .ocean-waves {{
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200%;
+            height: 120px;
+            background: linear-gradient(0deg, rgba(2, 132, 199, 0.25), transparent);
+            border-radius: 100% 100% 0 0;
+            animation: waveAnimation 8s ease-in-out infinite alternate;
+        }}
+        .ocean-waves:nth-child(2) {{
+            bottom: -20px;
+            opacity: 0.5;
+            animation: waveAnimation 12s ease-in-out infinite alternate-reverse;
+        }}
+        @keyframes waveAnimation {{
+            0% {{ transform: translateX(-10%) translateY(0); }}
+            100% {{ transform: translateX(-30%) translateY(-15px); }}
+        }}
+        .trees-silhouette {{
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 90px;
+            background: repeating-linear-gradient(90deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.2) 30px, transparent 30px, transparent 60px);
+            clip-path: polygon(0% 100%, 5% 40%, 10% 100%, 15% 30%, 20% 100%, 25% 50%, 30% 100%, 35% 20%, 40% 100%, 45% 45%, 50% 100%, 55% 35%, 60% 100%, 65% 25%, 70% 100%, 75% 50%, 80% 100%, 85% 30%, 90% 100%, 95% 45%, 100% 100%);
+        }}
+        .bird {{
+            position: absolute;
+            width: 20px;
+            height: 10px;
+            border-bottom: 2px solid {accent_color};
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: flyBird 20s linear infinite;
+        }}
+        .bird:nth-of-type(1) {{ top: 15%; left: -10%; animation-duration: 18s; animation-delay: 0s; }}
+        .bird:nth-of-type(2) {{ top: 25%; left: -15%; animation-duration: 24s; animation-delay: 4s; transform: scale(0.7); }}
+        .bird:nth-of-type(3) {{ top: 10%; left: -20%; animation-duration: 15s; animation-delay: 8s; transform: scale(0.5); }}
+        @keyframes flyBird {{
+            0% {{ transform: translateX(0) translateY(0) rotate(0deg); }}
+            50% {{ transform: translateX(60vw) translateY(-40px) rotate(-10deg); }}
+            100% {{ transform: translateX(120vw) translateY(10px) rotate(5deg); }}
+        }}
+    </style>
     <div class="nature-background">
         <div class="bird"></div>
         <div class="bird"></div>
@@ -357,9 +347,10 @@ def apply_neon_style(direction, align, theme):
         <div class="ocean-waves"></div>
         <div class="ocean-waves"></div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    components.html(animation_html, height=0, width=0)
 
-apply_neon_style(lang["direction"], lang["align"], current_theme)
+apply_nature_style(lang["direction"], lang["align"], current_theme)
 
 # --- 6. واجهة البرنامج الرئيسية المترجمة ---
 st.markdown(f"""
