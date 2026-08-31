@@ -176,7 +176,7 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. محرك الأنماط الديناميكي مع إصلاح تام للون النص داخل القوائم المنسدلة بعد الاختيار ---
+# --- 5. محرك الأنماط الديناميكي مع إصلاح حقل الإدخال الداخلي للـ Selectbox ---
 def apply_theme_and_styles(direction, align, theme):
     if theme == "cyberpunk":
         font_family = "'Orbitron', 'Cairo', sans-serif"
@@ -263,7 +263,7 @@ def apply_theme_and_styles(direction, align, theme):
         padding-right: 5rem !important;
     }}
 
-    /* --- تعديل حصري وقوي لإجبار النص المختار داخل المربع على الظهور بالأبيض الناصع --- */
+    /* --- تعديل شامل وصارم لإلغاء أي لون باهت داخل Selectbox بما فيها حقل البحث الداخلي (Input) --- */
     [data-testid="stSelectbox"] {{
         background-color: {select_bg} !important;
         padding: 10px 15px !important;
@@ -279,7 +279,6 @@ def apply_theme_and_styles(direction, align, theme):
         margin-bottom: 5px !important;
     }}
     
-    /* استهداف العنصر الذي يظهر النص المختار بعد الاختيار مباشرة */
     [data-testid="stSelectbox"] div[data-baseweb="select"],
     [data-testid="stSelectbox"] div[data-baseweb="select"] > div {{
         background-color: {select_bg} !important;
@@ -287,15 +286,17 @@ def apply_theme_and_styles(direction, align, theme):
         border-radius: 10px !important;
     }}
 
-    [data-testid="stSelectbox"] div[data-baseweb="select"] span,
-    [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
+    /* استهداف النصوص وحقول الإدخال/البحث الداخلية للـ Selectbox بـ CSS صارم جداً */
+    [data-testid="stSelectbox"] span,
+    [data-testid="stSelectbox"] div,
+    [data-testid="stSelectbox"] input {{
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
         font-weight: 900 !important;
         background-color: transparent !important;
     }}
 
-    /* قائمة الخيارات المنسدلة عند فتحها */
+    /* قائمة الخيارات المنبثقة عند النقر */
     div[data-baseweb="popover"], 
     div[data-baseweb="menu"], 
     ul[role="listbox"],
