@@ -39,13 +39,13 @@ translations = {
         "align": "right",
         "title": "📊 المحاسب الذكي <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
         "subtitle": "النظام السحابي المطور لمعالجة الجداول والبيانات ذكياً",
-        "tab1_title": "📊 تحويل PDF و CSV إلى Excel",
+        "tab1_title": "📊 تحويل PDF إلى جداول Excel",
         "tab2_title": "🔍 استخراج النصوص الذكي (OCR)",
         "card1_title": "مستخرج جداول البيانات",
-        "card1_desc": "ارفع ملفاتك لتحويل أي جدول صامت داخل الـ PDF أو ملفات CSV إلى ملف إكسيل منسق تلقائياً",
+        "card1_desc": "ارفع ملفاتك لتحويل أي جدول صامت داخل الـ PDF إلى ملف إكسيل منسق تلقائياً",
         "card2_title": "قارئ النصوص والماسح الضوئي",
         "card2_desc": "استخراج النصوص العربية والإنجليزية والأوردو بدقة كاملة من المستندات المصورة والـ PDF",
-        "uploader_pdf": "قم بسحب وإفلات ملفات الـ PDF أو CSV الخاصة بالجداول هنا",
+        "uploader_pdf": "قم بسحب وإفلات ملفات الـ PDF الخاصة بالجداول هنا",
         "uploader_ocr": "ارفع صورة الفاتورة/المستند (JPG, PNG) أو ملف PDF الممسوح",
         "btn_convert": "بدأ تحويل وجدولة: ",
         "btn_ocr": "🚀 اطلَق الذكاء الاصطناعي لقراءة النص",
@@ -69,13 +69,13 @@ translations = {
         "align": "left",
         "title": "📊 Smart Accountant <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
         "subtitle": "Advanced cloud system for smart data and table processing",
-        "tab1_title": "📊 Convert PDF & CSV to Excel",
+        "tab1_title": "📊 Convert PDF to Excel",
         "tab2_title": "🔍 Smart Text Extraction (OCR)",
         "card1_title": "Data Table Extractor",
-        "card1_desc": "Upload your files to automatically convert any silent table inside PDF or CSV files into a formatted Excel file",
+        "card1_desc": "Upload your files to automatically convert any silent table inside PDF into a formatted Excel file",
         "card2_title": "Text Reader & Scanner",
         "card2_desc": "Extract Arabic, English, and Urdu text with full accuracy from scanned documents and images",
-        "uploader_pdf": "Drag and drop your PDF or CSV table files here",
+        "uploader_pdf": "Drag and drop your PDF table files here",
         "uploader_ocr": "Upload invoice/document image (JPG, PNG) or scanned PDF file",
         "btn_convert": "Start Converting & Scheduling: ",
         "btn_ocr": "🚀 Launch AI to Read Text",
@@ -99,13 +99,13 @@ translations = {
         "align": "right",
         "title": "📊 سمارٹ اکاؤنٹنٹ <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
         "subtitle": "سمارٹ ڈیٹا اور ٹیبل پروسیسنگ کے لیے جدید کلاؤڈ سسٹم",
-        "tab1_title": "📊 پی ڈی ایف اور سی ایس وی کو ایکسل میں تبدیل کریں",
+        "tab1_title": "📊 پی ڈی ایف کو ایکسل میں تبدیل کریں",
         "tab2_title": "🔍 سمارٹ ٹیکسٹ نکالنا (OCR)",
         "card1_title": "ڈیٹا ٹیبل ایکسٹریکٹر",
-        "card1_desc": "پی ڈی ایف کے اندر موجود کسی بھی پوشیدہ ٹیبل یا سی ایس وی فائلوں کو خودکار طور پر فارمیٹ شدہ ایکسل فائل میں تبدیل کرنے کے لیے اپنی فائلیں اپ لوڈ کریں",
+        "card1_desc": "پی ڈی ایف کے اندر موجود کسی بھی پوشیدہ ٹیبل کو خودکار طور پر فارمیٹ شدہ ایکسل فائل میں تبدیل کرنے کے لیے اپنی فائلیں اپ لوڈ کریں",
         "card2_title": "ٹیکسٹ ریڈر اور اسكينر",
         "card2_desc": "اسکین شدہ दस्तावेजات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
-        "uploader_pdf": "اپنی پی ڈی ایف یا سی ایس وی ٹیبل فائلیں یہاں ڈریگ اور ڈراپ کریں",
+        "uploader_pdf": "اپنی پی ڈی ایف ٹیبل فائلیں یہاں ڈریگ اور ڈراپ کریں",
         "uploader_ocr": "انوائس/دستاویز کی تصویر (JPG, PNG) أو اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
         "btn_convert": "تبدیلی اور شیڈولنگ شروع کریں: ",
         "btn_ocr": "🚀 ٹیکسٹ پڑھنے کے لیے AI لانچ کریں",
@@ -115,7 +115,7 @@ translations = {
         "success_convert": "🚀 اعلیٰ ترین درستگی کے ساتھ تبدیلی کامیابی سے مکمل ہو گئی!",
         "warning_no_tables": "⚠️ اس فائل میں کوئی واضح عددی ٹیبل نہیں ملا۔",
         "warning_no_text": "معذرت، اس دستاویز میں کوئی پڑھنے کے قابل حروف یا متن نہیں ملا۔",
-        "download_excel": "📥 can ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
+        "download_excel": "📥 نکالی گئی ایکسل فائل ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
         "download_txt": "📥 متن کو TXT فائل کے طور بر ڈاؤن لوڈ کریں",
         "ocr_result_header": "#### ✅ نکالا گیا متن:",
         "opt1": "📋 پہلا آپشن:",
@@ -152,28 +152,22 @@ def apply_neon_style(direction, align):
         display: none;
     }}
 
-    /* === رفع المحتوى ليلتصق بأعلى المتصفح تماماً وتصفير الـ Padding العلوي === */
     [data-testid="stAppViewBlockContainer"] {{
-        padding-top: 0rem !important;
-        padding-bottom: 8rem !important;
-        padding-left: 5rem !important;
-        padding-right: 5rem !important;
+        padding: 1rem 5rem 8rem 5rem;
     }}
 
-    /* === تخصيص جذري وتوهج باللون الأزرق النيوني المضيء لصندوق اللغات === */
+    /* === تخصيص جذري للقائمة المنسدلة والخيارات المنبثقة لـ Streamlit === */
     [data-testid="stSelectbox"] label p {{
         font-size: 18px !important;
         font-weight: bold !important;
         color: #58a6ff !important;
-        text-shadow: 0 0 12px rgba(88, 166, 255, 0.6);
+        text-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
     }}
     
     [data-testid="stSelectbox"] div[data-baseweb="select"] {{
-        background: linear-gradient(135deg, rgba(31, 111, 235, 0.25) 0%, rgba(13, 68, 165, 0.4) 100%) !important;
-        border: 2px solid #58a6ff !important;
+        background-color: rgba(22, 27, 34, 0.9) !important;
+        border: 1px solid #30363d !important;
         border-radius: 12px !important;
-        box-shadow: 0 0 15px rgba(88, 166, 255, 0.45);
-        transition: all 0.3s ease-in-out;
     }}
     
     [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
@@ -183,14 +177,11 @@ def apply_neon_style(direction, align):
     
     [data-testid="stSelectbox"] div[data-baseweb="select"]:hover {{
         border-color: #58a6ff !important;
-        background: linear-gradient(135deg, rgba(31, 111, 235, 0.4) 0%, rgba(13, 68, 165, 0.6) 100%) !important;
-        box-shadow: 0 0 25px rgba(88, 166, 255, 0.7);
+        box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
     }}
 
     div[data-baseweb="popover"] {{
         background-color: #161b22 !important;
-        border: 1px solid #58a6ff !important;
-        box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
     }}
     
     div[data-baseweb="popover"] li {{
@@ -211,10 +202,10 @@ def apply_neon_style(direction, align):
 
     /* === حل مشكلة تكرار كلمة Upload بداخل أزرار الرفع بدون لمس التصميم الأساسي === */
     [data-testid="stFileUploader"] button span span {{
-        display: none !important;  
+        display: none !important;  /* إخفاء النص الخلفي المكرر من نظام ستريمليت */
     }}
     [data-testid="stFileUploader"] button span::after {{
-        content: "Upload" !important; 
+        content: "Upload" !important; /* فرض ظهور كلمة واحدة فقط وبشكل نظيف وثابت */
         color: white !important;
     }}
 
@@ -381,7 +372,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
 
-# --- التبويب الأول: تحويل الجداول لـ Excel (يدعم PDF و CSV) ---
+# --- التبويب الأول: تحويل الجداول لـ Excel ---
 with tab1:
     st.markdown(f"""
     <div class="custom-card">
@@ -391,26 +382,17 @@ with tab1:
     </div>
     """, unsafe_allow_html=True)
     
-    uploaded_files = st.file_uploader(lang["uploader_pdf"], type=["pdf", "csv"], key="table_uploader_main", accept_multiple_files=True)
+    pdf_files = st.file_uploader(lang["uploader_pdf"], type=["pdf"], key="pdf_main", accept_multiple_files=True)
     
-    if uploaded_files:
-        for file in uploaded_files:
+    if pdf_files:
+        for uploaded_pdf in pdf_files:
             st.write("")
             with st.container():
-                st.info(f"{lang['status_preparing']}{file.name}")
-                if st.button(f"{lang['btn_convert']}{file.name}"):
+                st.info(f"{lang['status_preparing']}{uploaded_pdf.name}")
+                if st.button(f"{lang['btn_convert']}{uploaded_pdf.name}"):
                     try:
                         with st.spinner(lang["status_loading"]):
-                            dfs = []
-                            
-                            # معالجة ملف الـ CSV
-                            if file.name.lower().endswith('.csv'):
-                                df_csv = pd.read_csv(file)
-                                dfs.append(df_csv)
-                            
-                            # معالجة ملف الـ PDF
-                            else:
-                                dfs = tabula.read_pdf(file, pages='all', multiple_tables=True, lattice=True)
+                            dfs = tabula.read_pdf(uploaded_pdf, pages='all', multiple_tables=True, lattice=True)
                             
                             if dfs:
                                 output = io.BytesIO()
@@ -422,11 +404,10 @@ with tab1:
                                         current_row += len(df) + 2
                                     
                                 st.success(lang["success_convert"])
-                                clean_name = file.name.rsplit('.', 1)[0]
                                 st.download_button(
                                     label=lang["download_excel"],
                                     data=output.getvalue(),
-                                    file_name=f"Excel_{clean_name}.xlsx",
+                                    file_name=f"Excel_{uploaded_pdf.name.replace('.pdf', '')}.xlsx",
                                     mime="application/vnd.ms-excel"
                                 )
                             else:
