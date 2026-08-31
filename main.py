@@ -130,7 +130,7 @@ current_theme = "dark" if theme_mode else "light"
 # استدعاء الخلفية الثابتة والمستقلة للحركة
 render_permanent_background(current_theme)
 
-# --- 4. قاموس الترجمة للغات الثلاث ---
+# --- 4. قاموس الترجمة للغات الثلاث (تم تنظيف النصوص المكررة ومنع تداخل الكلمات) ---
 translations = {
     "العربية": {
         "direction": "rtl",
@@ -144,20 +144,20 @@ translations = {
         "card2_title": "قارئ النصوص والماسح الضوئي",
         "card2_desc": "استخراج النصوص العربية والإنجليزية والأوردو بدقة كاملة من المستندات المصورة والـ PDF",
         "uploader_pdf": "قم بسحب وإفلات ملفات الـ PDF أو CSV الخاصة بالجداول هنا",
-        "uploader_ocr": "ارفع صورة الفاتورة/المستند (JPG, PNG) أو ملف PDF الممسوح",
-        "btn_convert": "بدأ تحويل وجدولة: ",
-        "btn_ocr": "🚀 اطلَق الذكاء الاصطناعي لقراءة النص",
+        "uploader_ocr": "ارفع صورة الفاتورة أو المستند (JPG, PNG) أو ملف PDF",
+        "btn_convert": "بدء تحويل وجدولة الملف",
+        "btn_ocr": "🚀 تشغيل الذكاء الاصطناعي لقراءة النص",
         "status_preparing": "📁 ملف قيد التحضير: ",
         "status_loading": "جاري تفكيك الجداول وهيكلتها...",
         "status_ocr_loading": "جاري المسح الضوئي للمستند وتفسير الحروف...",
         "success_convert": "🚀 اكتمل التحويل بنجاح وبأعلى دقة!",
         "warning_no_tables": "⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.",
         "warning_no_text": "نعتذر، لم نكتشف حروفاً أو نصوصاً مقروءة في هذا المستند.",
-        "download_excel": "📥 اضغط هنا لتحميل ملف Excel المستخرج",
+        "download_excel": "📥 تحميل ملف Excel المستخرج",
         "download_txt": "📥 تحميل النص كملف TXT",
-        "ocr_result_header": "#### ✅ النصوص التي تم العثور عليها ومسحها:",
-        "opt1": "📋 الخيار الأول:",
-        "opt2": "📥 الخيار الثاني:",
+        "ocr_result_header": "#### ✅ النصوص التي تم العثور عليها:",
+        "opt1": "📋 النسخ السريع:",
+        "opt2": "📥 التنزيل المباشر:",
         "btn_copy": "📋 نسخ النص بالكامل",
         "copied": "✅ تم النسخ بنجاح!",
         "motto": "الفصل في الذمة.. الوصل في الأمانة"
@@ -170,12 +170,12 @@ translations = {
         "tab1_title": "📊 Convert PDF & CSV to Excel",
         "tab2_title": "🔍 Smart Text Extraction (OCR)",
         "card1_title": "Data Table Extractor",
-        "card1_desc": "Upload your files to automatically convert any silent table inside PDF or CSV files into a formatted Excel file",
+        "card1_desc": "Upload your files to automatically convert any table inside PDF or CSV files into a formatted Excel file",
         "card2_title": "Text Reader & Scanner",
         "card2_desc": "Extract Arabic, English, and Urdu text with full accuracy from scanned documents and images",
         "uploader_pdf": "Drag and drop your PDF or CSV table files here",
-        "uploader_ocr": "Upload invoice/document image (JPG, PNG) or scanned PDF file",
-        "btn_convert": "Start Converting & Scheduling: ",
+        "uploader_ocr": "Upload invoice/document image (JPG, PNG) or PDF file",
+        "btn_convert": "Start Converting File",
         "btn_ocr": "🚀 Launch AI to Read Text",
         "status_preparing": "📁 File preparing: ",
         "status_loading": "Deconstructing and structuring tables...",
@@ -183,11 +183,11 @@ translations = {
         "success_convert": "🚀 Conversion completed successfully with highest accuracy!",
         "warning_no_tables": "⚠️ No clear numerical tables detected in this file.",
         "warning_no_text": "Sorry, no readable characters or text detected in this document.",
-        "download_excel": "📥 Click here to download the extracted Excel file",
-        "download_txt": "📥 Download text as TXT file",
+        "download_excel": "📥 Download Extracted Excel File",
+        "download_txt": "📥 Download Text as TXT File",
         "ocr_result_header": "#### ✅ Extracted Text:",
-        "opt1": "📋 Option 1:",
-        "opt2": "📥 Option 2:",
+        "opt1": "📋 Quick Copy:",
+        "opt2": "📥 Direct Download:",
         "btn_copy": "📋 Copy Full Text",
         "copied": "✅ Copied Successfully!",
         "motto": "Separation of liability... connection in trust"
@@ -200,24 +200,24 @@ translations = {
         "tab1_title": "📊 پی ڈی ایف اور سی ایس وی کو ایکسل میں تبدیل کریں",
         "tab2_title": "🔍 سمارٹ ٹیکسٹ نکالنا (OCR)",
         "card1_title": "ڈیٹا ٹیبل ایکسٹریکٹر",
-        "card1_desc": "پی ڈی ایف کے اندر موجود کسی بھی پوشیدہ ٹیبل یا سی ایس وی فائلوں کو خودکار طور پر فارمیٹ شدہ ایکسل فائل میں تبدیل کرنے کے لیے اپنی فائلیں اپ لوڈ کریں",
-        "card2_title": "ٹیکسٹ ریڈر اور اسكينر",
-        "card2_desc": "اسکین شدہ दस्तावेजات اور تصاویر سے مکمل درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
-        "uploader_pdf": "اپنی پی ڈی ایف یا سی ایس وی ٹیبل فائلیں یہاں ڈریگ اور ڈراپ کریں",
-        "uploader_ocr": "انوائس/دستاویز کی تصویر (JPG, PNG) أو اسکین شدہ پی ڈی ایف فائل اپ لوڈ کریں",
-        "btn_convert": "تبدیلی اور شیڈولنگ شروع کریں: ",
+        "card1_desc": "پی ڈی ایف یا سی ایس وی فائلوں کو خودکار طور پر فارمیٹ شدہ ایکسل فائل میں تبدیل کریں",
+        "card2_title": "ٹیکسٹ ریڈر اور اسکینر",
+        "card2_desc": "اسکین شدہ دستاویزات اور تصاویر سے درستگی کے ساتھ عربی، انگریزی اور اردو متن نکالیں",
+        "uploader_pdf": "اپنی پی ڈی ایف یا سی ایس وی فائلیں یہاں ڈریگ اور ڈراپ کریں",
+        "uploader_ocr": "دستاویز کی تصویر (JPG, PNG) یا پی ڈی ایف فائل اپ لوڈ کریں",
+        "btn_convert": "فائل کی تبدیلی شروع کریں",
         "btn_ocr": "🚀 ٹیکسٹ پڑھنے کے لیے AI لانچ کریں",
         "status_preparing": "📁 فائل کی تیاری: ",
-        "status_loading": "ٹیبلز کو ڈی کنسٹریکٹ اور سٹرکچر کیا جا رہا ہے...",
-        "status_ocr_loading": "دستاویز کو اسکین اور حروف کی تشریح کی جا رہی ہے...",
-        "success_convert": "🚀 اعلیٰ ترین درستگی کے ساتھ تبدیلی کامیابی سے مکمل ہو گئی!",
+        "status_loading": "ٹیبلز کو سٹرکچر کیا جا رہا ہے...",
+        "status_ocr_loading": "دستاویز کو اسکین کیا جا رہا ہے...",
+        "success_convert": "🚀 تبدیلی کامیابی سے مکمل ہو گئی!",
         "warning_no_tables": "⚠️ اس فائل میں کوئی واضح عددی ٹیبل نہیں ملا۔",
-        "warning_no_text": "معذرت، اس دستاویز میں کوئی پڑھنے کے قابل حروف یا متن نہیں ملا۔",
-        "download_excel": "📥 can ڈاؤن لوڈ کرنے کے لیے یہاں کلک کریں",
-        "download_txt": "📥 متن کو TXT فائل کے طور بر ڈاؤن لوڈ کریں",
+        "warning_no_text": "معذرت، اس دستاویز میں کوئی متن نہیں ملا۔",
+        "download_excel": "📥 ایکسل فائل ڈاؤن لوڈ کریں",
+        "download_txt": "📥 ٹیکسٹ فائل ڈاؤن لوڈ کریں",
         "ocr_result_header": "#### ✅ نکالا گیا متن:",
-        "opt1": "📋 پہلا آپشن:",
-        "opt2": "📥 دوسرا آپشن:",
+        "opt1": "📋 فوری کاپی:",
+        "opt2": "📥 براہ راست ڈاؤن لوڈ:",
         "btn_copy": "📋 پورا متن کاپی کریں",
         "copied": "✅ کامیابی سے کاپی ہو گیا!",
         "motto": "الفصل في الذمة.. الوصل في الأمانة"
@@ -226,7 +226,7 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. تطبيق التنسيقات العامة للواجهة ---
+# --- 5. تطبيق التنسيقات العامة للواجهة واللمسات الفنية التفاعلية للأزرار ---
 def apply_ui_style(direction, align, theme):
     bg_gradient = "linear-gradient(180deg, rgba(10,25,47,0.85) 0%, rgba(6,16,30,0.85) 60%, rgba(3,7,12,0.85) 100%)" if theme == "dark" else "linear-gradient(180deg, rgba(224,242,254,0.85) 0%, rgba(186,230,253,0.85) 60%, rgba(125,211,252,0.85) 100%)"
     text_color = "#e6edf3" if theme == "dark" else "#0f172a"
@@ -235,7 +235,6 @@ def apply_ui_style(direction, align, theme):
     sub_text = "#8b949e" if theme == "dark" else "#334155"
     accent_color = "#38bdf8" if theme == "dark" else "#0284c7"
     
-    # ألوان صلبة ومطلقة للقائمة المنسدلة والعناصر المنبثقة لمنع أي شفافية نهائياً
     select_bg = "#0b1329" if theme == "dark" else "#ffffff"
     select_text = "#f8fafc" if theme == "dark" else "#0f172a"
     dropdown_hover = "#1e293b" if theme == "dark" else "#e0f2fe"
@@ -297,7 +296,7 @@ def apply_ui_style(direction, align, theme):
         background-color: transparent !important;
     }}
 
-    /* فرض خلفية صلبة وواضحة على القائمة المنبثقة وعناصر القائمة (Dropdown Portal & Menu) */
+    /* القائمة المنبثقة وعناصر القائمة لمنع الشفافية وضمان عدم التداخل */
     div[data-baseweb="popover"], 
     div[data-baseweb="menu"], 
     ul[role="listbox"],
@@ -310,7 +309,6 @@ def apply_ui_style(direction, align, theme):
         opacity: 1 !important;
     }}
 
-    /* خيارات القائمة المنسدلة الفردية */
     li[role="option"], 
     div[role="option"],
     [data-baseweb="menu"] li {{
@@ -382,16 +380,34 @@ def apply_ui_style(direction, align, theme):
         -webkit-text-fill-color: transparent;
     }}
 
-    .stButton>button {{
+    /* --- اللمسة الفنية العصرية للأزرار والتفاعل مع حركة الماوس (Hover Effects & Glassmorphism) --- */
+    .stButton>button, [data-testid="baseButton-secondary"], [data-testid="baseButton-primary"] {{
         background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
         color: white !important;
-        border: none !important;
-        border-radius: 12px !important;
-        padding: 0.7rem 2rem !important;
-        font-weight: bold !important;
+        border: 1px solid rgba(56, 189, 248, 0.3) !important;
+        border-radius: 14px !important;
+        padding: 0.75rem 2rem !important;
+        font-weight: 700 !important;
         font-size: 16px !important;
         width: 100%;
-        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        position: relative;
+        overflow: hidden;
+    }}
+
+    /* تأثير التوهج والارتفاع عند مرور الماوس (Hover Animation) */
+    .stButton>button:hover, [data-testid="baseButton-secondary"]:hover, [data-testid="baseButton-primary"]:hover {{
+        background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%) !important;
+        border-color: #38bdf8 !important;
+        box-shadow: 0 8px 25px rgba(56, 189, 248, 0.5), 0 0 15px rgba(56, 189, 248, 0.3) !important;
+        transform: translateY(-3px) scale(1.01) !important;
+    }}
+
+    /* تأثير عند الضغط على الزر (Active Click) */
+    .stButton>button:active {{
+        transform: translateY(1px) scale(0.99) !important;
+        box-shadow: 0 2px 10px rgba(2, 132, 199, 0.4) !important;
     }}
 
     .footer {{
@@ -442,7 +458,7 @@ with tab1:
             st.write("")
             with st.container():
                 st.info(f"{lang['status_preparing']}{file.name}")
-                if st.button(f"{lang['btn_convert']}{file.name}", key=f"btn_{file.name}"):
+                if st.button(f"{lang['btn_convert']} ({file.name})", key=f"btn_{file.name}"):
                     try:
                         with st.spinner(lang["status_loading"]):
                             dfs = []
