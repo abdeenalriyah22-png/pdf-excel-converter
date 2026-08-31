@@ -235,8 +235,8 @@ def apply_ui_style(direction, align, theme):
     sub_text = "#8b949e" if theme == "dark" else "#334155"
     accent_color = "#38bdf8" if theme == "dark" else "#0284c7"
     
-    # ألوان دقيقة ومستقلة للقائمة المنسدلة وعناصرها المنبثقة لمنع الشفافية تماماً
-    select_bg = "#0f172a" if theme == "dark" else "#ffffff"
+    # ألوان صلبة ومطلقة للقائمة المنسدلة والعناصر المنبثقة لمنع أي شفافية نهائياً
+    select_bg = "#0b1329" if theme == "dark" else "#ffffff"
     select_text = "#f8fafc" if theme == "dark" else "#0f172a"
     dropdown_hover = "#1e293b" if theme == "dark" else "#e0f2fe"
     
@@ -269,13 +269,13 @@ def apply_ui_style(direction, align, theme):
         padding-right: 5rem !important;
     }}
 
-    /* الحاوية الأساسية لصندوق اللغة */
+    /* صندوق اختيار اللغة الرئيسي */
     [data-testid="stSelectbox"] {{
         background-color: {select_bg} !important;
         padding: 10px 15px !important;
         border-radius: 14px !important;
         border: 2px solid {accent_color} !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
     }}
 
     [data-testid="stSelectbox"] label p {{
@@ -297,23 +297,34 @@ def apply_ui_style(direction, align, theme):
         background-color: transparent !important;
     }}
 
-    /* استهداف القائمة المنبثقة (Dropdown Menu Popover) لإزالة الشفافية تماماً */
-    div[data-baseweb="popover"], div[data-baseweb="menu"], ul[role="listbox"] {{
+    /* فرض خلفية صلبة وواضحة على القائمة المنبثقة وعناصر القائمة (Dropdown Portal & Menu) */
+    div[data-baseweb="popover"], 
+    div[data-baseweb="menu"], 
+    ul[role="listbox"],
+    div[id^="baseui-menu-"] {{
         background-color: {select_bg} !important;
         background: {select_bg} !important;
-        border: 1px solid {accent_color} !important;
-        border-radius: 10px !important;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+        border: 2px solid {accent_color} !important;
+        border-radius: 12px !important;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.7) !important;
+        opacity: 1 !important;
     }}
 
-    div[data-baseweb="popover"] li[role="option"], ul[role="listbox"] li[role="option"] {{
+    /* خيارات القائمة المنسدلة الفردية */
+    li[role="option"], 
+    div[role="option"],
+    [data-baseweb="menu"] li {{
         background-color: {select_bg} !important;
         color: {select_text} !important;
         font-family: 'Cairo', sans-serif !important;
         font-weight: bold !important;
+        padding: 10px 15px !important;
+        opacity: 1 !important;
     }}
 
-    div[data-baseweb="popover"] li[role="option"]:hover, ul[role="listbox"] li[role="option"]:hover {{
+    li[role="option"]:hover, 
+    div[role="option"]:hover,
+    [data-baseweb="menu"] li:hover {{
         background-color: {dropdown_hover} !important;
         color: {accent_color} !important;
     }}
