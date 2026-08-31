@@ -137,7 +137,7 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. ستايل النيون المتطور مع دعم الثيمات والخلفية المتحركة ثلاثية الأبعاد (3D Shapes) ---
+# --- 5. ستايل النيون المتطور مع دعم الثيمات والخلفية المتحركة ثلاثية الأبعاد (3D Shapes) الواضحة ---
 def apply_neon_style(direction, align, theme):
     bg_gradient = "radial-gradient(circle at center, #111723 0%, #07090e 100%)" if theme == "dark" else "radial-gradient(circle at center, #f0f4f8 0%, #d9e2ec 100%)"
     text_color = "#e6edf3" if theme == "dark" else "#1f2937"
@@ -163,7 +163,7 @@ def apply_neon_style(direction, align, theme):
         color: {text_color};
     }}
 
-    /* --- خلفية الأشكال ثلاثية الأبعاد المتحركة (مربعات ودوائر) --- */
+    /* --- خلفية الأشكال ثلاثية الأبعاد المتحركة (مربعات ودوائر واضحة) --- */
     .background-shapes {{
         position: fixed;
         top: 0;
@@ -177,32 +177,32 @@ def apply_neon_style(direction, align, theme):
 
     .shape {{
         position: absolute;
-        opacity: 0.12;
-        animation: floatShape 22s infinite linear;
+        opacity: 0.35;
+        animation: floatShape 15s infinite linear;
     }}
 
     .shape.circle {{
         border-radius: 50%;
         background: linear-gradient(135deg, {accent_color}, #4facfe);
-        box-shadow: inset -5px -5px 15px rgba(0,0,0,0.4), 5px 5px 20px {accent_color};
+        box-shadow: inset -8px -8px 20px rgba(0,0,0,0.5), 0 0 25px {accent_color};
     }}
 
     .shape.square {{
-        border-radius: 12px;
+        border-radius: 16px;
         background: linear-gradient(45deg, #4facfe, {accent_color});
-        box-shadow: inset 5px 5px 15px rgba(255,255,255,0.2), -5px -5px 20px rgba(0,0,0,0.3);
+        box-shadow: inset 8px 8px 20px rgba(255,255,255,0.3), 0 0 25px rgba(0,0,0,0.4);
         transform: rotate(45deg);
     }}
 
-    .shape:nth-child(1) {{ width: 80px; height: 80px; top: 10%; left: 10%; animation-duration: 18s; }}
-    .shape:nth-child(2) {{ width: 110px; height: 110px; top: 75%; left: 82%; animation-duration: 25s; }}
-    .shape:nth-child(3) {{ width: 60px; height: 60px; top: 40%; left: 88%; animation-duration: 15s; }}
-    .shape:nth-child(4) {{ width: 95px; height: 95px; top: 80%; left: 12%; animation-duration: 20s; }}
-    .shape:nth-child(5) {{ width: 85px; height: 85px; top: 15%; left: 75%; animation-duration: 22s; }}
+    .shape:nth-child(1) {{ width: 90px; height: 90px; top: 15%; left: 10%; animation-duration: 12s; }}
+    .shape:nth-child(2) {{ width: 130px; height: 130px; top: 65%; left: 80%; animation-duration: 18s; }}
+    .shape:nth-child(3) {{ width: 70px; height: 70px; top: 35%; left: 85%; animation-duration: 10s; }}
+    .shape:nth-child(4) {{ width: 110px; height: 110px; top: 75%; left: 15%; animation-duration: 16s; }}
+    .shape:nth-child(5) {{ width: 95px; height: 95px; top: 20%; left: 70%; animation-duration: 14s; }}
 
     @keyframes floatShape {{
         0% {{ transform: translateY(0) rotate(0deg) scale(1); }}
-        50% {{ transform: translateY(-80px) rotate(180deg) scale(1.08); }}
+        50% {{ transform: translateY(-120px) rotate(180deg) scale(1.15); }}
         100% {{ transform: translateY(0) rotate(360deg) scale(1); }}
     }}
 
@@ -320,7 +320,7 @@ def apply_neon_style(direction, align, theme):
     }}
     </style>
     
-    <!-- الأشكال الهندسية ثلاثية الأبعاد للخلفية -->
+    <!-- الأشكال الهندسية ثلاثية الأبعاد المتحركة بوضوح -->
     <div class="background-shapes">
         <div class="shape circle"></div>
         <div class="shape square"></div>
