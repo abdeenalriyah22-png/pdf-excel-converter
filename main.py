@@ -176,7 +176,7 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. محرك الأنماط الديناميكي مع إصلاح حقل الإدخال الداخلي للـ Selectbox ---
+# --- 5. محرك الأنماط الديناميكي مع ضبط تباين النصوص والتبويبات ---
 def apply_theme_and_styles(direction, align, theme):
     if theme == "cyberpunk":
         font_family = "'Orbitron', 'Cairo', sans-serif"
@@ -189,9 +189,8 @@ def apply_theme_and_styles(direction, align, theme):
         btn_gradient = "linear-gradient(135deg, #f43f5e 0%, #06b6d4 100%)"
         btn_hover = "linear-gradient(135deg, #06b6d4 0%, #f43f5e 100%)"
         select_bg = "#0f0f1a"
-        select_text = "#ffffff"
         dropdown_hover = "#1e1b4b"
-        tab_text_color = "#38bdf8"
+        tab_text_color = "#ffffff"
     elif theme == "gold":
         font_family = "'Amiri', 'Cairo', serif"
         bg_gradient = "linear-gradient(135deg, rgba(15, 13, 11, 0.96) 0%, rgba(28, 22, 15, 0.96) 100%)"
@@ -203,9 +202,8 @@ def apply_theme_and_styles(direction, align, theme):
         btn_gradient = "linear-gradient(135deg, #d97706 0%, #b45309 100%)"
         btn_hover = "linear-gradient(135deg, #fbbf24 0%, #d97706 100%)"
         select_bg = "#1c140c"
-        select_text = "#ffffff"
         dropdown_hover = "#451a03"
-        tab_text_color = "#fcd34d"
+        tab_text_color = "#fffbeb"
     elif theme == "forest":
         font_family = "'Tajawal', 'Cairo', sans-serif"
         bg_gradient = "linear-gradient(135deg, rgba(2, 44, 34, 0.95) 0%, rgba(1, 20, 15, 0.95) 100%)"
@@ -217,9 +215,8 @@ def apply_theme_and_styles(direction, align, theme):
         btn_gradient = "linear-gradient(135deg, #059669 0%, #047857 100%)"
         btn_hover = "linear-gradient(135deg, #34d399 0%, #059669 100%)"
         select_bg = "#022c22"
-        select_text = "#ffffff"
         dropdown_hover = "#064e3b"
-        tab_text_color = "#6ee7b7"
+        tab_text_color = "#f0fdf4"
     else:
         font_family = "'Cairo', sans-serif"
         bg_gradient = "linear-gradient(180deg, rgba(10,25,47,0.85) 0%, rgba(6,16,30,0.85) 60%, rgba(3,7,12,0.85) 100%)"
@@ -231,9 +228,8 @@ def apply_theme_and_styles(direction, align, theme):
         btn_gradient = "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)"
         btn_hover = "linear-gradient(135deg, #0369a1 0%, #0284c7 100%)"
         select_bg = "#0b1329"
-        select_text = "#ffffff"
         dropdown_hover = "#1e293b"
-        tab_text_color = "#38bdf8"
+        tab_text_color = "#ffffff"
 
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -263,7 +259,7 @@ def apply_theme_and_styles(direction, align, theme):
         padding-right: 5rem !important;
     }}
 
-    /* --- تعديل شامل وصارم لإلغاء أي لون باهت داخل Selectbox بما فيها حقل البحث الداخلي (Input) --- */
+    /* --- تعديل حقول Selectbox --- */
     [data-testid="stSelectbox"] {{
         background-color: {select_bg} !important;
         padding: 10px 15px !important;
@@ -286,7 +282,6 @@ def apply_theme_and_styles(direction, align, theme):
         border-radius: 10px !important;
     }}
 
-    /* استهداف النصوص وحقول الإدخال/البحث الداخلية للـ Selectbox بـ CSS صارم جداً */
     [data-testid="stSelectbox"] span,
     [data-testid="stSelectbox"] div,
     [data-testid="stSelectbox"] input {{
@@ -296,7 +291,6 @@ def apply_theme_and_styles(direction, align, theme):
         background-color: transparent !important;
     }}
 
-    /* قائمة الخيارات المنبثقة عند النقر */
     div[data-baseweb="popover"], 
     div[data-baseweb="menu"], 
     ul[role="listbox"],
@@ -329,7 +323,7 @@ def apply_theme_and_styles(direction, align, theme):
         -webkit-text-fill-color: {accent_color} !important;
     }}
 
-    /* --- تعديل وتحسين رؤية نصوص التبويبات (Tabs) --- */
+    /* --- تعديل شامل وصارم لتصميم ونصوص التبويبات (Tabs) لضمان وضوحها الكامل --- */
     .stTabs [data-baseweb="tab-list"] {{
         gap: 15px;
         background-color: rgba(0, 0, 0, 0.5);
@@ -340,34 +334,46 @@ def apply_theme_and_styles(direction, align, theme):
 
     .stTabs [data-baseweb="tab"] {{
         height: 50px;
-        background-color: rgba(255, 255, 255, 0.05);
+        background-color: rgba(255, 255, 255, 0.08);
         border-radius: 10px;
         color: {tab_text_color} !important;
+        -webkit-text-fill-color: {tab_text_color} !important;
         border: 1px solid {border_color};
         padding: 0 25px;
         font-weight: 800 !important;
         font-size: 16px !important;
         transition: all 0.4s ease;
+        opacity: 1 !important;
     }}
 
-    .stTabs [data-baseweb="tab"] * {{
+    .stTabs [data-baseweb="tab"] *,
+    .stTabs [data-baseweb="tab"] p,
+    .stTabs [data-baseweb="tab"] span,
+    .stTabs [data-baseweb="tab"] div {{
         color: {tab_text_color} !important;
+        -webkit-text-fill-color: {tab_text_color} !important;
+        font-weight: 800 !important;
     }}
 
     .stTabs [aria-selected="true"] {{
         background: {btn_gradient} !important;
         color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
         box-shadow: 0 0 25px {border_color};
         transform: scale(1.02);
         border-color: #ffffff !important;
     }}
 
-    .stTabs [aria-selected="true"] * {{
+    .stTabs [aria-selected="true"] *,
+    .stTabs [aria-selected="true"] p,
+    .stTabs [aria-selected="true"] span,
+    .stTabs [aria-selected="true"] div {{
         color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
         font-weight: 900 !important;
     }}
 
-    /* --- تعديل ألوان الـ File Uploader لضمان ظهور النصوص والتعليمات بوضوح --- */
+    /* --- تعديل ألوان الـ File Uploader --- */
     [data-testid="stFileUploader"] {{
         background-color: {card_bg} !important;
         border: 2px dashed {border_color} !important;
