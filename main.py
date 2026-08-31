@@ -17,12 +17,99 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. دمج كود جوجل أدسنس في الخلفية ---
-components.html("""
-<meta name="google-adsense-account" content="ca-pub-1091631464795781">
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1091631464795781"
-     crossorigin="anonymous"></script>
-""", height=0, width=0)
+# --- 2. دمج الخلفية المتحركة عبر مكون HTML مستقل تماماً (iframe لا يعيد التحميل أبداً) ---
+def render_permanent_background(theme):
+    bg_color = "#03070c" if theme == "dark" else "#7dd3fc"
+    accent_color = "#38bdf8" if theme == "dark" else "#0284c7"
+    
+    bg_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        body, html {{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: {bg_color};
+        }}
+        .nature-background {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            z-index: 9999;
+            pointer-events: none;
+        }}
+        .ocean-waves {{
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200%;
+            height: 120px;
+            background: linear-gradient(0deg, rgba(2, 132, 199, 0.35), transparent);
+            border-radius: 100% 100% 0 0;
+            animation: waveAnimation 8s ease-in-out infinite alternate;
+        }}
+        .ocean-waves:nth-child(2) {{
+            bottom: -25px;
+            opacity: 0.6;
+            animation: waveAnimation 12s ease-in-out infinite alternate-reverse;
+        }}
+        @keyframes waveAnimation {{
+            0% {{ transform: translateX(-10%) translateY(0); }}
+            100% {{ transform: translateX(-30%) translateY(-15px); }}
+        }}
+        .trees-silhouette {{
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 90px;
+            background: repeating-linear-gradient(90deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.25) 30px, transparent 30px, transparent 60px);
+            clip-path: polygon(0% 100%, 5% 40%, 10% 100%, 15% 30%, 20% 100%, 25% 50%, 30% 100%, 35% 20%, 40% 100%, 45% 45%, 50% 100%, 55% 35%, 60% 100%, 65% 25%, 70% 100%, 75% 50%, 80% 100%, 85% 30%, 90% 100%, 95% 45%, 100% 100%);
+        }}
+        .bird {{
+            position: absolute;
+            width: 20px;
+            height: 10px;
+            border-bottom: 2px solid {accent_color};
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: flyBird 20s linear infinite;
+        }}
+        .bird:nth-of-type(1) {{ top: 15%; left: -10%; animation-duration: 18s; animation-delay: 0s; }}
+        .bird:nth-of-type(2) {{ top: 25%; left: -15%; animation-duration: 24s; animation-delay: 4s; transform: scale(0.7); }}
+        .bird:nth-of-type(3) {{ top: 10%; left: -20%; animation-duration: 15s; animation-delay: 8s; transform: scale(0.5); }}
+        @keyframes flyBird {{
+            0% {{ transform: translateX(0) translateY(0) rotate(0deg); }}
+            50% {{ transform: translateX(60vw) translateY(-40px) rotate(-10deg); }}
+            100% {{ transform: translateX(120vw) translateY(10px) rotate(5deg); }}
+        }}
+    </style>
+    </head>
+    <body>
+        <div class="nature-background">
+            <div class="bird"></div>
+            <div class="bird"></div>
+            <div class="bird"></div>
+            <div class="trees-silhouette"></div>
+            <div class="ocean-waves"></div>
+            <div class="ocean-waves"></div>
+        </div>
+    </body>
+    </html>
+    """
+    # حقن الخلفية كطبقة ثابتة تغطي الشاشة الخلفية بالكامل
+    components.html(f"""
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -999; pointer-events: none;">
+        <iframe srcdoc="{bg_html.replace('"', '&quot;')}" style="width: 100%; height: 100%; border: none; pointer-events: none;"></iframe>
+    </div>
+    """, height=0, width=0)
 
 # --- 3. زر تبديل الثيم (داكن / فاتح) واختيار اللغة في الأعلى ---
 col_top1, col_top2 = st.columns([6, 1])
@@ -40,6 +127,9 @@ with col_top2:
     theme_mode = st.toggle("☀️ / 🌙", value=True, key="theme_switcher_toggle", help="تبديل الثيم (داكن / فاتح)")
 
 current_theme = "dark" if theme_mode else "light"
+
+# استدعاء الخلفية الثابتة والمستقلة للحركة
+render_permanent_background(current_theme)
 
 # --- 4. قاموس الترجمة للغات الثلاث ---
 translations = {
@@ -137,11 +227,11 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. حقن التنسيقات والحركات مباشرة داخل الصفحة عبر st.markdown لضمان عملها المستمر ---
-def apply_nature_style(direction, align, theme):
-    bg_gradient = "linear-gradient(180deg, #0a192f 0%, #06101e 60%, #03070c 100%)" if theme == "dark" else "linear-gradient(180deg, #e0f2fe 0%, #bae6fd 60%, #7dd3fc 100%)"
+# --- 5. تطبيق التنسيقات العامة للواجهة ---
+def apply_ui_style(direction, align, theme):
+    bg_gradient = "linear-gradient(180deg, rgba(10,25,47,0.85) 0%, rgba(6,16,30,0.85) 60%, rgba(3,7,12,0.85) 100%)" if theme == "dark" else "linear-gradient(180deg, rgba(224,242,254,0.85) 0%, rgba(186,230,253,0.85) 60%, rgba(125,211,252,0.85) 100%)"
     text_color = "#e6edf3" if theme == "dark" else "#0f172a"
-    card_bg = "linear-gradient(145deg, rgba(22, 27, 34, 0.85) 0%, rgba(15, 19, 25, 0.9) 100%)" if theme == "dark" else "linear-gradient(145deg, rgba(255, 255, 255, 0.9) 100%, rgba(240, 249, 255, 0.9) 100%)"
+    card_bg = "linear-gradient(145deg, rgba(22, 27, 34, 0.9) 0%, rgba(15, 19, 25, 0.95) 100%)" if theme == "dark" else "linear-gradient(145deg, rgba(255, 255, 255, 0.9) 100%, rgba(240, 249, 255, 0.9) 100%)"
     border_color = "#30363d" if theme == "dark" else "#bae6fd"
     sub_text = "#8b949e" if theme == "dark" else "#334155"
     accent_color = "#38bdf8" if theme == "dark" else "#0284c7"
@@ -161,7 +251,6 @@ def apply_nature_style(direction, align, theme):
     .stApp {{
         background: {bg_gradient} !important;
         color: {text_color};
-        background-attachment: fixed;
     }}
 
     header, [data-testid="stHeader"] {{
@@ -190,17 +279,9 @@ def apply_nature_style(direction, align, theme):
         box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
     }}
 
-    [data-testid="stFileUploader"] button span span {{
-        display: none !important;  
-    }}
-    [data-testid="stFileUploader"] button span::after {{
-        content: "Upload" !important; 
-        color: white !important;
-    }}
-
     .stTabs [data-baseweb="tab-list"] {{
         gap: 15px;
-        background-color: rgba(22, 27, 34, 0.6);
+        background-color: rgba(22, 27, 34, 0.7);
         padding: 8px;
         border-radius: 12px;
         border: 1px solid {border_color};
@@ -268,7 +349,7 @@ def apply_nature_style(direction, align, theme):
         bottom: 0;
         left: 0;
         width: 100%;
-        background-color: rgba(15, 23, 42, 0.85);
+        background-color: rgba(15, 23, 42, 0.9);
         backdrop-filter: blur(8px);
         color: {sub_text};
         text-align: center;
@@ -277,78 +358,12 @@ def apply_nature_style(direction, align, theme):
         font-size: 14px;
         z-index: 999;
     }}
-
-    /* الرسوم المتحركة للخلفية (أمواج، أشجار، طيور) */
-    .nature-background {{
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        z-index: -999;
-        pointer-events: none;
-    }}
-    .ocean-waves {{
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 200%;
-        height: 120px;
-        background: linear-gradient(0deg, rgba(2, 132, 199, 0.25), transparent);
-        border-radius: 100% 100% 0 0;
-        animation: waveAnimation 8s ease-in-out infinite alternate;
-    }}
-    .ocean-waves:nth-child(2) {{
-        bottom: -20px;
-        opacity: 0.5;
-        animation: waveAnimation 12s ease-in-out infinite alternate-reverse;
-    }}
-    @keyframes waveAnimation {{
-        0% {{ transform: translateX(-10%) translateY(0); }}
-        100% {{ transform: translateX(-30%) translateY(-15px); }}
-    }}
-    .trees-silhouette {{
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 90px;
-        background: repeating-linear-gradient(90deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.2) 30px, transparent 30px, transparent 60px);
-        clip-path: polygon(0% 100%, 5% 40%, 10% 100%, 15% 30%, 20% 100%, 25% 50%, 30% 100%, 35% 20%, 40% 100%, 45% 45%, 50% 100%, 55% 35%, 60% 100%, 65% 25%, 70% 100%, 75% 50%, 80% 100%, 85% 30%, 90% 100%, 95% 45%, 100% 100%);
-    }}
-    .bird {{
-        position: absolute;
-        width: 20px;
-        height: 10px;
-        border-bottom: 2px solid {accent_color};
-        border-radius: 50%;
-        opacity: 0.6;
-        animation: flyBird 20s linear infinite;
-    }}
-    .bird:nth-of-type(1) {{ top: 15%; left: -10%; animation-duration: 18s; animation-delay: 0s; }}
-    .bird:nth-of-type(2) {{ top: 25%; left: -15%; animation-duration: 24s; animation-delay: 4s; transform: scale(0.7); }}
-    .bird:nth-of-type(3) {{ top: 10%; left: -20%; animation-duration: 15s; animation-delay: 8s; transform: scale(0.5); }}
-    @keyframes flyBird {{
-        0% {{ transform: translateX(0) translateY(0) rotate(0deg); }}
-        50% {{ transform: translateX(60vw) translateY(-40px) rotate(-10deg); }}
-        100% {{ transform: translateX(120vw) translateY(10px) rotate(5deg); }}
-    }}
     </style>
-    
-    <div class="nature-background">
-        <div class="bird"></div>
-        <div class="bird"></div>
-        <div class="bird"></div>
-        <div class="trees-silhouette"></div>
-        <div class="ocean-waves"></div>
-        <div class="ocean-waves"></div>
-    </div>
     """, unsafe_allow_html=True)
 
-apply_nature_style(lang["direction"], lang["align"], current_theme)
+apply_ui_style(lang["direction"], lang["align"], current_theme)
 
-# --- 6. واجهة البرنامج الرئيسية المترجمة ---
+# --- 6. واجهة البرنامج الرئيسية ---
 st.markdown(f"""
 <div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
     <h1>{lang["title"]}</h1>
@@ -360,7 +375,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
 
-# --- التبويب الأول: تحويل الجداول لـ Excel (يدعم PDF و CSV) ---
+# --- التبويب الأول ---
 with tab1:
     st.markdown(f"""
     <div class="custom-card">
@@ -381,7 +396,6 @@ with tab1:
                     try:
                         with st.spinner(lang["status_loading"]):
                             dfs = []
-                            
                             if file.name.lower().endswith('.csv'):
                                 df_csv = pd.read_csv(file)
                                 dfs.append(df_csv)
@@ -411,7 +425,7 @@ with tab1:
                     except Exception as e:
                         st.error(f"Error: {str(e)}")
 
-# --- التبويب الثاني: استخراج النصوص OCR ---
+# --- التبويب الثاني ---
 with tab2:
     st.markdown(f"""
     <div class="custom-card">
@@ -465,7 +479,7 @@ with tab2:
             except Exception as e:
                 st.error(f"OCR Error: {e}")
 
-# --- 7. مساحة إعلانية مخصصة ومتجاوبة في أسفل المحتوى ---
+# --- 7. الإعلانات والتذييل ---
 st.markdown("<br><br>", unsafe_allow_html=True)
 
 ads_code = """
@@ -485,7 +499,6 @@ ads_code = """
 """
 components.html(ads_code, height=110)
 
-# التذييل الاحترافي الثابت في قاع الموقع
 st.markdown(f"""
     <div class="footer">
         المحاسب الذكي Pro | <span style="color:#38bdf8;">{lang["motto"]}</span> | 2026 ©
