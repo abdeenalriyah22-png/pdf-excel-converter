@@ -24,20 +24,29 @@ components.html("""
      crossorigin="anonymous"></script>
 """, height=0, width=0)
 
-# --- 3. اختيار اللغة في أعلى الموقع ---
-selected_lang = st.selectbox(
-    "🌐 Choose Language / اختر اللغة / زبان کا انتخاب کریں",
-    ["العربية", "English", "اردو"],
-    index=0,
-    key="language_selector"
-)
+# --- 3. زر تبديل الثيم (داكن / فاتح) واختيار اللغة في الأعلى ---
+col_top1, col_top2 = st.columns([6, 1])
+
+with col_top1:
+    selected_lang = st.selectbox(
+        "🌐 Choose Language / اختر اللغة / زبان کا انتخاب کریں",
+        ["العربية", "English", "اردو"],
+        index=0,
+        key="language_selector"
+    )
+
+with col_top2:
+    st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+    theme_mode = st.toggle("☀️ / 🌙", value=True, key="theme_switcher_toggle", help="تبديل الثيم (داكن / فاتح)")
+
+current_theme = "dark" if theme_mode else "light"
 
 # --- 4. قاموس الترجمة للغات الثلاث ---
 translations = {
     "العربية": {
         "direction": "rtl",
         "align": "right",
-        "title": "📊 المحاسب الذكي <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
+        "title": "📊 المحاسب الذكي <span style='font-size:22px; color:var(--accent-color); font-weight:normal;'>Pro</span>",
         "subtitle": "النظام السحابي المطور لمعالجة الجداول والبيانات ذكياً",
         "tab1_title": "📊 تحويل PDF و CSV إلى Excel",
         "tab2_title": "🔍 استخراج النصوص الذكي (OCR)",
@@ -67,7 +76,7 @@ translations = {
     "English": {
         "direction": "ltr",
         "align": "left",
-        "title": "📊 Smart Accountant <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
+        "title": "📊 Smart Accountant <span style='font-size:22px; color:var(--accent-color); font-weight:normal;'>Pro</span>",
         "subtitle": "Advanced cloud system for smart data and table processing",
         "tab1_title": "📊 Convert PDF & CSV to Excel",
         "tab2_title": "🔍 Smart Text Extraction (OCR)",
@@ -97,7 +106,7 @@ translations = {
     "اردو": {
         "direction": "rtl",
         "align": "right",
-        "title": "📊 سمارٹ اکاؤنٹنٹ <span style='font-size:22px; color:#58a6ff; font-weight:normal;'>Pro</span>",
+        "title": "📊 سمارٹ اکاؤنٹنٹ <span style='font-size:22px; color:var(--accent-color); font-weight:normal;'>Pro</span>",
         "subtitle": "سمارٹ ڈیٹا اور ٹیبل پروسیسنگ کے لیے جدید کلاؤڈ سسٹم",
         "tab1_title": "📊 پی ڈی ایف اور سی ایس وی کو ایکسل میں تبدیل کریں",
         "tab2_title": "🔍 سمارٹ ٹیکسٹ نکالنا (OCR)",
@@ -128,13 +137,20 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. ستايل النيون المتطور وتخصيص جذري للمظهر والألوان (CSS الأصلي المستقر) ---
-def apply_neon_style(direction, align):
+# --- 5. ستايل النيون المتطور مع دعم الثيمات والخلفية المتحركة ثلاثية الأبعاد (3D Shapes) ---
+def apply_neon_style(direction, align, theme):
+    bg_gradient = "radial-gradient(circle at center, #111723 0%, #07090e 100%)" if theme == "dark" else "radial-gradient(circle at center, #f0f4f8 0%, #d9e2ec 100%)"
+    text_color = "#e6edf3" if theme == "dark" else "#1f2937"
+    card_bg = "linear-gradient(145deg, #161b22 0%, #0f1319 100%)" if theme == "dark" else "linear-gradient(145deg, #ffffff 0%, #f7f9fc 100%)"
+    border_color = "#30363d" if theme == "dark" else "#cbd5e1"
+    sub_text = "#8b949e" if theme == "dark" else "#4b5563"
+    accent_color = "#58a6ff" if theme == "dark" else "#0284c7"
+    
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
     
     html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea {{
         font-family: 'Cairo', sans-serif !important;
@@ -143,8 +159,51 @@ def apply_neon_style(direction, align):
     }}
 
     .stApp {{
-        background: radial-gradient(circle at center, #111723 0%, #07090e 100%) !important;
-        color: #e6edf3;
+        background: {bg_gradient} !important;
+        color: {text_color};
+    }}
+
+    /* --- خلفية الأشكال ثلاثية الأبعاد المتحركة (مربعات ودوائر) --- */
+    .background-shapes {{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        z-index: -1;
+        pointer-events: none;
+    }}
+
+    .shape {{
+        position: absolute;
+        opacity: 0.12;
+        animation: floatShape 22s infinite linear;
+    }}
+
+    .shape.circle {{
+        border-radius: 50%;
+        background: linear-gradient(135deg, {accent_color}, #4facfe);
+        box-shadow: inset -5px -5px 15px rgba(0,0,0,0.4), 5px 5px 20px {accent_color};
+    }}
+
+    .shape.square {{
+        border-radius: 12px;
+        background: linear-gradient(45deg, #4facfe, {accent_color});
+        box-shadow: inset 5px 5px 15px rgba(255,255,255,0.2), -5px -5px 20px rgba(0,0,0,0.3);
+        transform: rotate(45deg);
+    }}
+
+    .shape:nth-child(1) {{ width: 80px; height: 80px; top: 10%; left: 10%; animation-duration: 18s; }}
+    .shape:nth-child(2) {{ width: 110px; height: 110px; top: 75%; left: 82%; animation-duration: 25s; }}
+    .shape:nth-child(3) {{ width: 60px; height: 60px; top: 40%; left: 88%; animation-duration: 15s; }}
+    .shape:nth-child(4) {{ width: 95px; height: 95px; top: 80%; left: 12%; animation-duration: 20s; }}
+    .shape:nth-child(5) {{ width: 85px; height: 85px; top: 15%; left: 75%; animation-duration: 22s; }}
+
+    @keyframes floatShape {{
+        0% {{ transform: translateY(0) rotate(0deg) scale(1); }}
+        50% {{ transform: translateY(-80px) rotate(180deg) scale(1.08); }}
+        100% {{ transform: translateY(0) rotate(360deg) scale(1); }}
     }}
 
     header, [data-testid="stHeader"] {{
@@ -152,7 +211,6 @@ def apply_neon_style(direction, align):
         display: none;
     }}
 
-    /* === رفع المحتوى ليلتصق بأعلى المتصفح تماماً وتصفير الـ Padding العلوي === */
     [data-testid="stAppViewBlockContainer"] {{
         padding-top: 0rem !important;
         padding-bottom: 8rem !important;
@@ -160,56 +218,20 @@ def apply_neon_style(direction, align):
         padding-right: 5rem !important;
     }}
 
-    /* === تخصيص جذري وتوهج باللون الأزرق النيوني المضيء لصندوق اللغات === */
     [data-testid="stSelectbox"] label p {{
         font-size: 18px !important;
         font-weight: bold !important;
-        color: #58a6ff !important;
-        text-shadow: 0 0 12px rgba(88, 166, 255, 0.6);
+        color: {accent_color} !important;
+        text-shadow: 0 0 12px rgba(88, 166, 255, 0.4);
     }}
     
     [data-testid="stSelectbox"] div[data-baseweb="select"] {{
-        background: linear-gradient(135deg, rgba(31, 111, 235, 0.25) 0%, rgba(13, 68, 165, 0.4) 100%) !important;
-        border: 2px solid #58a6ff !important;
+        background: linear-gradient(135deg, rgba(31, 111, 235, 0.2) 0%, rgba(13, 68, 165, 0.3) 100%) !important;
+        border: 2px solid {accent_color} !important;
         border-radius: 12px !important;
-        box-shadow: 0 0 15px rgba(88, 166, 255, 0.45);
-        transition: all 0.3s ease-in-out;
-    }}
-    
-    [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
-        color: #ffffff !important;
-        font-weight: bold !important;
-    }}
-    
-    [data-testid="stSelectbox"] div[data-baseweb="select"]:hover {{
-        border-color: #58a6ff !important;
-        background: linear-gradient(135deg, rgba(31, 111, 235, 0.4) 0%, rgba(13, 68, 165, 0.6) 100%) !important;
-        box-shadow: 0 0 25px rgba(88, 166, 255, 0.7);
-    }}
-
-    div[data-baseweb="popover"] {{
-        background-color: #161b22 !important;
-        border: 1px solid #58a6ff !important;
         box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
     }}
-    
-    div[data-baseweb="popover"] li {{
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        background-color: transparent !important;
-    }}
 
-    li[role="option"], li[role="option"] span, div[role="listbox"] div, div[role="listbox"] span {{
-        color: #ffffff !important;
-        font-weight: 600 !important;
-    }}
-    
-    div[data-baseweb="popover"] li:hover, li[role="option"]:hover {{
-        background-color: #1f6feb !important;
-        color: #ffffff !important;
-    }}
-
-    /* === حل مشكلة تكرار كلمة Upload بداخل أزرار الرفع بدون لمس التصميم الأساسي === */
     [data-testid="stFileUploader"] button span span {{
         display: none !important;  
     }}
@@ -218,90 +240,54 @@ def apply_neon_style(direction, align):
         color: white !important;
     }}
 
-    /* ================================================================= */
-
     .stTabs [data-baseweb="tab-list"] {{
         gap: 15px;
         background-color: rgba(22, 27, 34, 0.5);
         padding: 8px;
         border-radius: 12px;
-        border: 1px solid #21262d;
+        border: 1px solid {border_color};
     }}
 
     .stTabs [data-baseweb="tab"] {{
         height: 48px;
         background-color: transparent;
         border-radius: 8px;
-        color: #8b949e;
+        color: {sub_text};
         border: none;
         padding: 0 25px;
         font-weight: bold;
-        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        transition: all 0.4s ease;
     }}
 
     .stTabs [aria-selected="true"] {{
-        background: linear-gradient(135deg, #1f6feb 0%, #0d44a5 100%) !important;
+        background: linear-gradient(135deg, #1f6feb 0%, #0d44a5) !important;
         color: white !important;
         box-shadow: 0 0 15px rgba(31, 111, 235, 0.6);
         transform: scale(1.02);
     }}
 
     [data-testid="stFileUploader"] {{
-        background-color: rgba(22, 27, 34, 0.7) !important;
-        border: 2px dashed #21262d !important;
+        background-color: rgba(22, 27, 34, 0.6) !important;
+        border: 2px dashed {border_color} !important;
         border-radius: 20px !important;
         padding: 30px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        transition: all 0.4s ease;
-    }}
-    
-    [data-testid="stFileUploader"]:hover {{
-        border-color: #58a6ff !important;
-        background-color: rgba(28, 33, 40, 0.9) !important;
-        box-shadow: 0 0 25px rgba(88, 166, 255, 0.25);
-        transform: translateY(-4px);
-    }}
-
-    [data-testid="stFileUploader"] section *, 
-    [data-testid="stFileUploader"] div, 
-    [data-testid="stFileUploader"] span, 
-    [data-testid="stFileUploader"] p {{
-        color: #ffffff !important;
-    }}
-
-    .icon-container {{
-        font-size: 55px;
-        margin-bottom: 15px;
-        transition: all 0.4s ease;
-        display: inline-block;
-    }}
-    
-    .excel-icon {{ color: #2ea043; text-shadow: 0 0 20px rgba(46, 160, 67, 0.4); }}
-    .ocr-icon {{ color: #58a6ff; text-shadow: 0 0 20px rgba(88, 166, 255, 0.4); }}
-    
-    .custom-card:hover .excel-icon {{
-        transform: scale(1.15) translateY(-5px);
-        filter: drop-shadow(0 0 15px #2ea043);
-    }}
-    .custom-card:hover .ocr-icon {{
-        transform: scale(1.15) rotate(10deg);
-        filter: drop-shadow(0 0 15px #58a6ff);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }}
 
     .custom-card {{
-        background: linear-gradient(145deg, #161b22 0%, #0f1319 100%);
-        border: 1px solid #30363d;
+        background: {card_bg};
+        border: 1px solid {border_color};
         border-radius: 16px;
         padding: 25px;
         text-align: center;
         margin-bottom: 20px;
-        transition: 0.3s;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     }}
 
     h1 {{
-        color: #ffffff !important;
+        color: {text_color} !important;
         font-weight: 900 !important;
-        background: linear-gradient(to right, #ffffff, #58a6ff);
+        background: linear-gradient(to right, {text_color}, {accent_color});
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }}
@@ -316,38 +302,6 @@ def apply_neon_style(direction, align):
         font-size: 16px !important;
         width: 100%;
         box-shadow: 0 4px 12px rgba(46, 160, 67, 0.2);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }}
-    
-    .stButton>button:hover {{
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(46, 160, 67, 0.5);
-    }}
-
-    [data-testid="stDownloadButton"] button {{
-        background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 12px rgba(31, 111, 235, 0.2);
-        transition: all 0.3s ease;
-        width: 100%;
-    }}
-
-    .stTextArea textarea {{
-        background-color: #0d1117 !important;
-        color: #e6edf3 !important;
-        border: 1px solid #30363d !important;
-        border-radius: 12px !important;
-    }}
-
-    .stCopyButton button {{
-        background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%) !important;
-        color: white !important;
-        border-radius: 12px !important;
-        border: none !important;
-        font-weight: bold !important;
-        width: 100%;
     }}
 
     .footer {{
@@ -357,23 +311,32 @@ def apply_neon_style(direction, align):
         width: 100%;
         background-color: rgba(22, 27, 34, 0.9);
         backdrop-filter: blur(8px);
-        color: #8b949e;
+        color: {sub_text};
         text-align: center;
         padding: 12px;
-        border-top: 1px solid #30363d;
+        border-top: 1px solid {border_color};
         font-size: 14px;
         z-index: 999;
     }}
     </style>
+    
+    <!-- الأشكال الهندسية ثلاثية الأبعاد للخلفية -->
+    <div class="background-shapes">
+        <div class="shape circle"></div>
+        <div class="shape square"></div>
+        <div class="shape circle"></div>
+        <div class="shape square"></div>
+        <div class="shape circle"></div>
+    </div>
     """, unsafe_allow_html=True)
 
-apply_neon_style(lang["direction"], lang["align"])
+apply_neon_style(lang["direction"], lang["align"], current_theme)
 
 # --- 6. واجهة البرنامج الرئيسية المترجمة ---
 st.markdown(f"""
 <div style='text-align: {lang["align"]}; margin-bottom: 10px;'>
     <h1>{lang["title"]}</h1>
-    <p style='font-size:16px; color:#8b949e; margin-top:-10px;'>{lang["subtitle"]}</p>
+    <p style='font-size:16px; color:var(--text-secondary); margin-top:-10px;'>{lang["subtitle"]}</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -385,9 +348,9 @@ tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
 with tab1:
     st.markdown(f"""
     <div class="custom-card">
-        <div class="icon-container excel-icon"><i class="fa-solid fa-file-excel"></i></div>
-        <h3 style='margin:0; color:#ffffff;'>{lang["card1_title"]}</h3>
-        <p style='font-size:14px; color:#8b949e; margin:5px 0;'>{lang["card1_desc"]}</p>
+        <div class="icon-container excel-icon"><i class="fa-solid fa-file-excel" style="font-size: 50px; color: #2ea043;"></i></div>
+        <h3 style='margin:0;'>{lang["card1_title"]}</h3>
+        <p style='font-size:14px; margin:5px 0;'>{lang["card1_desc"]}</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -398,7 +361,7 @@ with tab1:
             st.write("")
             with st.container():
                 st.info(f"{lang['status_preparing']}{file.name}")
-                if st.button(f"{lang['btn_convert']}{file.name}"):
+                if st.button(f"{lang['btn_convert']}{file.name}", key=f"btn_{file.name}"):
                     try:
                         with st.spinner(lang["status_loading"]):
                             dfs = []
@@ -427,7 +390,8 @@ with tab1:
                                     label=lang["download_excel"],
                                     data=output.getvalue(),
                                     file_name=f"Excel_{clean_name}.xlsx",
-                                    mime="application/vnd.ms-excel"
+                                    mime="application/vnd.ms-excel",
+                                    key=f"dl_{file.name}"
                                 )
                             else:
                                 st.warning(lang["warning_no_tables"])
@@ -438,16 +402,16 @@ with tab1:
 with tab2:
     st.markdown(f"""
     <div class="custom-card">
-        <div class="icon-container ocr-icon"><i class="fa-solid fa-eye"></i></div>
-        <h3 style='margin:0; color:#ffffff;'>{lang["card2_title"]}</h3>
-        <p style='font-size:14px; color:#8b949e; margin:5px 0;'>{lang["card2_desc"]}</p>
+        <div class="icon-container ocr-icon"><i class="fa-solid fa-eye" style="font-size: 50px; color: #58a6ff;"></i></div>
+        <h3 style='margin:0;'>{lang["card2_title"]}</h3>
+        <p style='font-size:14px; margin:5px 0;'>{lang["card2_desc"]}</p>
     </div>
     """, unsafe_allow_html=True)
     
     ocr_file = st.file_uploader(lang["uploader_ocr"], type=["jpg", "png", "jpeg", "pdf"], key="ocr_main")
     
     if ocr_file:
-        if st.button(lang["btn_ocr"]):
+        if st.button(lang["btn_ocr"], key="ocr_run_btn"):
             full_text = ""
             try:
                 with st.spinner(lang["status_ocr_loading"]):
@@ -472,15 +436,16 @@ with tab2:
                     col1, col2 = st.columns(2)
                     
                     with col1:
-                        st.markdown(f"<p style='font-size:14px; color:#8b949e; margin-bottom:5px;'>{lang['opt1']}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='font-size:14px; margin-bottom:5px;'>{lang['opt1']}</p>", unsafe_allow_html=True)
                         st_copy_to_clipboard(text=full_text, before_copy_label=lang["btn_copy"], after_copy_label=lang["copied"])
                         
                     with col2:
-                        st.markdown(f"<p style='font-size:14px; color:#8b949e; margin-bottom:5px;'>{lang['opt2']}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='font-size:14px; margin-bottom:5px;'>{lang['opt2']}</p>", unsafe_allow_html=True)
                         st.download_button(
                             label=lang["download_txt"],
                             data=full_text,
-                            file_name="extracted_text.txt"
+                            file_name="extracted_text.txt",
+                            key="dl_txt_file"
                         )
                 else:
                     st.warning(lang["warning_no_text"])
