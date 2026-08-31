@@ -176,7 +176,7 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. محرك الأنماط الديناميكي وضبط رؤية جميع النصوص (بما فيها الـ Selectbox والـ Uploader) ---
+# --- 5. محرك الأنماط الديناميكي مع إصلاح تام للون النص داخل القوائم المنسدلة بعد الاختيار ---
 def apply_theme_and_styles(direction, align, theme):
     if theme == "cyberpunk":
         font_family = "'Orbitron', 'Cairo', sans-serif"
@@ -263,7 +263,7 @@ def apply_theme_and_styles(direction, align, theme):
         padding-right: 5rem !important;
     }}
 
-    /* --- تعديل شامل لـ Selectbox والقوائم المنسدلة لضمان وضوح النص 100% --- */
+    /* --- تعديل حصري وقوي لإجبار النص المختار داخل المربع على الظهور بالأبيض الناصع --- */
     [data-testid="stSelectbox"] {{
         background-color: {select_bg} !important;
         padding: 10px 15px !important;
@@ -279,20 +279,23 @@ def apply_theme_and_styles(direction, align, theme):
         margin-bottom: 5px !important;
     }}
     
-    [data-testid="stSelectbox"] div[data-baseweb="select"] {{
+    /* استهداف العنصر الذي يظهر النص المختار بعد الاختيار مباشرة */
+    [data-testid="stSelectbox"] div[data-baseweb="select"],
+    [data-testid="stSelectbox"] div[data-baseweb="select"] > div {{
         background-color: {select_bg} !important;
-        border: 1px solid {border_color} !important;
+        border: none !important;
         border-radius: 10px !important;
-        color: {select_text} !important;
     }}
 
-    [data-testid="stSelectbox"] div[data-baseweb="select"] *, 
-    [data-testid="stSelectbox"] span {{
-        color: {select_text} !important;
+    [data-testid="stSelectbox"] div[data-baseweb="select"] span,
+    [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        font-weight: 900 !important;
         background-color: transparent !important;
-        font-weight: bold !important;
     }}
 
+    /* قائمة الخيارات المنسدلة عند فتحها */
     div[data-baseweb="popover"], 
     div[data-baseweb="menu"], 
     ul[role="listbox"],
@@ -310,7 +313,8 @@ def apply_theme_and_styles(direction, align, theme):
     [data-baseweb="menu"] li,
     [data-baseweb="menu"] li span {{
         background-color: {select_bg} !important;
-        color: {select_text} !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
         font-weight: bold !important;
         padding: 12px 18px !important;
         opacity: 1 !important;
@@ -321,6 +325,7 @@ def apply_theme_and_styles(direction, align, theme):
     [data-baseweb="menu"] li:hover {{
         background-color: {dropdown_hover} !important;
         color: {accent_color} !important;
+        -webkit-text-fill-color: {accent_color} !important;
     }}
 
     /* --- تعديل وتحسين رؤية نصوص التبويبات (Tabs) --- */
