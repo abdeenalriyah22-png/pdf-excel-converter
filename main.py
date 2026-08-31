@@ -64,9 +64,9 @@ translations = {
         "btn_convert": "بدء تحويل وجدولة الملف",
         "btn_ocr": "🚀 تشغيل الذكاء الاصطناعي لقراءة النص",
         "status_preparing": "📁 ملف قيد التحضير: ",
-        "status_loading": "جاري تفكيك الجداول وهيكلتها وتطهير البيانات بدقة...",
+        "status_loading": "جاري تفكيك الجداول وهيكلتها وتطهير الأرقام وإجبارها للقيم العددية...",
         "status_ocr_loading": "جاري المسح الضوئي للمستند وتفسير الحروف...",
-        "success_convert": "🚀 اكتمل التحويل بنجاح وبأعلى دقة وتنظيف كامل للأرقام والنصوص!",
+        "success_convert": "🚀 اكتمل التحويل بنجاح تام، وتم تحويل كافة الأرقام لقيم عددية حقيقية!",
         "warning_no_tables": "⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.",
         "warning_no_text": "نعتذر، لم نكتشف حروفاً أو نصوصاً مقروءة في هذا المستند.",
         "download_excel": "📥 تحميل ملف Excel المستخرج",
@@ -94,9 +94,9 @@ translations = {
         "btn_convert": "Start Converting File",
         "btn_ocr": "🚀 Launch AI to Read Text",
         "status_preparing": "📁 File preparing: ",
-        "status_loading": "Deconstructing, structuring tables and cleaning data...",
+        "status_loading": "Deconstructing, structuring tables and forcing numeric conversion...",
         "status_ocr_loading": "Scanning document and interpreting characters...",
-        "success_convert": "🚀 Conversion completed successfully with highest accuracy!",
+        "success_convert": "🚀 Conversion completed successfully with all numbers forced to real numeric values!",
         "warning_no_tables": "⚠️ No clear numerical tables detected in this file.",
         "warning_no_text": "Sorry, no readable characters or text detected in this document.",
         "download_excel": "📥 Download Extracted Excel File",
@@ -512,7 +512,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
 
-# --- التبويب الأول (المعاطاة الجذرية للأعمدة المرتبطة وتخزين الأرقام الحقيقية) ---
+# --- التبويب الأول (تنظيف وتحويل جبري صارم للأرقام وإزالة أي نصوص مخزنة) ---
 with tab1:
     st.markdown(f"""
     <div class="custom-card">
@@ -546,33 +546,55 @@ with tab1:
                                     for df in dfs:
                                         df = df.fillna('')
                                         
-                                        # 1. فصل وتطهير أسماء الأعمدة لمنع تداخل الكلمات (مثل "النوعالرقم")
+                                        # 1. تنقية وتسكين أسماء الأعمدة لتجنب تداخل الكلمات (مثل النوعالرقم)
                                         cleaned_columns = []
                                         for col in df.columns:
                                             col_str = str(col).strip()
                                             if col_str.startswith('Unnamed') or col_str == '':
                                                 cleaned_columns.append('')
                                             else:
-                                                # إضافة مسافة فاصلة آمنة بين الكلمات العربية المتلاصقة إن وجدت لتفادي أي التباس بصري
                                                 cleaned_columns.append(col_str)
                                         df.columns = cleaned_columns
                                         
-                                        # 2. تنقية الأعمدة الرقمية وتحويلها إلى قيم float حقيقية لضمان عدم ظهور علامة التعجب الخضراء
+                                        # 2. فلترة وتنظيف كل عمود لضمان تحويل القيم الرقمية بالكامل إلى أرقام حقيقية (Floats) ومطابقة تامة
                                         for col in df.columns:
-                                            col_name_lower = str(col).lower()
-                                            is_likely_numeric = any(keyword in col_name_lower for keyword in ['مدين', 'دائن', 'رصيد', 'debit', 'credit', 'balance', 'رقم', 'amount', 'مبلغ'])
+                                            col_lower = str(col).lower()
+                                            # الكشف التلقائي عن الأعمدة المالية والحسابية أو القيم التي تحتوي أرقام وفواصل
+                                            is_numeric_col = any(k in col_lower for k in ['مدين', 'دائن', 'رصيد', 'debit', 'credit', 'balance', 'رقم', 'amount', 'مبلغ', 'الرقم'])
                                             
-                                            try:
-                                                # تنظيف الفواصل والرموز غير الرقمية من السلاسل النصية للأرقام
-                                                series_str = df[col].astype(str).str.replace(',', '').str.strip()
-                                                numeric_series = pd.to_numeric(series_str, errors='coerce')
+                                            converted_col = []
+                                            for val in df[col]:
+                                                val_str = str(val).strip()
+                                                if val_str == '':
+                                                    converted_col.append(0.0 if is_numeric_col else '')
+                                                    continue
                                                 
-                                                valid_count = numeric_series.notnull().sum()
-                                                if is_likely_numeric or (valid_count > 0 and (valid_count / len(df) > 0.25)):
-                                                    # تعبئة القيم بـ 0 للأرقام لضمان تخزينها كحقول عددية وليست نصية
-                                                    df[col] = numeric_series.fillna(0)
-                                            except:
-                                                pass
+                                                # استخراج الأرقام بدقة بالتعامل مع الفواصل والعلامات السالبة والعشرية
+                                                cleaned_val = val_str.replace(',', '').replace(' ', '')
+                                                # محاولة التحويل المباشر لرقم
+                                                try:
+                                                    num_val = float(cleaned_val)
+                                                    converted_col.append(num_val)
+                                                    continue
+                                                except ValueError:
+                                                    pass
+                                                
+                                                # لو العمود تصنيفه رقمي أو يحتوي نصوص مدمجة (مثل الأرقام الملاصقة لكلمات سند قيد)
+                                                if is_numeric_col:
+                                                    import re
+                                                    # استخراج أول رقم عشري أو صحيح يظهر في النص
+                                                    match = re.search(r'-?\d+\.\d+|-?\d+', cleaned_val)
+                                                    if match:
+                                                        try:
+                                                            converted_col.append(float(match.group()))
+                                                        except:
+                                                            converted_col.append(0.0)
+                                                    else:
+                                                        converted_col.append(0.0)
+                                                else:
+                                                    converted_col.append(val)
+                                            
+                                            df[col] = converted_col
 
                                         df.to_excel(writer, index=False, startrow=current_row, sheet_name='Data')
                                         current_row += len(df) + 2
