@@ -64,9 +64,9 @@ translations = {
         "btn_convert": "بدء تحويل وجدولة الملف",
         "btn_ocr": "🚀 تشغيل الذكاء الاصطناعي لقراءة النص",
         "status_preparing": "📁 ملف قيد التحضير: ",
-        "status_loading": "جاري تفكيك الجداول وهيكلتها وتطهير الأرقام وإجبارها للقيم العددية...",
+        "status_loading": "جاري تفكيك الجداول وهيكلتها...",
         "status_ocr_loading": "جاري المسح الضوئي للمستند وتفسير الحروف...",
-        "success_convert": "🚀 اكتمل التحويل بنجاح تام، وتم تحويل كافة الأرقام لقيم عددية حقيقية!",
+        "success_convert": "🚀 اكتمل التحويل بنجاح تام وتم تجهيز ملف Excel!",
         "warning_no_tables": "⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.",
         "warning_no_text": "نعتذر، لم نكتشف حروفاً أو نصوصاً مقروءة في هذا المستند.",
         "download_excel": "📥 تحميل ملف Excel المستخرج",
@@ -94,9 +94,9 @@ translations = {
         "btn_convert": "Start Converting File",
         "btn_ocr": "🚀 Launch AI to Read Text",
         "status_preparing": "📁 File preparing: ",
-        "status_loading": "Deconstructing, structuring tables and forcing numeric conversion...",
+        "status_loading": "Deconstructing and structuring tables...",
         "status_ocr_loading": "Scanning document and interpreting characters...",
-        "success_convert": "🚀 Conversion completed successfully with all numbers forced to real numeric values!",
+        "success_convert": "🚀 Conversion completed successfully!",
         "warning_no_tables": "⚠️ No clear numerical tables detected in this file.",
         "warning_no_text": "Sorry, no readable characters or text detected in this document.",
         "download_excel": "📥 Download Extracted Excel File",
@@ -512,7 +512,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
 
-# --- التبويب الأول (تنظيف وتحويل جبري صارم للأرقام وإزالة أي نصوص مخزنة) ---
+# --- التبويب الأول ---
 with tab1:
     st.markdown(f"""
     <div class="custom-card">
@@ -545,57 +545,6 @@ with tab1:
                                     current_row = 0
                                     for df in dfs:
                                         df = df.fillna('')
-                                        
-                                        # 1. تنقية وتسكين أسماء الأعمدة لتجنب تداخل الكلمات (مثل النوعالرقم)
-                                        cleaned_columns = []
-                                        for col in df.columns:
-                                            col_str = str(col).strip()
-                                            if col_str.startswith('Unnamed') or col_str == '':
-                                                cleaned_columns.append('')
-                                            else:
-                                                cleaned_columns.append(col_str)
-                                        df.columns = cleaned_columns
-                                        
-                                        # 2. فلترة وتنظيف كل عمود لضمان تحويل القيم الرقمية بالكامل إلى أرقام حقيقية (Floats) ومطابقة تامة
-                                        for col in df.columns:
-                                            col_lower = str(col).lower()
-                                            # الكشف التلقائي عن الأعمدة المالية والحسابية أو القيم التي تحتوي أرقام وفواصل
-                                            is_numeric_col = any(k in col_lower for k in ['مدين', 'دائن', 'رصيد', 'debit', 'credit', 'balance', 'رقم', 'amount', 'مبلغ', 'الرقم'])
-                                            
-                                            converted_col = []
-                                            for val in df[col]:
-                                                val_str = str(val).strip()
-                                                if val_str == '':
-                                                    converted_col.append(0.0 if is_numeric_col else '')
-                                                    continue
-                                                
-                                                # استخراج الأرقام بدقة بالتعامل مع الفواصل والعلامات السالبة والعشرية
-                                                cleaned_val = val_str.replace(',', '').replace(' ', '')
-                                                # محاولة التحويل المباشر لرقم
-                                                try:
-                                                    num_val = float(cleaned_val)
-                                                    converted_col.append(num_val)
-                                                    continue
-                                                except ValueError:
-                                                    pass
-                                                
-                                                # لو العمود تصنيفه رقمي أو يحتوي نصوص مدمجة (مثل الأرقام الملاصقة لكلمات سند قيد)
-                                                if is_numeric_col:
-                                                    import re
-                                                    # استخراج أول رقم عشري أو صحيح يظهر في النص
-                                                    match = re.search(r'-?\d+\.\d+|-?\d+', cleaned_val)
-                                                    if match:
-                                                        try:
-                                                            converted_col.append(float(match.group()))
-                                                        except:
-                                                            converted_col.append(0.0)
-                                                    else:
-                                                        converted_col.append(0.0)
-                                                else:
-                                                    converted_col.append(val)
-                                            
-                                            df[col] = converted_col
-
                                         df.to_excel(writer, index=False, startrow=current_row, sheet_name='Data')
                                         current_row += len(df) + 2
                                 
