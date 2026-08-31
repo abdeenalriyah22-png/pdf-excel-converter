@@ -46,41 +46,7 @@ with col_top3:
     }
     current_theme = theme_mapping.get(selected_theme_name, "cyberpunk")
 
-# --- 3. دمج الخلفية المتحركة المخصصة لكل ثيم عبر iframe ---
-def render_permanent_background(theme):
-    if theme == "cyberpunk":
-        bg_code = """
-        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #05050a; }
-        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; }
-        .grid-line { position: absolute; width: 200%; height: 200%; background-image: linear-gradient(rgba(236, 72, 153, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px); background-size: 40px 40px; animation: moveGrid 20s linear infinite; }
-        @keyframes moveGrid { 0% { transform: translateY(0); } 100% { transform: translateY(40px); } }
-        """
-    elif theme == "gold":
-        bg_code = """
-        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #0c0a09; }
-        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; background: radial-gradient(circle at 50% 20%, rgba(217, 119, 6, 0.12) 0%, transparent 60%); }
-        """
-    elif theme == "forest":
-        bg_code = """
-        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #022c22; }
-        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; background: radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.15) 0%, transparent 50%); }
-        """
-    else:
-        bg_code = """
-        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #03070c; }
-        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; }
-        """
-
-    bg_html = f"""<!DOCTYPE html><html><head><style>{bg_code}</style></head><body><div class="bg-fx"><div class="grid-line"></div></div></body></html>"""
-    components.html(f"""
-    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -999; pointer-events: none;">
-        <iframe srcdoc="{bg_html.replace('"', '&quot;')}" style="width: 100%; height: 100%; border: none; pointer-events: none;"></iframe>
-    </div>
-    """, height=0, width=0)
-
-render_permanent_background(current_theme)
-
-# --- 4. قاموس الترجمة للغات الثلاث ---
+# --- 3. قاموس الترجمة للغات الثلاث ---
 translations = {
     "العربية": {
         "direction": "rtl",
@@ -176,75 +142,86 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 5. محرك الأنماط الديناميكي مع ضبط تباين النصوص والتبويبات ---
-def apply_theme_and_styles(direction, align, theme):
+# --- 4. محرك الأنماط الديناميكي وتعريف المتغيرات الأساسية للثيمات ---
+def get_theme_colors(theme):
     if theme == "cyberpunk":
-        font_family = "'Orbitron', 'Cairo', sans-serif"
-        bg_gradient = "linear-gradient(135deg, rgba(10, 10, 20, 0.98) 0%, rgba(20, 5, 25, 0.98) 100%)"
-        text_color = "#ff2a6d"
-        main_text = "#ffffff"
-        card_bg = "linear-gradient(145deg, rgba(22, 22, 45, 0.95) 0%, rgba(12, 12, 25, 0.98) 100%)"
-        border_color = "#05d9e8"
-        accent_color = "#05d9e8"
-        btn_gradient = "linear-gradient(135deg, #ff2a6d 0%, #05d9e8 100%)"
-        btn_hover = "linear-gradient(135deg, #05d9e8 0%, #ff2a6d 100%)"
-        select_bg = "#0f0f1a"
-        dropdown_hover = "#1e1b4b"
-        tab_text_color = "#ffffff"
+        return {
+            "font_family": "'Orbitron', 'Cairo', sans-serif",
+            "bg_gradient": "linear-gradient(135deg, rgba(10, 10, 20, 0.98) 0%, rgba(20, 5, 25, 0.98) 100%)",
+            "text_color": "#ff2a6d",
+            "main_text": "#ffffff",
+            "card_bg": "linear-gradient(145deg, rgba(22, 22, 45, 0.95) 0%, rgba(12, 12, 25, 0.98) 100%)",
+            "border_color": "#05d9e8",
+            "accent_color": "#05d9e8",
+            "btn_gradient": "linear-gradient(135deg, #ff2a6d 0%, #05d9e8 100%)",
+            "btn_hover": "linear-gradient(135deg, #05d9e8 0%, #ff2a6d 100%)",
+            "select_bg": "#0f0f1a",
+            "dropdown_hover": "#1e1b4b",
+            "tab_text_color": "#ffffff"
+        }
     elif theme == "gold":
-        font_family = "'Amiri', 'Cairo', serif"
-        bg_gradient = "linear-gradient(135deg, rgba(15, 13, 11, 0.98) 0%, rgba(28, 22, 15, 0.98) 100%)"
-        text_color = "#fcd34d"
-        main_text = "#fffbeb"
-        card_bg = "linear-gradient(145deg, rgba(40, 32, 20, 0.95) 0%, rgba(20, 15, 10, 0.98) 100%)"
-        border_color = "#f59e0b"
-        accent_color = "#fcd34d"
-        btn_gradient = "linear-gradient(135deg, #d97706 0%, #b45309 100%)"
-        btn_hover = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-        select_bg = "#1c140c"
-        dropdown_hover = "#451a03"
-        tab_text_color = "#fffbeb"
+        return {
+            "font_family": "'Amiri', 'Cairo', serif",
+            "bg_gradient": "linear-gradient(135deg, rgba(15, 13, 11, 0.98) 0%, rgba(28, 22, 15, 0.98) 100%)",
+            "text_color": "#fcd34d",
+            "main_text": "#fffbeb",
+            "card_bg": "linear-gradient(145deg, rgba(40, 32, 20, 0.95) 0%, rgba(20, 15, 10, 0.98) 100%)",
+            "border_color": "#f59e0b",
+            "accent_color": "#fcd34d",
+            "btn_gradient": "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
+            "btn_hover": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+            "select_bg": "#1c140c",
+            "dropdown_hover": "#451a03",
+            "tab_text_color": "#fffbeb"
+        }
     elif theme == "forest":
-        font_family = "'Tajawal', 'Cairo', sans-serif"
-        bg_gradient = "linear-gradient(135deg, rgba(2, 44, 34, 0.98) 0%, rgba(1, 20, 15, 0.98) 100%)"
-        text_color = "#6ee7b7"
-        main_text = "#f0fdf4"
-        card_bg = "linear-gradient(145deg, rgba(6, 78, 59, 0.95) 0%, rgba(2, 44, 34, 0.98) 100%)"
-        border_color = "#10b981"
-        accent_color = "#6ee7b7"
-        btn_gradient = "linear-gradient(135deg, #059669 0%, #047857 100%)"
-        btn_hover = "linear-gradient(135deg, #10b981 0%, #059669 100%)"
-        select_bg = "#022c22"
-        dropdown_hover = "#064e3b"
-        tab_text_color = "#f0fdf4"
+        return {
+            "font_family": "'Tajawal', 'Cairo', sans-serif",
+            "bg_gradient": "linear-gradient(135deg, rgba(2, 44, 34, 0.98) 0%, rgba(1, 20, 15, 0.98) 100%)",
+            "text_color": "#6ee7b7",
+            "main_text": "#f0fdf4",
+            "card_bg": "linear-gradient(145deg, rgba(6, 78, 59, 0.95) 0%, rgba(2, 44, 34, 0.98) 100%)",
+            "border_color": "#10b981",
+            "accent_color": "#6ee7b7",
+            "btn_gradient": "linear-gradient(135deg, #059669 0%, #047857 100%)",
+            "btn_hover": "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            "select_bg": "#022c22",
+            "dropdown_hover": "#064e3b",
+            "tab_text_color": "#f0fdf4"
+        }
     else:
-        font_family = "'Cairo', sans-serif"
-        bg_gradient = "linear-gradient(180deg, rgba(10,25,47,0.95) 0%, rgba(6,16,30,0.98) 100%)"
-        text_color = "#38bdf8"
-        main_text = "#ffffff"
-        card_bg = "linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)"
-        border_color = "#38bdf8"
-        accent_color = "#38bdf8"
-        btn_gradient = "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)"
-        btn_hover = "linear-gradient(135deg, #0369a1 0%, #0284c7 100%)"
-        select_bg = "#0b1329"
-        dropdown_hover = "#1e293b"
-        tab_text_color = "#ffffff"
+        return {
+            "font_family": "'Cairo', sans-serif",
+            "bg_gradient": "linear-gradient(180deg, rgba(10,25,47,0.95) 0%, rgba(6,16,30,0.98) 100%)",
+            "text_color": "#38bdf8",
+            "main_text": "#ffffff",
+            "card_bg": "linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)",
+            "border_color": "#38bdf8",
+            "accent_color": "#38bdf8",
+            "btn_gradient": "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
+            "btn_hover": "linear-gradient(135deg, #0369a1 0%, #0284c7 100%)",
+            "select_bg": "#0b1329",
+            "dropdown_hover": "#1e293b",
+            "tab_text_color": "#ffffff"
+        }
 
+colors = get_theme_colors(current_theme)
+
+def apply_theme_and_styles(direction, align, c):
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;700;900&family=Orbitron:wght@500;700;900&family=Tajawal:wght@450;700;900&display=swap" rel="stylesheet">
     
     <style>
     html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea {{
-        font-family: {font_family} !important;
+        font-family: {c['font_family']} !important;
         direction: {direction} !important;
         text-align: {align} !important;
     }}
 
     .stApp {{
-        background: {bg_gradient} !important;
-        color: {main_text} !important;
+        background: {c['bg_gradient']} !important;
+        color: {c['main_text']} !important;
     }}
 
     header, [data-testid="stHeader"] {{
@@ -259,10 +236,9 @@ def apply_theme_and_styles(direction, align, theme):
         padding-right: 5rem !important;
     }}
 
-    /* --- تحسين أحجام النصوص والتباين العام --- */
     h1 {{
         font-size: 38px !important;
-        color: {text_color} !important;
+        color: {c['text_color']} !important;
         font-weight: 900 !important;
         text-shadow: 0 3px 15px rgba(0,0,0,0.6);
         letter-spacing: 0.5px;
@@ -270,35 +246,34 @@ def apply_theme_and_styles(direction, align, theme):
 
     h3 {{
         font-size: 22px !important;
-        color: {text_color} !important;
+        color: {c['text_color']} !important;
         font-weight: 800 !important;
     }}
 
     p, span, label, div {{
         font-size: 17px !important;
-        color: {main_text} !important;
+        color: {c['main_text']} !important;
         letter-spacing: 0.3px;
     }}
 
-    /* --- تعديل حقول Selectbox --- */
     [data-testid="stSelectbox"] {{
-        background-color: {select_bg} !important;
+        background-color: {c['select_bg']} !important;
         padding: 12px 18px !important;
         border-radius: 16px !important;
-        border: 2px solid {border_color} !important;
+        border: 2px solid {c['border_color']} !important;
         box-shadow: 0 6px 25px rgba(0, 0, 0, 0.6) !important;
     }}
 
     [data-testid="stSelectbox"] label p, [data-testid="stSelectbox"] label span {{
         font-size: 17px !important;
         font-weight: 800 !important;
-        color: {text_color} !important;
+        color: {c['text_color']} !important;
         margin-bottom: 8px !important;
     }}
     
     [data-testid="stSelectbox"] div[data-baseweb="select"],
     [data-testid="stSelectbox"] div[data-baseweb="select"] > div {{
-        background-color: {select_bg} !important;
+        background-color: {c['select_bg']} !important;
         border: none !important;
         border-radius: 12px !important;
     }}
@@ -306,8 +281,8 @@ def apply_theme_and_styles(direction, align, theme):
     [data-testid="stSelectbox"] span,
     [data-testid="stSelectbox"] div,
     [data-testid="stSelectbox"] input {{
-        color: {main_text} !important;
-        -webkit-text-fill-color: {main_text} !important;
+        color: {c['main_text']} !important;
+        -webkit-text-fill-color: {c['main_text']} !important;
         font-size: 18px !important;
         font-weight: 900 !important;
         background-color: transparent !important;
@@ -317,9 +292,9 @@ def apply_theme_and_styles(direction, align, theme):
     div[data-baseweb="menu"], 
     ul[role="listbox"],
     div[id^="baseui-menu-"] {{
-        background-color: {select_bg} !important;
-        background: {select_bg} !important;
-        border: 2px solid {border_color} !important;
+        background-color: {c['select_bg']} !important;
+        background: {c['select_bg']} !important;
+        border: 2px solid {c['border_color']} !important;
         border-radius: 14px !important;
         box-shadow: 0 20px 40px rgba(0,0,0,0.9) !important;
         opacity: 1 !important;
@@ -329,9 +304,9 @@ def apply_theme_and_styles(direction, align, theme):
     div[role="option"],
     [data-baseweb="menu"] li,
     [data-baseweb="menu"] li span {{
-        background-color: {select_bg} !important;
-        color: {main_text} !important;
-        -webkit-text-fill-color: {main_text} !important;
+        background-color: {c['select_bg']} !important;
+        color: {c['main_text']} !important;
+        -webkit-text-fill-color: {c['main_text']} !important;
         font-size: 17px !important;
         font-weight: 800 !important;
         padding: 14px 20px !important;
@@ -341,27 +316,26 @@ def apply_theme_and_styles(direction, align, theme):
     li[role="option"]:hover, 
     div[role="option"]:hover,
     [data-baseweb="menu"] li:hover {{
-        background-color: {dropdown_hover} !important;
-        color: {text_color} !important;
-        -webkit-text-fill-color: {text_color} !important;
+        background-color: {c['dropdown_hover']} !important;
+        color: {c['text_color']} !important;
+        -webkit-text-fill-color: {c['text_color']} !important;
     }}
 
-    /* --- تعديل التبويبات (Tabs) بخطوط كبيرة وواضحة جداً --- */
     .stTabs [data-baseweb="tab-list"] {{
         gap: 15px;
         background-color: rgba(0, 0, 0, 0.6);
         padding: 12px;
         border-radius: 16px;
-        border: 2px solid {border_color};
+        border: 2px solid {c['border_color']};
     }}
 
     .stTabs [data-baseweb="tab"] {{
         height: 55px;
         background-color: rgba(255, 255, 255, 0.08);
         border-radius: 12px;
-        color: {tab_text_color} !important;
-        -webkit-text-fill-color: {tab_text_color} !important;
-        border: 1px solid {border_color};
+        color: {c['tab_text_color']} !important;
+        -webkit-text-fill-color: {c['tab_text_color']} !important;
+        border: 1px solid {c['border_color']};
         padding: 0 30px;
         font-weight: 900 !important;
         font-size: 19px !important;
@@ -373,17 +347,17 @@ def apply_theme_and_styles(direction, align, theme):
     .stTabs [data-baseweb="tab"] p,
     .stTabs [data-baseweb="tab"] span,
     .stTabs [data-baseweb="tab"] div {{
-        color: {tab_text_color} !important;
-        -webkit-text-fill-color: {tab_text_color} !important;
+        color: {c['tab_text_color']} !important;
+        -webkit-text-fill-color: {c['tab_text_color']} !important;
         font-size: 19px !important;
         font-weight: 900 !important;
     }}
 
     .stTabs [aria-selected="true"] {{
-        background: {btn_gradient} !important;
+        background: {c['btn_gradient']} !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
-        box-shadow: 0 0 30px {border_color};
+        box-shadow: 0 0 30px {c['border_color']};
         transform: scale(1.02);
         border-color: #ffffff !important;
     }}
@@ -398,10 +372,9 @@ def apply_theme_and_styles(direction, align, theme):
         font-weight: 900 !important;
     }}
 
-    /* --- تعديل ألوان الـ File Uploader --- */
     [data-testid="stFileUploader"] {{
-        background-color: {card_bg} !important;
-        border: 3px dashed {border_color} !important;
+        background-color: {c['card_bg']} !important;
+        border: 3px dashed {c['border_color']} !important;
         border-radius: 20px !important;
         padding: 35px !important;
         box-shadow: 0 10px 35px rgba(0,0,0,0.5);
@@ -415,14 +388,14 @@ def apply_theme_and_styles(direction, align, theme):
     [data-testid="stFileUploader"] small, 
     [data-testid="stFileUploader"] p,
     [data-testid="stFileUploader"] div {{
-        color: {main_text} !important;
+        color: {c['main_text']} !important;
         font-size: 17px !important;
         font-weight: 700 !important;
     }}
 
     .custom-card {{
-        background: {card_bg};
-        border: 2px solid {border_color};
+        background: {c['card_bg']};
+        border: 2px solid {c['border_color']};
         border-radius: 20px;
         padding: 30px;
         text-align: center;
@@ -433,21 +406,21 @@ def apply_theme_and_styles(direction, align, theme):
 
     .custom-card h3 {{
         font-size: 26px !important;
-        color: {text_color} !important;
+        color: {c['text_color']} !important;
         font-weight: 900 !important;
         margin-bottom: 10px !important;
     }}
 
     .custom-card p {{
         font-size: 17px !important;
-        color: {main_text} !important;
+        color: {c['main_text']} !important;
         opacity: 0.95;
     }}
 
     .stButton>button, [data-testid="baseButton-secondary"], [data-testid="baseButton-primary"] {{
-        background: {btn_gradient} !important;
+        background: {c['btn_gradient']} !important;
         color: white !important;
-        border: 2px solid {border_color} !important;
+        border: 2px solid {c['border_color']} !important;
         border-radius: 16px !important;
         padding: 0.85rem 2.2rem !important;
         font-weight: 900 !important;
@@ -458,19 +431,18 @@ def apply_theme_and_styles(direction, align, theme):
     }}
 
     .stButton>button:hover, [data-testid="baseButton-secondary"]:hover, [data-testid="baseButton-primary"]:hover {{
-        background: {btn_hover} !important;
-        border-color: {text_color} !important;
-        box-shadow: 0 10px 35px {border_color}, 0 0 25px {accent_color} !important;
+        background: {c['btn_hover']} !important;
+        border-color: {c['text_color']} !important;
+        box-shadow: 0 10px 35px {c['border_color']}, 0 0 25px {c['accent_color']} !important;
         transform: translateY(-3px) scale(1.01) !important;
     }}
 
-    /* --- تحسين مظهر حقل النصوص المستخرجة OCR --- */
     textarea {{
         font-size: 17px !important;
         font-weight: 700 !important;
         background-color: rgba(0, 0, 0, 0.4) !important;
-        color: {main_text} !important;
-        border: 2px solid {border_color} !important;
+        color: {c['main_text']} !important;
+        border: 2px solid {c['border_color']} !important;
         border-radius: 14px !important;
     }}
 
@@ -481,10 +453,10 @@ def apply_theme_and_styles(direction, align, theme):
         width: 100%;
         background-color: rgba(5, 5, 10, 0.95);
         backdrop-filter: blur(10px);
-        color: {text_color};
+        color: {c['text_color']};
         text-align: center;
         padding: 15px;
-        border-top: 2px solid {border_color};
+        border-top: 2px solid {c['border_color']};
         font-size: 16px;
         font-weight: 800;
         z-index: 999;
@@ -492,7 +464,42 @@ def apply_theme_and_styles(direction, align, theme):
     </style>
     """, unsafe_allow_html=True)
 
-apply_theme_and_styles(lang["direction"], lang["align"], current_theme)
+# تطبيق الستايلات والدوال فوراً في البداية
+apply_theme_and_styles(lang["direction"], lang["align"], colors)
+
+# --- 5. دمج الخلفية المتحركة المخصصة لكل ثيم عبر iframe ---
+def render_permanent_background(theme):
+    if theme == "cyberpunk":
+        bg_code = """
+        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #05050a; }
+        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; }
+        .grid-line { position: absolute; width: 200%; height: 200%; background-image: linear-gradient(rgba(236, 72, 153, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px); background-size: 40px 40px; animation: moveGrid 20s linear infinite; }
+        @keyframes moveGrid { 0% { transform: translateY(0); } 100% { transform: translateY(40px); } }
+        """
+    elif theme == "gold":
+        bg_code = """
+        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #0c0a09; }
+        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; background: radial-gradient(circle at 50% 20%, rgba(217, 119, 6, 0.12) 0%, transparent 60%); }
+        """
+    elif theme == "forest":
+        bg_code = """
+        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #022c22; }
+        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; background: radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.15) 0%, transparent 50%); }
+        """
+    else:
+        bg_code = """
+        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #03070c; }
+        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; }
+        """
+
+    bg_html = f"""<!DOCTYPE html><html><head><style>{bg_code}</style></head><body><div class="bg-fx"><div class="grid-line"></div></div></body></html>"""
+    components.html(f"""
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -999; pointer-events: none;">
+        <iframe srcdoc="{bg_html.replace('"', '&quot;')}" style="width: 100%; height: 100%; border: none; pointer-events: none;"></iframe>
+    </div>
+    """, height=0, width=0)
+
+render_permanent_background(current_theme)
 
 # --- 6. واجهة البرنامج الرئيسية ---
 st.markdown(f"""
@@ -510,7 +517,7 @@ tab1, tab2 = st.tabs([lang["tab1_title"], lang["tab2_title"]])
 with tab1:
     st.markdown(f"""
     <div class="custom-card">
-        <div class="icon-container"><i class="fa-solid fa-file-excel" style="font-size: 55px; color: {text_color};"></i></div>
+        <div class="icon-container"><i class="fa-solid fa-file-excel" style="font-size: 55px; color: {colors['text_color']};"></i></div>
         <h3>{lang["card1_title"]}</h3>
         <p>{lang["card1_desc"]}</p>
     </div>
@@ -560,7 +567,7 @@ with tab1:
 with tab2:
     st.markdown(f"""
     <div class="custom-card">
-        <div class="icon-container"><i class="fa-solid fa-eye" style="font-size: 55px; color: {text_color};"></i></div>
+        <div class="icon-container"><i class="fa-solid fa-eye" style="font-size: 55px; color: {colors['text_color']};"></i></div>
         <h3>{lang["card2_title"]}</h3>
         <p>{lang["card2_desc"]}</p>
     </div>
