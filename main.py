@@ -417,7 +417,7 @@ def apply_theme_and_styles(direction, align, c):
         opacity: 0.95;
     }}
 
-    .stButton>button, [data-testid="baseButton-secondary"], [data-testid="baseButton-primary"] {{
+    .stButton > button {{
         background: {c['btn_gradient']} !important;
         color: white !important;
         border: 2px solid {c['border_color']} !important;
@@ -430,11 +430,16 @@ def apply_theme_and_styles(direction, align, c):
         transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }}
 
-    .stButton>button:hover, [data-testid="baseButton-secondary"]:hover, [data-testid="baseButton-primary"]:hover {{
+    .stButton > button:hover {{
         background: {c['btn_hover']} !important;
         border-color: {c['text_color']} !important;
         box-shadow: 0 10px 35px {c['border_color']}, 0 0 25px {c['accent_color']} !important;
         transform: translateY(-3px) scale(1.01) !important;
+    }}
+
+    [data-testid="stFileUploader"] button {{
+        width: auto !important;
+        direction: ltr !important;
     }}
 
     textarea {{
