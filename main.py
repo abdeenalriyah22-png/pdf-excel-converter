@@ -417,23 +417,18 @@ def apply_theme_and_styles(direction, align, c):
         opacity: 0.95;
     }}
 
-    ..stButton > button {
-    background: {c['btn_gradient']} !important;
-    color: white !important;
-    border: 2px solid {c['border_color']} !important;
-    border-radius: 16px !important;
-    padding: 0.85rem 2.2rem !important;
-    font-weight: 900 !important;
-    font-size: 18px !important;
-    width: 100%;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-[data-testid="stFileUploader"] button {
-    width: auto !important;
-    direction: ltr !important;
-}
+    .stButton>button, [data-testid="baseButton-secondary"], [data-testid="baseButton-primary"] {{
+        background: {c['btn_gradient']} !important;
+        color: white !important;
+        border: 2px solid {c['border_color']} !important;
+        border-radius: 16px !important;
+        padding: 0.85rem 2.2rem !important;
+        font-weight: 900 !important;
+        font-size: 18px !important;
+        width: 100%;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }}
 
     .stButton>button:hover, [data-testid="baseButton-secondary"]:hover, [data-testid="baseButton-primary"]:hover {{
         background: {c['btn_hover']} !important;
