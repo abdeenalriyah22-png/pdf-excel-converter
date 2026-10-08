@@ -63,36 +63,26 @@ if saved_theme != current_theme:
 with col_top3:
     st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
 
-# --- 3. محرك معالجة النصوص المحاسبية والتشفير المكسور ---
-def fix_corrupted_arabic_text(val):
-    if not val or not isinstance(val, str):
-        return val if val else ""
-    
-    val = val.strip()
-    
-    # حظر الرموز الشاذة والتشكيل المكسور الناتج عن التشفير الخاطئ
-    val = re.sub(r'[\u0640\u0610-\u061A\u064B-\u065F\u0670-\u06D5]', '', val)
-    
-    # إصلاح تفكيك وتداخل الأرقام والكلمات
-    val = re.sub(r'([0-9\.,]+)\s*([أ-ي])', r'\1 \2', val)
-    val = re.sub(r'([أ-ي])\s*([0-9\.,]+)', r'\1 \2', val)
-    
-    return val
-
-def process_pdf_tables_hybrid(file_bytes):
+# --- 3. المعالج الخاص لكشوف الحسابات المحاسبية السليمة نصياً ---
+def parse_smart_accountant_pdf(file_bytes):
     """
-    استخراج شبكة الجداول من الـ PDF أولاً لضبط الأعمدة، 
-    مع تطبيق OCR مخصص لترجمة النصوص المحاسبية بدقة دون الحروف المكسورة
+    استخراج الجداول المحاسبية مباشرة من الطبقة النصية للـ PDF 
+    بدون مسح ضوئي لمنع التشويه، مع الاعتماد على الفواصل الشاقولية
     """
     all_dfs = []
+    
+    # إعدادات التفكيك النصي للجداول بدون خطوط شبكية
+    table_settings = {
+        "vertical_strategy": "text",
+        "horizontal_strategy": "text",
+        "snap_tolerance": 4,
+        "join_tolerance": 4,
+        "min_words_vertical": 1
+    }
 
     with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
         for page in pdf.pages:
-            # 1. تحويل الصفحة لصورة دقيقة
-            img_original = page.to_image(resolution=300).original
-            
-            # 2. استخراج الجداول كشبكة هندسية
-            tables = page.extract_tables()
+            tables = page.extract_tables(table_settings)
             
             if tables:
                 for table in tables:
@@ -100,24 +90,21 @@ def process_pdf_tables_hybrid(file_bytes):
                         continue
                     df = pd.DataFrame(table)
                     
-                    # تنظيف الخلية وتصحيحها
-                    if hasattr(df, 'map'):
-                        df = df.map(fix_corrupted_arabic_text)
-                    else:
-                        df = df.applymap(fix_corrupted_arabic_text)
-                        
+                    # تنظيف الخانات الفارغة وتطبيق تنسيق النصوص
+                    df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
                     df = df.dropna(how='all').dropna(how='all', axis=1)
+                    
                     if not df.empty:
                         all_dfs.append(df)
             else:
-                # 3. معالجة الصفحات المصورة بالكامل
-                ocr_text = pytesseract.image_to_string(img_original, lang='ara+eng', config='--psm 6')
-                lines = [line.strip() for line in ocr_text.split('\n') if line.strip()]
+                # في حال تعذر القراءة بالتموضع يتم أخذ النصوص المهيكلة
+                text = page.extract_text(layout=False)
+                lines = [line.strip() for line in text.split('\n') if line.strip()]
                 rows = []
                 for line in lines:
-                    cols = [fix_corrupted_arabic_text(c) for c in re.split(r'\s{2,}|\t', line) if c.strip()]
-                    if cols:
-                        rows.append(cols)
+                    parts = [p.strip() for p in line.split('|') if p.strip()]
+                    if parts:
+                        rows.append(parts)
                 if rows:
                     all_dfs.append(pd.DataFrame(rows))
 
@@ -141,7 +128,7 @@ translations = {
         "btn_convert": "بدء تحويل وجدولة الملف",
         "btn_ocr": "🚀 تشغيل الذكاء الاصطناعي لقراءة النص",
         "status_preparing": "📁 ملف قيد التحضير: ",
-        "status_loading": "جاري تفكيك وإعادة التشفير اللغوي للجداول...",
+        "status_loading": "جاري استخراج السجلات المحاسبية وتنظيم الأعمدة...",
         "status_ocr_loading": "جاري المسح الضوئي للمستند وتفسير الحروف...",
         "success_convert": "🚀 اكتمل التحويل بنجاح تام وتم تجهيز ملف Excel!",
         "warning_no_tables": "⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.",
@@ -551,7 +538,7 @@ with tab1:
                                 df_csv = pd.read_csv(io.BytesIO(file_bytes))
                                 dfs.append(df_csv)
                             else:
-                                dfs = process_pdf_tables_hybrid(file_bytes)
+                                dfs = parse_smart_accountant_pdf(file_bytes)
                             
                             if dfs:
                                 output = io.BytesIO()
@@ -596,8 +583,7 @@ with tab2:
                     if ocr_file.type == "application/pdf":
                         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
                             for page in pdf.pages:
-                                img = page.to_image(resolution=300).original
-                                full_text += pytesseract.image_to_string(img, lang='ara+eng') + "\n"
+                                full_text += (page.extract_text() or "") + "\n"
                     else:
                         img = Image.open(io.BytesIO(file_bytes))
                         full_text = pytesseract.image_to_string(img, lang='ara+eng+urd')
