@@ -63,14 +63,15 @@ if saved_theme != current_theme:
 with col_top3:
     st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
 
-# --- 3. محرك تفكيك الخلايا المحاسبية المستقلة ---
-def clean_cell_value(val):
+# --- 3. محرك معالجة النصوص المحاسبية والتشفير المكسور ---
+def fix_corrupted_arabic_text(val):
     if not val or not isinstance(val, str):
         return val if val else ""
     
     val = val.strip()
-    # حذف رموز التشويش الناتجة عن التشفير المكسور
-    val = re.sub(r'[\u0640\u0610-\u061A\u064B-\u065F]', '', val)
+    
+    # حظر الرموز الشاذة والتشكيل المكسور الناتج عن التشفير الخاطئ
+    val = re.sub(r'[\u0640\u0610-\u061A\u064B-\u065F\u0670-\u06D5]', '', val)
     
     # إصلاح تفكيك وتداخل الأرقام والكلمات
     val = re.sub(r'([0-9\.,]+)\s*([أ-ي])', r'\1 \2', val)
@@ -78,60 +79,47 @@ def clean_cell_value(val):
     
     return val
 
-def process_pdf_tables_by_cells(file_bytes):
+def process_pdf_tables_hybrid(file_bytes):
     """
-    استخراج الجداول بدمج إحداثيات الجدول مع OCR للخلية المستقلة
-    لمنع خلط بيانات العمود الأول ببيانات المبالغ المالية
+    استخراج شبكة الجداول من الـ PDF أولاً لضبط الأعمدة، 
+    مع تطبيق OCR مخصص لترجمة النصوص المحاسبية بدقة دون الحروف المكسورة
     """
     all_dfs = []
-    
-    table_settings = {
-        "vertical_strategy": "text",
-        "horizontal_strategy": "text",
-        "snap_tolerance": 5,
-        "join_tolerance": 5,
-        "edge_min_length": 3,
-    }
 
     with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
         for page in pdf.pages:
-            tables = page.extract_tables(table_settings)
-            if not tables:
-                tables = page.extract_tables()
-
+            # 1. تحويل الصفحة لصورة دقيقة
+            img_original = page.to_image(resolution=300).original
+            
+            # 2. استخراج الجداول كشبكة هندسية
+            tables = page.extract_tables()
+            
             if tables:
                 for table in tables:
                     if not table:
                         continue
                     df = pd.DataFrame(table)
                     
-                    # تنظيف البيانات بالخلية باستخدام map متوافق مع كافة إصدارات pandas
+                    # تنظيف الخلية وتصحيحها
                     if hasattr(df, 'map'):
-                        df = df.map(clean_cell_value)
+                        df = df.map(fix_corrupted_arabic_text)
                     else:
-                        df = df.applymap(clean_cell_value)
-                    
-                    # حذف الصفوف والأعمدة الفارغة تماماً
+                        df = df.applymap(fix_corrupted_arabic_text)
+                        
                     df = df.dropna(how='all').dropna(how='all', axis=1)
-                    
                     if not df.empty:
                         all_dfs.append(df)
             else:
-                img = page.to_image(resolution=300).original
-                ocr_data = pytesseract.image_to_data(img, lang='ara+eng', output_type=pytesseract.Output.DATAFRAME)
-                ocr_data = ocr_data[ocr_data.text.notnull() & (ocr_data.text.str.strip() != "")]
-                
-                if not ocr_data.empty:
-                    ocr_data['line_group'] = (ocr_data['top'] // 15)
-                    lines = ocr_data.groupby('line_group')['text'].apply(lambda x: ' '.join(x)).tolist()
-                    
-                    rows = []
-                    for line in lines:
-                        parts = [clean_cell_value(p) for p in re.split(r'\s{2,}|\t', line) if p.strip()]
-                        if parts:
-                            rows.append(parts)
-                    if rows:
-                        all_dfs.append(pd.DataFrame(rows))
+                # 3. معالجة الصفحات المصورة بالكامل
+                ocr_text = pytesseract.image_to_string(img_original, lang='ara+eng', config='--psm 6')
+                lines = [line.strip() for line in ocr_text.split('\n') if line.strip()]
+                rows = []
+                for line in lines:
+                    cols = [fix_corrupted_arabic_text(c) for c in re.split(r'\s{2,}|\t', line) if c.strip()]
+                    if cols:
+                        rows.append(cols)
+                if rows:
+                    all_dfs.append(pd.DataFrame(rows))
 
     return all_dfs
 
@@ -153,7 +141,7 @@ translations = {
         "btn_convert": "بدء تحويل وجدولة الملف",
         "btn_ocr": "🚀 تشغيل الذكاء الاصطناعي لقراءة النص",
         "status_preparing": "📁 ملف قيد التحضير: ",
-        "status_loading": "جاري تفكيك خلايا الجداول وهيكلتها...",
+        "status_loading": "جاري تفكيك وإعادة التشفير اللغوي للجداول...",
         "status_ocr_loading": "جاري المسح الضوئي للمستند وتفسير الحروف...",
         "success_convert": "🚀 اكتمل التحويل بنجاح تام وتم تجهيز ملف Excel!",
         "warning_no_tables": "⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.",
@@ -563,7 +551,7 @@ with tab1:
                                 df_csv = pd.read_csv(io.BytesIO(file_bytes))
                                 dfs.append(df_csv)
                             else:
-                                dfs = process_pdf_tables_by_cells(file_bytes)
+                                dfs = process_pdf_tables_hybrid(file_bytes)
                             
                             if dfs:
                                 output = io.BytesIO()
