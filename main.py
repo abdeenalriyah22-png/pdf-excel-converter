@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 import pandas as pd
 import io
 import re
-import fitz  # PyMuPDF
+import pdfplumber
 from PIL import Image
 import pytesseract
 from st_copy_to_clipboard import st_copy_to_clipboard
@@ -63,44 +63,79 @@ if saved_theme != current_theme:
 with col_top3:
     st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
 
-# --- 3. محرك الاستخراج الضوئي الذكي (OCR-First Approach) ---
-def clean_extracted_text(text):
-    if not isinstance(text, str):
-        return text
-    # تنظيف الفواصل والرموز الغريبة الناتجة عن المسح الضوئي
-    text = re.sub(r'[\u0640\u0610-\u061A\u064B-\u065F]', '', text)
-    return text.strip()
+# --- 3. محرك تفكيك الخلايا المحاسبية المستقلة ---
+def clean_cell_value(val):
+    if not val or not isinstance(val, str):
+        return val if val else ""
+    
+    val = val.strip()
+    # حذف رموز التشويش الناتجة عن التشفير المكسور
+    val = re.sub(r'[\u0640\u0610-\u061A\u064B-\u065F]', '', val)
+    
+    # إصلاح تفكيك وتداخل الأرقام والكلمات
+    val = re.sub(r'([0-9\.,]+)\s*([أ-ي])', r'\1 \2', val)
+    val = re.sub(r'([أ-ي])\s*([0-9\.,]+)', r'\1 \2', val)
+    
+    return val
 
-def process_pdf_with_ocr(file_bytes):
+def process_pdf_tables_by_cells(file_bytes):
     """
-    تحويل كل صفحة PDF إلى صورة فائقة الدقة ثم قراءتها عبر OCR 
-    لتجاوز التشفير المكسور والحروف المقلوبة في برامج المحاسبة
+    استخراج الجداول بدمج إحداثيات الجدول مع OCR للخلية المستقلة
+    لمنع خلط بيانات العمود الأول ببيانات المبالغ المالية
     """
-    doc = fitz.open(stream=file_bytes, filetype="pdf")
-    all_data = []
+    all_dfs = []
+    
+    # إعدادات متقدمة لقراءة إحداثيات الجدول
+    table_settings = {
+        "vertical_strategy": "text",
+        "horizontal_strategy": "text",
+        "snap_tolerance": 5,
+        "join_tolerance": 5,
+        "edge_min_length": 3,
+    }
 
-    for page in doc:
-        # تحويل الصفحة إلى صورة عالية الجودة (300 DPI)
-        pix = page.get_pixmap(dpi=300)
-        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-        
-        # قراءة الجداول عبر Tesseract OCR مع تحديد دعم العربية والإنجليزية
-        ocr_data = pytesseract.image_to_string(img, lang='ara+eng', config='--psm 6')
-        
-        lines = ocr_data.split('\n')
-        page_rows = []
-        for line in lines:
-            if line.strip():
-                # تقسيم الأسطر بناءً على المسافات المزدوجة أو علامات التبويب
-                columns = [clean_extracted_text(col) for col in re.split(r'\s{2,}|\t', line) if col.strip()]
-                if columns:
-                    page_rows.append(columns)
-        
-        if page_rows:
-            df = pd.DataFrame(page_rows)
-            all_data.append(df)
-            
-    return all_data
+    with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+        for page in pdf.pages:
+            # محاولة استخراج الجدول كشبكة خلايا
+            tables = page.extract_tables(table_settings)
+            if not tables:
+                tables = page.extract_tables()
+
+            if tables:
+                for table in tables:
+                    if not table:
+                        continue
+                    df = pd.DataFrame(table)
+                    # تنظيف البيانات بالخلية
+                    df = df.applymap(clean_cell_value)
+                    
+                    # حذف الصفوف والأعمدة الفارغة تماماً
+                    df = df.dropna(how='all').dropna(how='all', axis=1)
+                    
+                    if not df.empty:
+                        all_dfs.append(df)
+            else:
+                # في حال كانت الصفحة عبارة عن صورة نصوص جافة بدون خطوط
+                img = page.to_image(resolution=300).original
+                # OCR موجه بقواعد التداول المالي (Single Line / Uniform Block)
+                ocr_data = pytesseract.image_to_data(img, lang='ara+eng', output_type=pytesseract.Output.DATAFRAME)
+                ocr_data = ocr_data[ocr_data.text.notnull() & (ocr_data.text.str.strip() != "")]
+                
+                if not ocr_data.empty:
+                    # تجميع الكلمات بناءً على ارتفاع السطر (Top Coords) لمنع انحشار كل الأسطر في خلية واحدة
+                    ocr_data['line_group'] = (ocr_data['top'] // 15)
+                    lines = ocr_data.groupby('line_group')['text'].apply(lambda x: ' '.join(x)).tolist()
+                    
+                    rows = []
+                    for line in lines:
+                        # تقسيم السطر بفرز الفواصل الواضحة
+                        parts = [clean_cell_value(p) for p in re.split(r'\s{2,}|\t', line) if p.strip()]
+                        if parts:
+                            rows.append(parts)
+                    if rows:
+                        all_dfs.append(pd.DataFrame(rows))
+
+    return all_dfs
 
 # --- 4. قاموس الترجمة ---
 translations = {
@@ -120,7 +155,7 @@ translations = {
         "btn_convert": "بدء تحويل وجدولة الملف",
         "btn_ocr": "🚀 تشغيل الذكاء الاصطناعي لقراءة النص",
         "status_preparing": "📁 ملف قيد التحضير: ",
-        "status_loading": "جاري المسح الضوئي وإعادة بناء الجداول المحاسبية...",
+        "status_loading": "جاري تفكيك خلايا الجداول وهيكلتها...",
         "status_ocr_loading": "جاري المسح الضوئي للمستند وتفسير الحروف...",
         "success_convert": "🚀 اكتمل التحويل بنجاح تام وتم تجهيز ملف Excel!",
         "warning_no_tables": "⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.",
@@ -530,7 +565,7 @@ with tab1:
                                 df_csv = pd.read_csv(io.BytesIO(file_bytes))
                                 dfs.append(df_csv)
                             else:
-                                dfs = process_pdf_with_ocr(file_bytes)
+                                dfs = process_pdf_tables_by_cells(file_bytes)
                             
                             if dfs:
                                 output = io.BytesIO()
@@ -573,11 +608,10 @@ with tab2:
                 with st.spinner(lang["status_ocr_loading"]):
                     file_bytes = ocr_file.read()
                     if ocr_file.type == "application/pdf":
-                        doc = fitz.open(stream=file_bytes, filetype="pdf")
-                        for page in doc:
-                            pix = page.get_pixmap(dpi=300)
-                            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-                            full_text += pytesseract.image_to_string(img, lang='ara+eng') + "\n"
+                        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+                            for page in pdf.pages:
+                                img = page.to_image(resolution=300).original
+                                full_text += pytesseract.image_to_string(img, lang='ara+eng') + "\n"
                     else:
                         img = Image.open(io.BytesIO(file_bytes))
                         full_text = pytesseract.image_to_string(img, lang='ara+eng+urd')
