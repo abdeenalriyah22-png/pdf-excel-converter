@@ -3,10 +3,14 @@ import streamlit.components.v1 as components
 import pandas as pd
 import io
 import re
-import fitz  # PyMuPDF
+import pdfplumber
 from PIL import Image
 import pytesseract
 from st_copy_to_clipboard import st_copy_to_clipboard
+
+# استيراد مكتبات المعالجة الثنائية للاتجاه
+import arabic_reshaper
+from bidi.algorithm import get_display
 
 # --- 1. إعدادات الصفحة الأساسية ---
 st.set_page_config(
@@ -57,46 +61,67 @@ with col_top2:
 
 current_theme = theme_mapping.get(selected_theme_name, "cyberpunk")
 
-# تحديث رابط المتصفح بحالة الثيم لضمان حفظه عند إعادة التنشيط
 if saved_theme != current_theme:
     st.query_params["theme"] = current_theme
 
 with col_top3:
     st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
 
-# --- 3. محرك تصحيح وتفكيك النصوص العربية المتداخلة مع الأرقام ---
+# --- 3. الدالة المحسنة لفك تشابك النص العربي والأرقام ---
 def fix_arabic_bidi_text(text):
-    """تصحيح تفكيك الحروف وتداخل الأرقام مع الكلمات العربية"""
     if not isinstance(text, str) or not text.strip():
         return text
 
-    # إصلاح تفكيك وتداخل الأرقام والرموز المكسورة
-    text = re.sub(r'([0-9]+)\s*([أ-ي])', r'\1 \2', text)
-    text = re.sub(r'([أ-ي])\s*([0-9]+)', r'\1 \2', text)
-
-    # حظر الحروف المقطعة الشاذة والرموز الناتجة عن ترميز الـ PDF
+    # إزالة تشكيل التشكيل والحركات التي تسبب تشوه الكلمات في الـ PDF
     text = re.sub(r'[\u0640\u0610-\u061A\u064B-\u065F]', '', text)
 
-    # ضبط الترتيب السليم للأسطر العربية الممزوجة بأرقام
-    words = text.split()
-    if any(re.search(r'[\u0600-\u06FF]', w) for w in words):
-        return " ".join(words)
+    # إصلاح تفكيك المسافات الملتصقة بين الأرقام والحروف
+    text = re.sub(r'([0-9]+)\s*([أ-يa-zA-Z])', r'\1 \2', text)
+    text = re.sub(r'([أ-يa-zA-Z])\s*([0-9]+)', r'\1 \2', text)
+
+    # إذا كان النص يحتوي على حروف عربية
+    if re.search(r'[\u0600-\u06FF]', text):
+        try:
+            # تقطيع الكلمات وتعديل الترتيب إذا كان السطر مقلوباً من اليمين لليسار
+            reshaped = arabic_reshaper.reshape(text)
+            bidi_text = get_display(reshaped)
+            
+            # إذا ظهر الكود معكوس الكلمات بعد get_display، نعيد ترتيبة لضمان المقروئية
+            words = bidi_text.split()
+            return " ".join(words)
+        except Exception:
+            return text
+
     return text
 
 def extract_pdf_tables_clean(file_bytes):
-    """استخراج الجداول بدقة عالية دون إتلاف الترتيب العربي للأرقام والنصوص"""
-    doc = fitz.open(stream=file_bytes, filetype="pdf")
+    """استخراج الجداول بخيارات محددة لمنع تداخل أسطر الجداول المحاسبية"""
     all_dfs = []
+    
+    # إعدادات مخصصة لـ pdfplumber لمكافحة تداخل الخلايا
+    table_settings = {
+        "vertical_strategy": "lines",
+        "horizontal_strategy": "lines",
+        "snap_tolerance": 3,
+        "join_tolerance": 3,
+    }
 
-    for page in doc:
-        tabs = page.find_tables()
-        if tabs and tabs.tables:
-            for tab in tabs.tables:
-                df = tab.extract()
-                df = pd.DataFrame(df)
+    with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+        for page in pdf.pages:
+            tables = page.extract_tables(table_settings)
+            
+            # إذا لم يجد أسطر صريحة نجرب الاستراتيجية المرنة
+            if not tables:
+                tables = page.extract_tables()
+
+            for table in tables:
+                if not table:
+                    continue
+                df = pd.DataFrame(table)
+                df = df.dropna(how='all').dropna(how='all', axis=1)
+
                 if not df.empty:
-                    df.columns = [fix_arabic_bidi_text(str(c)) for c in df.iloc[0]]
-                    df = df[1:].reset_index(drop=True)
+                    # تطبيق المعالجة على جميع الخلايا
                     for col in df.columns:
                         df[col] = df[col].astype(str).apply(fix_arabic_bidi_text)
                     all_dfs.append(df)
@@ -264,7 +289,6 @@ def get_theme_colors(theme):
 colors = get_theme_colors(current_theme)
 
 def apply_theme_and_styles(direction, align, c):
-    # كود JS لحفظ واسترجاع الثيم في localStorage الخاص بالمتصفح
     st.html(f"""
     <script>
         const curTheme = "{current_theme}";
@@ -576,15 +600,14 @@ with tab2:
                 with st.spinner(lang["status_ocr_loading"]):
                     file_bytes = ocr_file.read()
                     if ocr_file.type == "application/pdf":
-                        doc = fitz.open(stream=file_bytes, filetype="pdf")
-                        for page in doc:
-                            text = page.get_text()
-                            if text.strip():
-                                full_text += fix_arabic_bidi_text(text) + "\n"
-                            else:
-                                pix = page.get_pixmap()
-                                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-                                full_text += fix_arabic_bidi_text(pytesseract.image_to_string(img, lang='ara+eng')) + "\n"
+                        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+                            for page in pdf.pages:
+                                text = page.extract_text()
+                                if text and text.strip():
+                                    full_text += fix_arabic_bidi_text(text) + "\n"
+                                else:
+                                    img = page.to_image().original
+                                    full_text += fix_arabic_bidi_text(pytesseract.image_to_string(img, lang='ara+eng')) + "\n"
                     else:
                         img = Image.open(io.BytesIO(file_bytes))
                         full_text = fix_arabic_bidi_text(pytesseract.image_to_string(img, lang='ara+eng+urd'))
