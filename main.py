@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 import tabula
 import pandas as pd
 import io
-import base64
+import re
 from PIL import Image
 import pytesseract
 import fitz  # PyMuPDF
@@ -17,7 +17,19 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. التحكم في اختيار الثيم واللغة من الأعلى ---
+# --- 2. إدارة الثيم الثابت عبر Query Params و LocalStorage ---
+query_params = st.query_params
+saved_theme = query_params.get("theme", ["cyberpunk"])[0] if isinstance(query_params.get("theme"), list) else query_params.get("theme", "cyberpunk")
+
+theme_reverse_mapping = {
+    "cyberpunk": "🌌 نيون سايبربانك (Cyberpunk Neon)",
+    "gold": "👑 رويال جولد (Royal Gold)",
+    "forest": "🌲 الطبيعة المريحة (Emerald Forest)",
+    "dark": "🌙 الكلاسيكي الداكن (Dark Mode)"
+}
+
+default_theme_name = theme_reverse_mapping.get(saved_theme, "🌌 نيون سايبربانك (Cyberpunk Neon)")
+
 col_top1, col_top2, col_top3 = st.columns([3, 3, 2])
 
 with col_top1:
@@ -32,21 +44,51 @@ with col_top2:
     selected_theme_name = st.selectbox(
         "🎨 Select Theme / اختر الثيم الفني",
         ["🌌 نيون سايبربانك (Cyberpunk Neon)", "👑 رويال جولد (Royal Gold)", "🌲 الطبيعة المريحة (Emerald Forest)", "🌙 الكلاسيكي الداكن (Dark Mode)"],
-        index=0,
+        index=list(theme_reverse_mapping.values()).index(default_theme_name) if default_theme_name in theme_reverse_mapping.values() else 0,
         key="theme_selector"
     )
 
-with col_top3:
-    st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
-    theme_mapping = {
-        "🌌 نيون سايبربانك (Cyberpunk Neon)": "cyberpunk",
-        "👑 رويال جولد (Royal Gold)": "gold",
-        "🌲 الطبيعة المريحة (Emerald Forest)": "forest",
-        "🌙 الكلاسيكي الداكن (Dark Mode)": "dark"
-    }
-    current_theme = theme_mapping.get(selected_theme_name, "cyberpunk")
+theme_mapping = {
+    "🌌 نيون سايبربانك (Cyberpunk Neon)": "cyberpunk",
+    "👑 رويال جولد (Royal Gold)": "gold",
+    "🌲 الطبيعة المريحة (Emerald Forest)": "forest",
+    "🌙 الكلاسيكي الداكن (Dark Mode)": "dark"
+}
+current_theme = theme_mapping.get(selected_theme_name, "cyberpunk")
 
-# --- 3. قاموس الترجمة للغات الثلاث ---
+# تحديث الرابط بحالة الثيم لضمان ثباته
+if saved_theme != current_theme:
+    st.query_params["theme"] = current_theme
+
+# --- 3. دالة إصلاح وتشذيب النصوص العربية المعكوسة والمتداخلة مع الأرقام ---
+def fix_arabic_bidi_text(val):
+    if not isinstance(val, str) or not val.strip():
+        return val
+    
+    # إصلاح الأقواس والمعاملات المعكوسة
+    val = val.replace(')', 'TEMP_R').replace('(', ')').replace('TEMP_R', '(')
+    
+    # فك التشابك بين الأرقام والحروف الملتصقة بالخطأ
+    val = re.sub(r'([\u0600-\u06FF])([0-9]+)', r'\1 \2', val)
+    val = re.sub(r'([0-9]+)([\u0600-\u06FF])', r'\1 \2', val)
+    
+    # تنظيف الحروف العشوائية الناتجة عن الترميز المكسور في الـ PDF
+    val = re.sub(r'[\u0640\u0610-\u061A\u064B-\u065F]', '', val)
+    
+    # ترتيب الكلمات للأتجاه الصحيح إذا كانت معالجة Tabula قد عكست السطر
+    parts = val.split()
+    if any(re.search(r'[\u0600-\u06FF]', p) for p in parts):
+        # المحافظة على تسلسل الأرقام والنصوص بشكل صحيح
+        return " ".join(parts)
+    return val
+
+def clean_dataframe(df):
+    df = df.fillna('')
+    for col in df.columns:
+        df[col] = df[col].astype(str).apply(fix_arabic_bidi_text)
+    return df
+
+# --- 4. قاموس الترجمة للغات الثلاث ---
 translations = {
     "العربية": {
         "direction": "rtl",
@@ -142,7 +184,7 @@ translations = {
 
 lang = translations[selected_lang]
 
-# --- 4. محرك الأنماط الديناميكي ---
+# --- 5. محرك الأنماط الديناميكي ---
 def get_theme_colors(theme):
     if theme == "cyberpunk":
         return {
@@ -212,6 +254,18 @@ def apply_theme_and_styles(direction, align, c):
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;700;900&family=Orbitron:wght@500;700;900&family=Tajawal:wght@450;700;900&display=swap" rel="stylesheet">
     
+    <script>
+        // حفظ واسترجاع الثيم عبر LocalStorage للمتصفح
+        const currentTheme = "{current_theme}";
+        localStorage.setItem("smart_accountant_theme", currentTheme);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.has("theme") && localStorage.getItem("smart_accountant_theme")) {{
+            urlParams.set("theme", localStorage.getItem("smart_accountant_theme"));
+            window.location.search = urlParams.toString();
+        }}
+    </script>
+
     <style>
     html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea {{
         font-family: {c['font_family']} !important;
@@ -471,7 +525,7 @@ def apply_theme_and_styles(direction, align, c):
 
 apply_theme_and_styles(lang["direction"], lang["align"], colors)
 
-# --- 5. الخلفية المتحركة ---
+# --- 6. الخلفية المتحركة ---
 def render_permanent_background(theme):
     if theme == "cyberpunk":
         bg_code = """
@@ -505,7 +559,7 @@ def render_permanent_background(theme):
 
 render_permanent_background(current_theme)
 
-# --- 6. واجهة البرنامج الرئيسية ---
+# --- 7. واجهة البرنامج الرئيسية ---
 st.markdown(f"""
 <div style='text-align: {lang["align"]}; margin-bottom: 15px;'>
     <h1>{lang["title"]}</h1>
@@ -540,16 +594,33 @@ with tab1:
                             dfs = []
                             if file.name.lower().endswith('.csv'):
                                 df_csv = pd.read_csv(file)
-                                dfs.append(df_csv)
+                                dfs.append(clean_dataframe(df_csv))
                             else:
-                                dfs = tabula.read_pdf(file, pages='all', multiple_tables=True, lattice=True)
+                                # استخراج الجداول مع تفعيل خيارات حماية اتجاه النصوص العربية وترتيب البيئة
+                                dfs_raw = tabula.read_pdf(
+                                    file, 
+                                    pages='all', 
+                                    multiple_tables=True, 
+                                    lattice=True,
+                                    java_options=["-Dfile.encoding=UTF-8"]
+                                )
+                                # إذا لم يستخرج lattice جداول كافية نجرب stream
+                                if not dfs_raw:
+                                    dfs_raw = tabula.read_pdf(
+                                        file, 
+                                        pages='all', 
+                                        multiple_tables=True, 
+                                        stream=True,
+                                        java_options=["-Dfile.encoding=UTF-8"]
+                                    )
+                                for df in dfs_raw:
+                                    dfs.append(clean_dataframe(df))
                             
                             if dfs:
                                 output = io.BytesIO()
                                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                                     current_row = 0
                                     for df in dfs:
-                                        df = df.fillna('')
                                         df.to_excel(writer, index=False, startrow=current_row, sheet_name='Data')
                                         current_row += len(df) + 2
                                 
@@ -589,14 +660,14 @@ with tab2:
                         for page in doc:
                             text = page.get_text()
                             if text.strip():
-                                full_text += text + "\n"
+                                full_text += fix_arabic_bidi_text(text) + "\n"
                             else:
                                 pix = page.get_pixmap()
                                 img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-                                full_text += pytesseract.image_to_string(img, lang='ara+eng') + "\n"
+                                full_text += fix_arabic_bidi_text(pytesseract.image_to_string(img, lang='ara+eng')) + "\n"
                     else:
                         img = Image.open(ocr_file)
-                        full_text = pytesseract.image_to_string(img, lang='ara+eng+urd')
+                        full_text = fix_arabic_bidi_text(pytesseract.image_to_string(img, lang='ara+eng+urd'))
 
                 if full_text.strip():
                     st.markdown(lang["ocr_result_header"])
@@ -621,7 +692,7 @@ with tab2:
             except Exception as e:
                 st.error(f"OCR Error: {e}")
 
-# --- 7. الإعلانات والتذييل ---
+# --- 8. الإعلانات والتذييل ---
 st.markdown("<br><br>", unsafe_allow_html=True)
 
 ads_code = """
