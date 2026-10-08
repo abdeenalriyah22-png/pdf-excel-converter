@@ -8,10 +8,6 @@ from PIL import Image
 import pytesseract
 from st_copy_to_clipboard import st_copy_to_clipboard
 
-# استيراد مكتبات المعالجة الثنائية للاتجاه
-import arabic_reshaper
-from bidi.algorithm import get_display
-
 # --- 1. إعدادات الصفحة الأساسية ---
 st.set_page_config(
     page_title="المحاسب الذكي Pro / Smart Accountant",
@@ -67,38 +63,50 @@ if saved_theme != current_theme:
 with col_top3:
     st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
 
-# --- 3. الدالة المحسنة لفك تشابك النص العربي والأرقام ---
-def fix_arabic_bidi_text(text):
+# --- 3. محرك معالجة وتصحيح النصوص المعكوسة دون إتلاف الأرقام ---
+def fix_reversed_arabic_with_numbers(text):
+    """
+    تكتشف هذه الدالة الأجزاء النصية المعكوسة الناتجة عن الـ PDF
+    وتقوم بتعديل اتجاه الحروف مع إبقاء الأرقام في موقعها وتدوير الأجزاء النصية فقط.
+    """
     if not isinstance(text, str) or not text.strip():
         return text
 
-    # إزالة تشكيل التشكيل والحركات التي تسبب تشوه الكلمات في الـ PDF
+    # تنظيف الحروف الزائدة الناتجة عن التشفير المكسور
     text = re.sub(r'[\u0640\u0610-\u061A\u064B-\u065F]', '', text)
 
-    # إصلاح تفكيك المسافات الملتصقة بين الأرقام والحروف
-    text = re.sub(r'([0-9]+)\s*([أ-يa-zA-Z])', r'\1 \2', text)
-    text = re.sub(r'([أ-يa-zA-Z])\s*([0-9]+)', r'\1 \2', text)
+    # إذا لم يكن هناك حروف عربية، لا نلمس النص
+    if not re.search(r'[\u0600-\u06FF]', text):
+        return text
 
-    # إذا كان النص يحتوي على حروف عربية
-    if re.search(r'[\u0600-\u06FF]', text):
-        try:
-            # تقطيع الكلمات وتعديل الترتيب إذا كان السطر مقلوباً من اليمين لليسار
-            reshaped = arabic_reshaper.reshape(text)
-            bidi_text = get_display(reshaped)
-            
-            # إذا ظهر الكود معكوس الكلمات بعد get_display، نعيد ترتيبة لضمان المقروئية
-            words = bidi_text.split()
-            return " ".join(words)
-        except Exception:
-            return text
+    # تقسيم السطر إلى أجزاء (كلمات وأرقام ورموز)
+    tokens = re.split(r'(\d+|\s+|[^\w\s])', text)
+    processed_tokens = []
 
-    return text
+    for token in tokens:
+        if not token:
+            continue
+        # إذا كان التوكن يحتوي على حروف عربية معكوسة، نعكس الحروف المكونة للكلمة
+        if re.search(r'[\u0600-\u06FF]', token):
+            processed_tokens.append(token[::-1])
+        else:
+            # الأرقام والرموز والمسافات تظل كما هي بدون عكس
+            processed_tokens.append(token)
+
+    # إذا كان الاتجاه العام للسطر تم عكس كلماته بالكامل من اليسار لليمين
+    result = "".join(processed_tokens)
+    words = result.split()
+    
+    # فحص ما إذا كان الترتيب الإجمالي للكلمات يحتاج اعادة ترتيب
+    if len(words) > 1 and re.search(r'[\u0600-\u06FF]', words[0]):
+        return " ".join(reversed(words))
+    
+    return result
 
 def extract_pdf_tables_clean(file_bytes):
-    """استخراج الجداول بخيارات محددة لمنع تداخل أسطر الجداول المحاسبية"""
+    """استخراج الجداول وقراءتها بدون خلط بين الأعمدة"""
     all_dfs = []
     
-    # إعدادات مخصصة لـ pdfplumber لمكافحة تداخل الخلايا
     table_settings = {
         "vertical_strategy": "lines",
         "horizontal_strategy": "lines",
@@ -110,7 +118,6 @@ def extract_pdf_tables_clean(file_bytes):
         for page in pdf.pages:
             tables = page.extract_tables(table_settings)
             
-            # إذا لم يجد أسطر صريحة نجرب الاستراتيجية المرنة
             if not tables:
                 tables = page.extract_tables()
 
@@ -121,9 +128,8 @@ def extract_pdf_tables_clean(file_bytes):
                 df = df.dropna(how='all').dropna(how='all', axis=1)
 
                 if not df.empty:
-                    # تطبيق المعالجة على جميع الخلايا
                     for col in df.columns:
-                        df[col] = df[col].astype(str).apply(fix_arabic_bidi_text)
+                        df[col] = df[col].astype(str).apply(fix_reversed_arabic_with_numbers)
                     all_dfs.append(df)
     return all_dfs
 
@@ -554,7 +560,7 @@ with tab1:
                             if file.name.lower().endswith('.csv'):
                                 df_csv = pd.read_csv(io.BytesIO(file_bytes))
                                 for col in df_csv.columns:
-                                    df_csv[col] = df_csv[col].astype(str).apply(fix_arabic_bidi_text)
+                                    df_csv[col] = df_csv[col].astype(str).apply(fix_reversed_arabic_with_numbers)
                                 dfs.append(df_csv)
                             else:
                                 dfs = extract_pdf_tables_clean(file_bytes)
@@ -604,13 +610,13 @@ with tab2:
                             for page in pdf.pages:
                                 text = page.extract_text()
                                 if text and text.strip():
-                                    full_text += fix_arabic_bidi_text(text) + "\n"
+                                    full_text += fix_reversed_arabic_with_numbers(text) + "\n"
                                 else:
                                     img = page.to_image().original
-                                    full_text += fix_arabic_bidi_text(pytesseract.image_to_string(img, lang='ara+eng')) + "\n"
+                                    full_text += fix_reversed_arabic_with_numbers(pytesseract.image_to_string(img, lang='ara+eng')) + "\n"
                     else:
                         img = Image.open(io.BytesIO(file_bytes))
-                        full_text = fix_arabic_bidi_text(pytesseract.image_to_string(img, lang='ara+eng+urd'))
+                        full_text = fix_reversed_arabic_with_numbers(pytesseract.image_to_string(img, lang='ara+eng+urd'))
 
                 if full_text.strip():
                     st.markdown(lang["ocr_result_header"])
