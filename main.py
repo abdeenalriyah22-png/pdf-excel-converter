@@ -85,7 +85,6 @@ def process_pdf_tables_by_cells(file_bytes):
     """
     all_dfs = []
     
-    # إعدادات متقدمة لقراءة إحداثيات الجدول
     table_settings = {
         "vertical_strategy": "text",
         "horizontal_strategy": "text",
@@ -96,7 +95,6 @@ def process_pdf_tables_by_cells(file_bytes):
 
     with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
         for page in pdf.pages:
-            # محاولة استخراج الجدول كشبكة خلايا
             tables = page.extract_tables(table_settings)
             if not tables:
                 tables = page.extract_tables()
@@ -106,8 +104,12 @@ def process_pdf_tables_by_cells(file_bytes):
                     if not table:
                         continue
                     df = pd.DataFrame(table)
-                    # تنظيف البيانات بالخلية
-                    df = df.applymap(clean_cell_value)
+                    
+                    # تنظيف البيانات بالخلية باستخدام map متوافق مع كافة إصدارات pandas
+                    if hasattr(df, 'map'):
+                        df = df.map(clean_cell_value)
+                    else:
+                        df = df.applymap(clean_cell_value)
                     
                     # حذف الصفوف والأعمدة الفارغة تماماً
                     df = df.dropna(how='all').dropna(how='all', axis=1)
@@ -115,20 +117,16 @@ def process_pdf_tables_by_cells(file_bytes):
                     if not df.empty:
                         all_dfs.append(df)
             else:
-                # في حال كانت الصفحة عبارة عن صورة نصوص جافة بدون خطوط
                 img = page.to_image(resolution=300).original
-                # OCR موجه بقواعد التداول المالي (Single Line / Uniform Block)
                 ocr_data = pytesseract.image_to_data(img, lang='ara+eng', output_type=pytesseract.Output.DATAFRAME)
                 ocr_data = ocr_data[ocr_data.text.notnull() & (ocr_data.text.str.strip() != "")]
                 
                 if not ocr_data.empty:
-                    # تجميع الكلمات بناءً على ارتفاع السطر (Top Coords) لمنع انحشار كل الأسطر في خلية واحدة
                     ocr_data['line_group'] = (ocr_data['top'] // 15)
                     lines = ocr_data.groupby('line_group')['text'].apply(lambda x: ' '.join(x)).tolist()
                     
                     rows = []
                     for line in lines:
-                        # تقسيم السطر بفرز الفواصل الواضحة
                         parts = [clean_cell_value(p) for p in re.split(r'\s{2,}|\t', line) if p.strip()]
                         if parts:
                             rows.append(parts)
