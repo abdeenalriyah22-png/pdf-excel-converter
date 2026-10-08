@@ -8,9 +8,6 @@ from PIL import Image
 import pytesseract
 from st_copy_to_clipboard import st_copy_to_clipboard
 
-# استيراد إدارة الكوكيز لحفظ الثيم دائمًا في المتصفح
-import extra_streamlit_components as stx
-
 # --- 1. إعدادات الصفحة الأساسية ---
 st.set_page_config(
     page_title="المحاسب الذكي Pro / Smart Accountant",
@@ -19,13 +16,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. إدارة الكوكيز للحفاظ على الثيم ثابت عند إغلاق المتصفح ---
-cookie_manager = stx.CookieManager()
-
-# جلب الثيم المخزن في الكوكيز إن وجد
-saved_theme = cookie_manager.get(cookie="selected_theme")
-if not saved_theme:
-    saved_theme = "cyberpunk"
+# --- 2. إدارة الثيم المختار واسترجاعه عبر URL Query Params ---
+query_params = st.query_params
+saved_theme = query_params.get("theme", "cyberpunk")
 
 theme_options = [
     "🌌 نيون سايبربانك (Cyberpunk Neon)",
@@ -64,9 +57,9 @@ with col_top2:
 
 current_theme = theme_mapping.get(selected_theme_name, "cyberpunk")
 
-# حفظ الاختيار في كوكيز المتصفح لمدة سنة
+# تحديث رابط المتصفح بحالة الثيم لضمان حفظه عند إعادة التنشيط
 if saved_theme != current_theme:
-    cookie_manager.set("selected_theme", current_theme, max_age=365*24*3600)
+    st.query_params["theme"] = current_theme
 
 with col_top3:
     st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
@@ -101,7 +94,6 @@ def extract_pdf_tables_clean(file_bytes):
             for tab in tabs.tables:
                 df = tab.extract()
                 df = pd.DataFrame(df)
-                # استخدام الصف الأول كعناوين إذا كان صالحاً
                 if not df.empty:
                     df.columns = [fix_arabic_bidi_text(str(c)) for c in df.iloc[0]]
                     df = df[1:].reset_index(drop=True)
@@ -272,6 +264,22 @@ def get_theme_colors(theme):
 colors = get_theme_colors(current_theme)
 
 def apply_theme_and_styles(direction, align, c):
+    # كود JS لحفظ واسترجاع الثيم في localStorage الخاص بالمتصفح
+    st.html(f"""
+    <script>
+        const curTheme = "{current_theme}";
+        localStorage.setItem("smart_acc_theme", curTheme);
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.has("theme")) {{
+            const localTheme = localStorage.getItem("smart_acc_theme");
+            if (localTheme && localTheme !== curTheme) {{
+                urlParams.set("theme", localTheme);
+                window.location.search = urlParams.toString();
+            }}
+        }}
+    </script>
+    """)
+
     st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;700;900&family=Orbitron:wght@500;700;900&family=Tajawal:wght@450;700;900&display=swap" rel="stylesheet">
