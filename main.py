@@ -1,13 +1,15 @@
 import streamlit as st
 import streamlit.components.v1 as components
-import tabula
 import pandas as pd
 import io
 import re
+import fitz  # PyMuPDF
 from PIL import Image
 import pytesseract
-import fitz  # PyMuPDF
 from st_copy_to_clipboard import st_copy_to_clipboard
+
+# استيراد إدارة الكوكيز لحفظ الثيم دائمًا في المتصفح
+import extra_streamlit_components as stx
 
 # --- 1. إعدادات الصفحة الأساسية ---
 st.set_page_config(
@@ -17,18 +19,30 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. إدارة الثيم الثابت عبر Query Params و LocalStorage ---
-query_params = st.query_params
-saved_theme = query_params.get("theme", ["cyberpunk"])[0] if isinstance(query_params.get("theme"), list) else query_params.get("theme", "cyberpunk")
+# --- 2. إدارة الكوكيز للحفاظ على الثيم ثابت عند إغلاق المتصفح ---
+cookie_manager = stx.CookieManager()
 
-theme_reverse_mapping = {
-    "cyberpunk": "🌌 نيون سايبربانك (Cyberpunk Neon)",
-    "gold": "👑 رويال جولد (Royal Gold)",
-    "forest": "🌲 الطبيعة المريحة (Emerald Forest)",
-    "dark": "🌙 الكلاسيكي الداكن (Dark Mode)"
+# جلب الثيم المخزن في الكوكيز إن وجد
+saved_theme = cookie_manager.get(cookie="selected_theme")
+if not saved_theme:
+    saved_theme = "cyberpunk"
+
+theme_options = [
+    "🌌 نيون سايبربانك (Cyberpunk Neon)",
+    "👑 رويال جولد (Royal Gold)",
+    "🌲 الطبيعة المريحة (Emerald Forest)",
+    "🌙 الكلاسيكي الداكن (Dark Mode)"
+]
+
+theme_mapping = {
+    "🌌 نيون سايبربانك (Cyberpunk Neon)": "cyberpunk",
+    "👑 رويال جولد (Royal Gold)": "gold",
+    "🌲 الطبيعة المريحة (Emerald Forest)": "forest",
+    "🌙 الكلاسيكي الداكن (Dark Mode)": "dark"
 }
 
-default_theme_name = theme_reverse_mapping.get(saved_theme, "🌌 نيون سايبربانك (Cyberpunk Neon)")
+reverse_theme_mapping = {v: k for k, v in theme_mapping.items()}
+default_theme_label = reverse_theme_mapping.get(saved_theme, theme_options[0])
 
 col_top1, col_top2, col_top3 = st.columns([3, 3, 2])
 
@@ -43,52 +57,60 @@ with col_top1:
 with col_top2:
     selected_theme_name = st.selectbox(
         "🎨 Select Theme / اختر الثيم الفني",
-        ["🌌 نيون سايبربانك (Cyberpunk Neon)", "👑 رويال جولد (Royal Gold)", "🌲 الطبيعة المريحة (Emerald Forest)", "🌙 الكلاسيكي الداكن (Dark Mode)"],
-        index=list(theme_reverse_mapping.values()).index(default_theme_name) if default_theme_name in theme_reverse_mapping.values() else 0,
+        theme_options,
+        index=theme_options.index(default_theme_label),
         key="theme_selector"
     )
 
-theme_mapping = {
-    "🌌 نيون سايبربانك (Cyberpunk Neon)": "cyberpunk",
-    "👑 رويال جولد (Royal Gold)": "gold",
-    "🌲 الطبيعة المريحة (Emerald Forest)": "forest",
-    "🌙 الكلاسيكي الداكن (Dark Mode)": "dark"
-}
 current_theme = theme_mapping.get(selected_theme_name, "cyberpunk")
 
-# تحديث الرابط بحالة الثيم لضمان ثباته
+# حفظ الاختيار في كوكيز المتصفح لمدة سنة
 if saved_theme != current_theme:
-    st.query_params["theme"] = current_theme
+    cookie_manager.set("selected_theme", current_theme, max_age=365*24*3600)
 
-# --- 3. دالة إصلاح وتشذيب النصوص العربية المعكوسة والمتداخلة مع الأرقام ---
-def fix_arabic_bidi_text(val):
-    if not isinstance(val, str) or not val.strip():
-        return val
-    
-    # إصلاح الأقواس والمعاملات المعكوسة
-    val = val.replace(')', 'TEMP_R').replace('(', ')').replace('TEMP_R', '(')
-    
-    # فك التشابك بين الأرقام والحروف الملتصقة بالخطأ
-    val = re.sub(r'([\u0600-\u06FF])([0-9]+)', r'\1 \2', val)
-    val = re.sub(r'([0-9]+)([\u0600-\u06FF])', r'\1 \2', val)
-    
-    # تنظيف الحروف العشوائية الناتجة عن الترميز المكسور في الـ PDF
-    val = re.sub(r'[\u0640\u0610-\u061A\u064B-\u065F]', '', val)
-    
-    # ترتيب الكلمات للأتجاه الصحيح إذا كانت معالجة Tabula قد عكست السطر
-    parts = val.split()
-    if any(re.search(r'[\u0600-\u06FF]', p) for p in parts):
-        # المحافظة على تسلسل الأرقام والنصوص بشكل صحيح
-        return " ".join(parts)
-    return val
+with col_top3:
+    st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
 
-def clean_dataframe(df):
-    df = df.fillna('')
-    for col in df.columns:
-        df[col] = df[col].astype(str).apply(fix_arabic_bidi_text)
-    return df
+# --- 3. محرك تصحيح وتفكيك النصوص العربية المتداخلة مع الأرقام ---
+def fix_arabic_bidi_text(text):
+    """تصحيح تفكيك الحروف وتداخل الأرقام مع الكلمات العربية"""
+    if not isinstance(text, str) or not text.strip():
+        return text
 
-# --- 4. قاموس الترجمة للغات الثلاث ---
+    # إصلاح تفكيك وتداخل الأرقام والرموز المكسورة
+    text = re.sub(r'([0-9]+)\s*([أ-ي])', r'\1 \2', text)
+    text = re.sub(r'([أ-ي])\s*([0-9]+)', r'\1 \2', text)
+
+    # حظر الحروف المقطعة الشاذة والرموز الناتجة عن ترميز الـ PDF
+    text = re.sub(r'[\u0640\u0610-\u061A\u064B-\u065F]', '', text)
+
+    # ضبط الترتيب السليم للأسطر العربية الممزوجة بأرقام
+    words = text.split()
+    if any(re.search(r'[\u0600-\u06FF]', w) for w in words):
+        return " ".join(words)
+    return text
+
+def extract_pdf_tables_clean(file_bytes):
+    """استخراج الجداول بدقة عالية دون إتلاف الترتيب العربي للأرقام والنصوص"""
+    doc = fitz.open(stream=file_bytes, filetype="pdf")
+    all_dfs = []
+
+    for page in doc:
+        tabs = page.find_tables()
+        if tabs and tabs.tables:
+            for tab in tabs.tables:
+                df = tab.extract()
+                df = pd.DataFrame(df)
+                # استخدام الصف الأول كعناوين إذا كان صالحاً
+                if not df.empty:
+                    df.columns = [fix_arabic_bidi_text(str(c)) for c in df.iloc[0]]
+                    df = df[1:].reset_index(drop=True)
+                    for col in df.columns:
+                        df[col] = df[col].astype(str).apply(fix_arabic_bidi_text)
+                    all_dfs.append(df)
+    return all_dfs
+
+# --- 4. قاموس الترجمة ---
 translations = {
     "العربية": {
         "direction": "rtl",
@@ -254,18 +276,6 @@ def apply_theme_and_styles(direction, align, c):
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;700;900&family=Orbitron:wght@500;700;900&family=Tajawal:wght@450;700;900&display=swap" rel="stylesheet">
     
-    <script>
-        // حفظ واسترجاع الثيم عبر LocalStorage للمتصفح
-        const currentTheme = "{current_theme}";
-        localStorage.setItem("smart_accountant_theme", currentTheme);
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        if (!urlParams.has("theme") && localStorage.getItem("smart_accountant_theme")) {{
-            urlParams.set("theme", localStorage.getItem("smart_accountant_theme"));
-            window.location.search = urlParams.toString();
-        }}
-    </script>
-
     <style>
     html, body, [class*="st-emotion-cache"], p, div, h1, h2, h3, span, label, textarea {{
         font-family: {c['font_family']} !important;
@@ -397,16 +407,6 @@ def apply_theme_and_styles(direction, align, c):
         opacity: 1 !important;
     }}
 
-    .stTabs [data-baseweb="tab"] *,
-    .stTabs [data-baseweb="tab"] p,
-    .stTabs [data-baseweb="tab"] span,
-    .stTabs [data-baseweb="tab"] div {{
-        color: {c['tab_text_color']} !important;
-        -webkit-text-fill-color: {c['tab_text_color']} !important;
-        font-size: 19px !important;
-        font-weight: 900 !important;
-    }}
-
     .stTabs [aria-selected="true"] {{
         background: {c['btn_gradient']} !important;
         color: #ffffff !important;
@@ -416,35 +416,12 @@ def apply_theme_and_styles(direction, align, c):
         border-color: #ffffff !important;
     }}
 
-    .stTabs [aria-selected="true"] *,
-    .stTabs [aria-selected="true"] p,
-    .stTabs [aria-selected="true"] span,
-    .stTabs [aria-selected="true"] div {{
-        color: #ffffff !important;
-        -webkit-text-fill-color: #ffffff !important;
-        font-size: 19px !important;
-        font-weight: 900 !important;
-    }}
-
     [data-testid="stFileUploader"] {{
         background-color: {c['card_bg']} !important;
         border: 3px dashed {c['border_color']} !important;
         border-radius: 20px !important;
         padding: 35px !important;
         box-shadow: 0 10px 35px rgba(0,0,0,0.5);
-    }}
-
-    [data-testid="stFileUploader"] section {{
-        background-color: transparent !important;
-    }}
-
-    [data-testid="stFileUploader"] span, 
-    [data-testid="stFileUploader"] small, 
-    [data-testid="stFileUploader"] p,
-    [data-testid="stFileUploader"] div {{
-        color: {c['main_text']} !important;
-        font-size: 17px !important;
-        font-weight: 700 !important;
     }}
 
     .custom-card {{
@@ -456,19 +433,6 @@ def apply_theme_and_styles(direction, align, c):
         margin-bottom: 25px;
         box-shadow: 0 10px 35px rgba(0,0,0,0.6);
         backdrop-filter: blur(10px);
-    }}
-
-    .custom-card h3 {{
-        font-size: 26px !important;
-        color: {c['text_color']} !important;
-        font-weight: 900 !important;
-        margin-bottom: 10px !important;
-    }}
-
-    .custom-card p {{
-        font-size: 17px !important;
-        color: {c['main_text']} !important;
-        opacity: 0.95;
     }}
 
     .stButton > button {{
@@ -489,11 +453,6 @@ def apply_theme_and_styles(direction, align, c):
         border-color: {c['text_color']} !important;
         box-shadow: 0 10px 35px {c['border_color']}, 0 0 25px {c['accent_color']} !important;
         transform: translateY(-3px) scale(1.01) !important;
-    }}
-
-    [data-testid="stFileUploader"] button {{
-        width: auto !important;
-        direction: ltr !important;
     }}
 
     textarea {{
@@ -525,41 +484,7 @@ def apply_theme_and_styles(direction, align, c):
 
 apply_theme_and_styles(lang["direction"], lang["align"], colors)
 
-# --- 6. الخلفية المتحركة ---
-def render_permanent_background(theme):
-    if theme == "cyberpunk":
-        bg_code = """
-        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #05050a; }
-        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; }
-        .grid-line { position: absolute; width: 200%; height: 200%; background-image: linear-gradient(rgba(236, 72, 153, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px); background-size: 40px 40px; animation: moveGrid 20s linear infinite; }
-        @keyframes moveGrid { 0% { transform: translateY(0); } 100% { transform: translateY(40px); } }
-        """
-    elif theme == "gold":
-        bg_code = """
-        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #0c0a09; }
-        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; background: radial-gradient(circle at 50% 20%, rgba(217, 119, 6, 0.12) 0%, transparent 60%); }
-        """
-    elif theme == "forest":
-        bg_code = """
-        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #022c22; }
-        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; background: radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.15) 0%, transparent 50%); }
-        """
-    else:
-        bg_code = """
-        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #03070c; }
-        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; }
-        """
-
-    bg_html = f"""<!DOCTYPE html><html><head><style>{bg_code}</style></head><body><div class="bg-fx"><div class="grid-line"></div></div></body></html>"""
-    components.html(f"""
-    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -999; pointer-events: none;">
-        <iframe srcdoc="{bg_html.replace('"', '&quot;')}" style="width: 100%; height: 100%; border: none; pointer-events: none;"></iframe>
-    </div>
-    """, height=0, width=0)
-
-render_permanent_background(current_theme)
-
-# --- 7. واجهة البرنامج الرئيسية ---
+# --- 6. واجهة البرنامج الرئيسية ---
 st.markdown(f"""
 <div style='text-align: {lang["align"]}; margin-bottom: 15px;'>
     <h1>{lang["title"]}</h1>
@@ -592,29 +517,15 @@ with tab1:
                     try:
                         with st.spinner(lang["status_loading"]):
                             dfs = []
+                            file_bytes = file.read()
+                            
                             if file.name.lower().endswith('.csv'):
-                                df_csv = pd.read_csv(file)
-                                dfs.append(clean_dataframe(df_csv))
+                                df_csv = pd.read_csv(io.BytesIO(file_bytes))
+                                for col in df_csv.columns:
+                                    df_csv[col] = df_csv[col].astype(str).apply(fix_arabic_bidi_text)
+                                dfs.append(df_csv)
                             else:
-                                # استخراج الجداول مع تفعيل خيارات حماية اتجاه النصوص العربية وترتيب البيئة
-                                dfs_raw = tabula.read_pdf(
-                                    file, 
-                                    pages='all', 
-                                    multiple_tables=True, 
-                                    lattice=True,
-                                    java_options=["-Dfile.encoding=UTF-8"]
-                                )
-                                # إذا لم يستخرج lattice جداول كافية نجرب stream
-                                if not dfs_raw:
-                                    dfs_raw = tabula.read_pdf(
-                                        file, 
-                                        pages='all', 
-                                        multiple_tables=True, 
-                                        stream=True,
-                                        java_options=["-Dfile.encoding=UTF-8"]
-                                    )
-                                for df in dfs_raw:
-                                    dfs.append(clean_dataframe(df))
+                                dfs = extract_pdf_tables_clean(file_bytes)
                             
                             if dfs:
                                 output = io.BytesIO()
@@ -655,8 +566,9 @@ with tab2:
             full_text = ""
             try:
                 with st.spinner(lang["status_ocr_loading"]):
+                    file_bytes = ocr_file.read()
                     if ocr_file.type == "application/pdf":
-                        doc = fitz.open(stream=ocr_file.read(), filetype="pdf")
+                        doc = fitz.open(stream=file_bytes, filetype="pdf")
                         for page in doc:
                             text = page.get_text()
                             if text.strip():
@@ -666,7 +578,7 @@ with tab2:
                                 img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
                                 full_text += fix_arabic_bidi_text(pytesseract.image_to_string(img, lang='ara+eng')) + "\n"
                     else:
-                        img = Image.open(ocr_file)
+                        img = Image.open(io.BytesIO(file_bytes))
                         full_text = fix_arabic_bidi_text(pytesseract.image_to_string(img, lang='ara+eng+urd'))
 
                 if full_text.strip():
@@ -691,26 +603,6 @@ with tab2:
                     st.warning(lang["warning_no_text"])
             except Exception as e:
                 st.error(f"OCR Error: {e}")
-
-# --- 8. الإعلانات والتذييل ---
-st.markdown("<br><br>", unsafe_allow_html=True)
-
-ads_code = """
-<div style="text-align: center; width: 100%;">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1091631464795781"
-         crossorigin="anonymous"></script>
-    <ins class="adsbygoogle"
-         style="display:block; min-width:300px; max-width:970px; width:100%; height:90px; margin:auto;"
-         data-ad-client="ca-pub-1091631464795781"
-         data-ad-slot="8159670732"
-         data-ad-format="auto"
-         data-full-width-responsive="true"></ins>
-    <script>
-         (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
-</div>
-"""
-components.html(ads_code, height=110)
 
 st.markdown(f"""
     <div class="footer">
