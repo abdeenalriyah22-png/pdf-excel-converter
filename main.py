@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 import pandas as pd
 import io
 import re
-import pdfplumber
+import fitz  # PyMuPDF
 from PIL import Image
 import pytesseract
 from st_copy_to_clipboard import st_copy_to_clipboard
@@ -63,75 +63,44 @@ if saved_theme != current_theme:
 with col_top3:
     st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
 
-# --- 3. محرك معالجة وتصحيح النصوص المعكوسة دون إتلاف الأرقام ---
-def fix_reversed_arabic_with_numbers(text):
-    """
-    تكتشف هذه الدالة الأجزاء النصية المعكوسة الناتجة عن الـ PDF
-    وتقوم بتعديل اتجاه الحروف مع إبقاء الأرقام في موقعها وتدوير الأجزاء النصية فقط.
-    """
-    if not isinstance(text, str) or not text.strip():
+# --- 3. محرك الاستخراج الضوئي الذكي (OCR-First Approach) ---
+def clean_extracted_text(text):
+    if not isinstance(text, str):
         return text
-
-    # تنظيف الحروف الزائدة الناتجة عن التشفير المكسور
+    # تنظيف الفواصل والرموز الغريبة الناتجة عن المسح الضوئي
     text = re.sub(r'[\u0640\u0610-\u061A\u064B-\u065F]', '', text)
+    return text.strip()
 
-    # إذا لم يكن هناك حروف عربية، لا نلمس النص
-    if not re.search(r'[\u0600-\u06FF]', text):
-        return text
+def process_pdf_with_ocr(file_bytes):
+    """
+    تحويل كل صفحة PDF إلى صورة فائقة الدقة ثم قراءتها عبر OCR 
+    لتجاوز التشفير المكسور والحروف المقلوبة في برامج المحاسبة
+    """
+    doc = fitz.open(stream=file_bytes, filetype="pdf")
+    all_data = []
 
-    # تقسيم السطر إلى أجزاء (كلمات وأرقام ورموز)
-    tokens = re.split(r'(\d+|\s+|[^\w\s])', text)
-    processed_tokens = []
-
-    for token in tokens:
-        if not token:
-            continue
-        # إذا كان التوكن يحتوي على حروف عربية معكوسة، نعكس الحروف المكونة للكلمة
-        if re.search(r'[\u0600-\u06FF]', token):
-            processed_tokens.append(token[::-1])
-        else:
-            # الأرقام والرموز والمسافات تظل كما هي بدون عكس
-            processed_tokens.append(token)
-
-    # إذا كان الاتجاه العام للسطر تم عكس كلماته بالكامل من اليسار لليمين
-    result = "".join(processed_tokens)
-    words = result.split()
-    
-    # فحص ما إذا كان الترتيب الإجمالي للكلمات يحتاج اعادة ترتيب
-    if len(words) > 1 and re.search(r'[\u0600-\u06FF]', words[0]):
-        return " ".join(reversed(words))
-    
-    return result
-
-def extract_pdf_tables_clean(file_bytes):
-    """استخراج الجداول وقراءتها بدون خلط بين الأعمدة"""
-    all_dfs = []
-    
-    table_settings = {
-        "vertical_strategy": "lines",
-        "horizontal_strategy": "lines",
-        "snap_tolerance": 3,
-        "join_tolerance": 3,
-    }
-
-    with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-        for page in pdf.pages:
-            tables = page.extract_tables(table_settings)
+    for page in doc:
+        # تحويل الصفحة إلى صورة عالية الجودة (300 DPI)
+        pix = page.get_pixmap(dpi=300)
+        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        
+        # قراءة الجداول عبر Tesseract OCR مع تحديد دعم العربية والإنجليزية
+        ocr_data = pytesseract.image_to_string(img, lang='ara+eng', config='--psm 6')
+        
+        lines = ocr_data.split('\n')
+        page_rows = []
+        for line in lines:
+            if line.strip():
+                # تقسيم الأسطر بناءً على المسافات المزدوجة أو علامات التبويب
+                columns = [clean_extracted_text(col) for col in re.split(r'\s{2,}|\t', line) if col.strip()]
+                if columns:
+                    page_rows.append(columns)
+        
+        if page_rows:
+            df = pd.DataFrame(page_rows)
+            all_data.append(df)
             
-            if not tables:
-                tables = page.extract_tables()
-
-            for table in tables:
-                if not table:
-                    continue
-                df = pd.DataFrame(table)
-                df = df.dropna(how='all').dropna(how='all', axis=1)
-
-                if not df.empty:
-                    for col in df.columns:
-                        df[col] = df[col].astype(str).apply(fix_reversed_arabic_with_numbers)
-                    all_dfs.append(df)
-    return all_dfs
+    return all_data
 
 # --- 4. قاموس الترجمة ---
 translations = {
@@ -151,7 +120,7 @@ translations = {
         "btn_convert": "بدء تحويل وجدولة الملف",
         "btn_ocr": "🚀 تشغيل الذكاء الاصطناعي لقراءة النص",
         "status_preparing": "📁 ملف قيد التحضير: ",
-        "status_loading": "جاري تفكيك الجداول وهيكلتها...",
+        "status_loading": "جاري المسح الضوئي وإعادة بناء الجداول المحاسبية...",
         "status_ocr_loading": "جاري المسح الضوئي للمستند وتفسير الحروف...",
         "success_convert": "🚀 اكتمل التحويل بنجاح تام وتم تجهيز ملف Excel!",
         "warning_no_tables": "⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.",
@@ -559,18 +528,16 @@ with tab1:
                             
                             if file.name.lower().endswith('.csv'):
                                 df_csv = pd.read_csv(io.BytesIO(file_bytes))
-                                for col in df_csv.columns:
-                                    df_csv[col] = df_csv[col].astype(str).apply(fix_reversed_arabic_with_numbers)
                                 dfs.append(df_csv)
                             else:
-                                dfs = extract_pdf_tables_clean(file_bytes)
+                                dfs = process_pdf_with_ocr(file_bytes)
                             
                             if dfs:
                                 output = io.BytesIO()
                                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                                     current_row = 0
                                     for df in dfs:
-                                        df.to_excel(writer, index=False, startrow=current_row, sheet_name='Data')
+                                        df.to_excel(writer, index=False, header=False, startrow=current_row, sheet_name='Data')
                                         current_row += len(df) + 2
                                 
                                 st.success(lang["success_convert"])
@@ -606,17 +573,14 @@ with tab2:
                 with st.spinner(lang["status_ocr_loading"]):
                     file_bytes = ocr_file.read()
                     if ocr_file.type == "application/pdf":
-                        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-                            for page in pdf.pages:
-                                text = page.extract_text()
-                                if text and text.strip():
-                                    full_text += fix_reversed_arabic_with_numbers(text) + "\n"
-                                else:
-                                    img = page.to_image().original
-                                    full_text += fix_reversed_arabic_with_numbers(pytesseract.image_to_string(img, lang='ara+eng')) + "\n"
+                        doc = fitz.open(stream=file_bytes, filetype="pdf")
+                        for page in doc:
+                            pix = page.get_pixmap(dpi=300)
+                            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                            full_text += pytesseract.image_to_string(img, lang='ara+eng') + "\n"
                     else:
                         img = Image.open(io.BytesIO(file_bytes))
-                        full_text = fix_reversed_arabic_with_numbers(pytesseract.image_to_string(img, lang='ara+eng+urd'))
+                        full_text = pytesseract.image_to_string(img, lang='ara+eng+urd')
 
                 if full_text.strip():
                     st.markdown(lang["ocr_result_header"])
