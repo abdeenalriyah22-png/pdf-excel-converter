@@ -11,3 +11,4 @@ pdfplumber
 openpyxl
 arabic_reshaper
 python-bidi
+extra-streamlit-components
