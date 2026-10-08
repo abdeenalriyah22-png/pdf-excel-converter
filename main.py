@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 import pandas as pd
 import io
 import re
-import pdfplumber
+import fitz  # PyMuPDF
 from PIL import Image
 import pytesseract
 from st_copy_to_clipboard import st_copy_to_clipboard
@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. إدارة الثيم المختار واسترجاعه عبر URL Query Params ---
+# --- 2. إدارة الثيم عبر URL Query Params ---
 query_params = st.query_params
 saved_theme = query_params.get("theme", "cyberpunk")
 
@@ -63,50 +63,65 @@ if saved_theme != current_theme:
 with col_top3:
     st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
 
-# --- 3. المعالج الخاص لكشوف الحسابات المحاسبية السليمة نصياً ---
-def parse_smart_accountant_pdf(file_bytes):
+# --- 3. محرك تصحيح اتجاه النصوص العربية المعكوسة ---
+def fix_reversed_text_cell(text):
+    if not isinstance(text, str) or not text.strip():
+        return text if text else ""
+    
+    text = text.strip()
+    
+    # حظر التشكيل والرموز المكسورة
+    text = re.sub(r'[\u0640\u0610-\u061A\u064B-\u065F]', '', text)
+
+    # إذا كان النص يحتوي على حروف عربية معكوسة حرفياً، نعكس ترتيب الكلمة أو الأحرف
+    if re.search(r'[\u0600-\u06FF]', text):
+        # فحص ما إذا كان الحرف الأول والأخير يشير إلى عكس النص
+        words = text.split()
+        fixed_words = []
+        for w in words:
+            if re.search(r'[\u0600-\u06FF]', w):
+                fixed_words.append(w[::-1])
+            else:
+                fixed_words.append(w)
+        
+        # إعادة تجميع الجملة بالاتجاه المحاسبي الصحيح
+        return " ".join(reversed(fixed_words))
+    
+    return text
+
+def parse_pdf_tables_bidi_correct(file_bytes):
     """
-    استخراج الجداول المحاسبية مباشرة من الطبقة النصية للـ PDF 
-    بدون مسح ضوئي لمنع التشويه، مع الاعتماد على الفواصل الشاقولية
+    استخراج الجداول بدقة عالية باستخدام PyMuPDF
+    وقراءة النصوص المنسقة لتفادي تفكيك السطور المعكوسة
     """
     all_dfs = []
-    
-    # إعدادات التفكيك النصي للجداول بدون خطوط شبكية
-    table_settings = {
-        "vertical_strategy": "text",
-        "horizontal_strategy": "text",
-        "snap_tolerance": 4,
-        "join_tolerance": 4,
-        "min_words_vertical": 1
-    }
+    doc = fitz.open(stream=file_bytes, filetype="pdf")
 
-    with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-        for page in pdf.pages:
-            tables = page.extract_tables(table_settings)
-            
-            if tables:
-                for table in tables:
-                    if not table:
-                        continue
-                    df = pd.DataFrame(table)
-                    
-                    # تنظيف الخانات الفارغة وتطبيق تنسيق النصوص
-                    df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
-                    df = df.dropna(how='all').dropna(how='all', axis=1)
-                    
-                    if not df.empty:
-                        all_dfs.append(df)
-            else:
-                # في حال تعذر القراءة بالتموضع يتم أخذ النصوص المهيكلة
-                text = page.extract_text(layout=False)
-                lines = [line.strip() for line in text.split('\n') if line.strip()]
-                rows = []
-                for line in lines:
-                    parts = [p.strip() for p in line.split('|') if p.strip()]
-                    if parts:
-                        rows.append(parts)
-                if rows:
-                    all_dfs.append(pd.DataFrame(rows))
+    for page in doc:
+        tabs = page.find_tables()
+        if tabs and tabs.tables:
+            for tab in tabs.tables:
+                extracted_data = tab.extract()
+                df = pd.DataFrame(extracted_data)
+                
+                # تطبيق معالجة تصحيح الاتجاه على كل خلية
+                df = df.applymap(fix_reversed_text_cell) if hasattr(df, 'applymap') else df.map(fix_reversed_text_cell)
+                df = df.dropna(how='all').dropna(how='all', axis=1)
+                
+                if not df.empty:
+                    all_dfs.append(df)
+        else:
+            # معالجة بديلة عبر استخراج كتل النصوص المترابطة
+            blocks = page.get_text("blocks")
+            rows = []
+            for b in blocks:
+                line_text = b[4].strip()
+                if line_text:
+                    cols = [fix_reversed_text_cell(c) for c in re.split(r'\s{2,}|\t|\n', line_text) if c.strip()]
+                    if cols:
+                        rows.append(cols)
+            if rows:
+                all_dfs.append(pd.DataFrame(rows))
 
     return all_dfs
 
@@ -128,7 +143,7 @@ translations = {
         "btn_convert": "بدء تحويل وجدولة الملف",
         "btn_ocr": "🚀 تشغيل الذكاء الاصطناعي لقراءة النص",
         "status_preparing": "📁 ملف قيد التحضير: ",
-        "status_loading": "جاري استخراج السجلات المحاسبية وتنظيم الأعمدة...",
+        "status_loading": "جاري معالجة الاتجاهات وتصحيح النصوص المعكوسة...",
         "status_ocr_loading": "جاري المسح الضوئي للمستند وتفسير الحروف...",
         "success_convert": "🚀 اكتمل التحويل بنجاح تام وتم تجهيز ملف Excel!",
         "warning_no_tables": "⚠️ لم نكتشف جداول رقمية واضحة داخل هذا الملف.",
@@ -538,7 +553,7 @@ with tab1:
                                 df_csv = pd.read_csv(io.BytesIO(file_bytes))
                                 dfs.append(df_csv)
                             else:
-                                dfs = parse_smart_accountant_pdf(file_bytes)
+                                dfs = parse_pdf_tables_bidi_correct(file_bytes)
                             
                             if dfs:
                                 output = io.BytesIO()
@@ -581,9 +596,9 @@ with tab2:
                 with st.spinner(lang["status_ocr_loading"]):
                     file_bytes = ocr_file.read()
                     if ocr_file.type == "application/pdf":
-                        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-                            for page in pdf.pages:
-                                full_text += (page.extract_text() or "") + "\n"
+                        doc = fitz.open(stream=file_bytes, filetype="pdf")
+                        for page in doc:
+                            full_text += page.get_text() + "\n"
                     else:
                         img = Image.open(io.BytesIO(file_bytes))
                         full_text = pytesseract.image_to_string(img, lang='ara+eng+urd')
